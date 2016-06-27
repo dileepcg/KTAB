@@ -225,9 +225,9 @@ if(ENABLE_QT_GUI)
 
     #specifing path to find libraries
     if(WIN32)
-        set(CMAKE_PREFIX_PATH "C:\\Qt\\Qt5.6.0\\5.6\\mingw49_32\\lib\\cmake")
+        set(CMAKE_PREFIX_PATH "D:\\Qt\\Qt5.6.1\\5.6\\msvc2015_64\\lib\\cmake")
     elseif(UNIX)
-        set(CMAKE_PREFIX_PATH "/home/arunsathvik/Qt5.6.0/5.6/gcc_64/lib/cmake")
+        set(CMAKE_PREFIX_PATH "/home/ahowe/Qt5.6.1/5.6/gcc_64/lib/cmake")
     endif(WIN32)
 
     #adding qt libraries
