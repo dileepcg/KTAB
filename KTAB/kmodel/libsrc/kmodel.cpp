@@ -92,6 +92,17 @@ Model::Model(PRNG * r, string desc, uint64_t s) {
 	delete utcBuffId;
 	utcBuffId = nullptr;
 
+    // BPW 20160717
+    // (a) record a reproducible seed even we were given '0'
+    // (b) make sure that the given value really is the initial seed
+    // (c) at this point, the PRNG* is almost irrelevant, except that someone
+    // might, in the future, provide an object which was a new subclass of PRNG*
+    if (0 == s) {
+      rng->setSeed(0); // random and irreproducible
+      s = rng->uniform(); // random and irreproducible 64-bits
+    }
+    rng->setSeed(s);
+
     // JAH 20160711 save the seed for the rng
     rngSeed = s;
 
