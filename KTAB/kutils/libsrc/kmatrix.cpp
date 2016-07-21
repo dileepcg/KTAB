@@ -423,6 +423,18 @@ namespace KBase {
     return idm;
   }
 
+  bool iMatP(const KMatrix & m) {
+    const unsigned int nr = m.numR();
+    bool okP = (nr == m.numC());
+    if (okP) {
+      const double tol = 1E-10;
+      // tolerable round-off error on a [0,1] range
+      const KMatrix im = iMat(nr);
+      okP = (norm(m - im) < tol);
+    }
+    return okP;
+  }
+    
   // return y to min |y-x| s.t. perpendicular(y,p)
   KMatrix makePerp(const KMatrix & x, const KMatrix & p) {
     double lambda = dot(x,p) / dot(p,p);

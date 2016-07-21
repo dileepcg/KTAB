@@ -13,7 +13,7 @@ decl {\#include <stdlib.h>} {public local
 decl {\#include "kutils.h"} {public local
 } 
 
-decl {\#include "kgraph.h"} {selected public local
+decl {\#include "kgraph.h"} {public local
 } 
 
 comment {
@@ -27,7 +27,7 @@ class CSMain {
   } {
     Fl_Window mainWindow {
       label {Committee Selection} open
-      xywh {140 280 990 590} type Double resizable size_range {1000 600 0 0} visible
+      xywh {75 54 990 615} type Double resizable size_range {500 300 0 0} visible
     } {
       Fl_Menu_Bar {} {
         xywh {0 0 990 25}
@@ -44,12 +44,12 @@ exit(0);}
           }
         }
       }
-      Fl_Group {} {open
-        xywh {0 45 145 540} box THIN_DOWN_BOX
+      Fl_Group {} {
+        xywh {0 45 145 565} box THIN_DOWN_BOX
       } {
         Fl_Group {} {
           label {Voting Rules} open
-          xywh {10 75 125 135} box THIN_DOWN_BOX
+          xywh {10 75 125 160} box THIN_DOWN_BOX
         } {
           Fl_Round_Button btnVRBin {
             label Binary
@@ -71,65 +71,69 @@ exit(0);}
             label Cubic
             xywh {20 181 100 20} type Radio down_box ROUND_DOWN_BOX
           }
+          Fl_Round_Button btnVRAsymProsp {
+            label Prospect
+            tooltip {Asymmetric voting} xywh {20 205 100 20} type Radio down_box ROUND_DOWN_BOX
+          }
         }
         Fl_Group {} {
           label {Victory Prob} open
-          xywh {10 236 120 89} box THIN_DOWN_BOX
+          xywh {10 271 120 89} box THIN_DOWN_BOX
         } {
           Fl_Round_Button btnVPLin {
             label Linear
-            xywh {15 245 100 20} type Radio down_box ROUND_DOWN_BOX value 1
+            xywh {15 280 100 20} type Radio down_box ROUND_DOWN_BOX value 1
           }
           Fl_Round_Button btnVPQuad {
             label Quadratic
-            xywh {15 270 100 20} type Radio down_box ROUND_DOWN_BOX
+            xywh {15 305 100 20} type Radio down_box ROUND_DOWN_BOX
           }
           Fl_Round_Button btnVPQrtc {
             label Quartic
-            xywh {15 295 100 20} type Radio down_box ROUND_DOWN_BOX
+            xywh {15 330 100 20} type Radio down_box ROUND_DOWN_BOX
           }
         }
         Fl_Group {} {
           label Selection open
-          xywh {10 355 120 60} box THIN_DOWN_BOX
+          xywh {10 390 120 60} box THIN_DOWN_BOX
         } {
           Fl_Round_Button btnSelCP {
             label {C. Position}
-            xywh {15 360 100 20} type Radio down_box ROUND_DOWN_BOX
+            xywh {15 395 100 20} type Radio down_box ROUND_DOWN_BOX
           }
           Fl_Round_Button btnSelEU {
             label {Exp. Utility}
-            xywh {15 385 100 20} type Radio down_box ROUND_DOWN_BOX value 1
+            xywh {15 420 100 20} type Radio down_box ROUND_DOWN_BOX value 1
           }
         }
         Fl_Counter numPartyCounter {
           label Parties
-          xywh {25 440 90 20} type Simple align 1 minimum 2 maximum 6 step 1 value 4
+          xywh {25 475 90 20} type Simple align 1 minimum 2 maximum 6 step 1 value 4
         }
         Fl_Counter numDimCounter {
           label Issues
-          xywh {25 480 90 20} type Simple align 1 minimum 1 maximum 7 step 1 value 4
+          xywh {25 515 90 20} type Simple align 1 minimum 1 maximum 7 step 1 value 4
         }
         Fl_Value_Input prngSeedInput {
           label PRNG
-          xywh {10 520 120 20} align 1
+          xywh {10 555 120 20} align 1
         }
         Fl_Button {} {
           label {Reset Scenario}
-          xywh {10 550 120 20}
+          xywh {10 585 120 20}
         }
       }
       Fl_Table {} {
         label {Desired Position} open
-        xywh {160 45 400 155}
+        xywh {160 45 400 160}
       } {}
       Fl_Table {} {
         label Salience open
-        xywh {160 235 395 155}
+        xywh {160 247 395 160}
       } {}
       Fl_Table {} {
         label {Outcome Positions (Central)} open
-        xywh {155 425 400 155}
+        xywh {155 450 400 160}
       } {}
       Fl_Table {} {
         label {Committe Positions (Central)} open

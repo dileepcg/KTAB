@@ -84,13 +84,14 @@ namespace DemoSMP {
     return sfn;
   };
 
-  void demoEUSpatial(unsigned int numA, unsigned int sDim, uint64_t s, PRNG* rng) {
+  void demoEUSpatial(unsigned int numA, unsigned int sDim, bool accP, uint64_t s, PRNG* rng) {
     printf("Using PRNG seed: %020llu \n", s);
-    rng->setSeed(s);
+    auto md0 = new SMPModel(rng, "", s); // JAH 20160711 added rng seed
+    //rng->setSeed(s); // seed is now set in Model::Model
     if (0 == numA) {
       double lnMin = log(4);
-      double lnMax = log(40);
-      // median is 13 = round(12.65), where 12.65 = exp( [log(4)+log(40)] /2 )
+      double lnMax = log(25);
+      // median is 10  = exp( [log(4)+log(25)] /2 ) = sqrt(4*25)
       double na = exp(rng->uniform(lnMin, lnMax));
       numA = ((unsigned int)(na + 0.5)); // i.e. [5,10] inclusive
     }
@@ -117,7 +118,6 @@ namespace DemoSMP {
     // typical first shifts are on the order of numAct/10, so this is low
     // enough not to affect anything while guarding against the theoretical
     // possiblity of 0/0 errors
-    auto md0 = new SMPModel(rng, "", s); // JAH 20160711 added rng seed
     md0->stop = [maxIter](unsigned int iter, const State * s) {
       return (maxIter <= iter);
     };
@@ -135,6 +135,8 @@ namespace DemoSMP {
 
     SMPState* st0 = new SMPState(md0);
     md0->addState(st0); // now state 0 of the history
+    
+   
 
     st0->step = [st0]() {
       return st0->stepBCN();
@@ -176,8 +178,23 @@ namespace DemoSMP {
       printf("Risk attitude: %+.4f \n", ri);
       cout << endl;
     }
-
-
+    
+    auto aMat = KBase::iMat(md0->numAct);
+    if (accP) {
+      cout << "Using randomized matrix for ideal-accomodation"<<endl<<flush;
+      for (unsigned int i=0; i<md0->numAct; i++) {
+        aMat(i,i) = rng->uniform(0.1, 0.5); // make them lag noticably
+      }
+    }
+    else {
+      cout << "Using identity matrix for ideal-accomodation"<<endl<<flush;
+    }
+    cout << "Accomodate matrix:"<<endl;
+    aMat.mPrintf(" %.3f ");
+    cout << endl;
+    
+    st0->setAccomodate(aMat);
+    st0->idealsFromPstns();
     st0->setUENdx();
     st0->setAUtil(-1, ReportingLevel::Silent);
     st0->setNRA(); // TODO: simple setting of NRA
@@ -312,7 +329,8 @@ int main(int ac, char **av) {
   auto sTime = KBase::displayProgramStart(DemoSMP::appName, DemoSMP::appVersion);
   uint64_t seed = dSeed;
   bool run = true;
-  bool euSmpP = true; // debugging with Visual Studio
+  bool euSmpP = false; 
+  bool randAccP = false;
   bool csvP = false;
   string inputCSV = "";
 
@@ -322,6 +340,7 @@ int main(int ac, char **av) {
     printf("Usage: specify one or more of these options\n");
     printf("--help            print this message\n");
     printf("--euSMP           exp. util. of spatial model of politics\n");
+    printf("--ra              randomize the adjustment of ideal points with euSMP \n");
     printf("--csv <f>         read a scenario from CSV\n");
     printf("--seed <n>        set a 64bit seed\n");
     printf("                  0 means truly random\n");
@@ -344,6 +363,9 @@ int main(int ac, char **av) {
       }
       else if (strcmp(av[i], "--euSMP") == 0) {
         euSmpP = true;
+      }
+      else if (strcmp(av[i], "--ra") == 0) {
+        randAccP = true;
       }
       else if (strcmp(av[i], "--help") == 0) {
         run = false;
@@ -370,7 +392,7 @@ int main(int ac, char **av) {
   // seed required to reproduce the bug.
   if (euSmpP) {
     cout << "-----------------------------------" << endl;
-    DemoSMP::demoEUSpatial(0, 0, seed, rng);
+    DemoSMP::demoEUSpatial(0, 0, randAccP, seed, rng);
   }
   if (csvP) {
     cout << "-----------------------------------" << endl;

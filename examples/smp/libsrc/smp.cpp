@@ -61,6 +61,32 @@ namespace SMPLib {
   const unsigned int sqlBuffSize = 250;
 
   // --------------------------------------------
+string bModName(const SMPBargnModel& bMod) {
+  string rs = "Unrecognized SMPBargnModel";
+  switch (bMod) {
+    case SMPBargnModel::InitOnlyInterpSMPBM:
+      rs = "InitOnlyInterpSMPBM";
+      break;
+      
+    case SMPBargnModel::InitRcvrInterpSMPBM:
+      rs = "InitRcvrInterpSMPBM";
+      break;
+      
+    case SMPBargnModel::PWCompInterSMPBM:
+      rs = "PWCompInterSMPBM";
+      break;
+    default:
+    cout << "bModName: Unrecognized SMPBargnModel"<<endl<<flush;
+    break;
+}
+  return rs;
+}
+
+ostream& operator<< (ostream& os, const SMPBargnModel& bMod) {
+    os << bModName(bMod);
+    return os;
+}
+  // --------------------------------------------
 
   BargainSMP::BargainSMP(const SMPActor* ai, const SMPActor* ar, const VctrPstn & pi, const VctrPstn & pr) {
     assert(nullptr != ai);
@@ -134,10 +160,11 @@ namespace SMPLib {
     vSal = (s * vSal) / sum(vSal);
     assert(fabs(s - sum(vSal)) < 1E-4);
 
-    // I could randomly assign different voting rules
-    // to different actors, but that would just be too cute.
+    // Note that we randomly assign different voting rules
     vr = VotingRule::Proportional;
-
+    const unsigned int vrNum = ((unsigned int) (rng->uniform(0.0, KBase::NumVotingRule-0.01)));
+    vr = VotingRule(vrNum);
+    //cout << "Voting rule " << vrNum << "  " << vr << endl;
     return;
   }
 
@@ -251,25 +278,29 @@ namespace SMPLib {
     accomodate = KMatrix();
   }
 
-  void SMPState::setVDiff(const vector<VctrPstn> & vpos) {
-    auto dfn = [vpos, this](unsigned int i, unsigned int j) {
+  void SMPState::setVDiff(const vector<VctrPstn> & vPos) {
+    auto dfn = [vPos, this](unsigned int i, unsigned int j) {
       auto ai = ((const SMPActor*)(model->actrs[i]));
       KMatrix si = ai->vSal;
       auto posJ = ((const VctrPstn*)(pstns[j]));
       double dij = 0.0;
-      if (0 == vpos.size()) {
+      if (0 == vPos.size()) {
         auto posI = ((const VctrPstn*)(pstns[i]));
-        //auto idlI = ideals[i];
-        dij = SMPModel::bvDiff((*posI) - (*posJ), si);
+        auto idlI = ideals[i];
+        //dij = SMPModel::bvDiff((*posI) - (*posJ), si);
+        dij = SMPModel::bvDiff(idlI - (*posJ), si);
       }
       else {
-        auto vpi = vpos[i];
+        auto vpi = vPos[i];
         dij = SMPModel::bvDiff(vpi - (*posJ), si);
       }
       return dij;
     };
 
     const unsigned int na = model->numAct;
+    assert (na == ideals.size());
+    assert (na == accomodate.numR());
+    assert (na == accomodate.numC());
     vDiff = KMatrix::map(dfn, na, na);
     return;
   }
@@ -521,6 +552,18 @@ namespace SMPLib {
     const double ri = nra(i, 0);
     return ri;
   }
+  
+  
+  
+  void  SMPState::setAccomodate(const KMatrix & aMat) {
+    const unsigned int na = model->numAct;
+    assert(Model::minNumActor <= na);
+    assert(na <= Model::maxNumActor);
+    assert (na == aMat.numR());
+    assert (na == aMat.numC());
+    accomodate = aMat;
+    return;
+  }
 
   void SMPState::addPstn(Position* ap) {
     auto sp = (VctrPstn*)ap;
@@ -575,7 +618,6 @@ namespace SMPLib {
     };
     return s2;
   }
-
 
 
   SMPState* SMPState::doBCN() const {
@@ -716,7 +758,7 @@ namespace SMPLib {
         model->sqlBargainEntries(t, brgnJIJ->getID(), i, i, i, bestEU);
         model->sqlBargainEntries(t, brgnIIJ->getID(), i, i, j, bestEU);
 
-
+        cout << "Using "<<bMod<<" to form proposed bargains" << endl;
         switch (bMod) {
         case SMPBargnModel::InitOnlyInterpSMPBM:
           // record the only one used into SQLite
@@ -950,27 +992,24 @@ namespace SMPLib {
     // TODO: this really should do all the assessment: ueIndices, rnProb, all U^h_{ij}, raProb
     s2->setUENdx();
 
-    // TODO: setup ideals and accomodate, so newIdeals can be called
-    // for now, just copy them
-    if (0 == ideals.size()) { // nothing to copy
-      s2->setupAccomodateMatrix(1.000);
-      s2->idealsFromPstns(); // set s2's current ideals to s2's current positions
-      s2->newIdeals(); // adjust toward new ones 
-
-      double ipDist = s2->posIdealDist(ReportingLevel::Medium);
-      printf("rms (pstn, ideal) = %.5f \n", ipDist);
-      cout << flush;
+  
+    if (0 == accomodate.numC()) { // nothing to copy
+      s2->setAccomodate(1.0); // set to identity matrix
     }
     else {
       s2->accomodate = accomodate;
-      s2->ideals = ideals; // copy s1's old ideals
-      s2->newIdeals(); // adjust s2 ideals toward new ones
-
-      double ipDist = s2->posIdealDist(ReportingLevel::Medium);
-      printf("rms (pstn, ideal) = %.5f \n", ipDist);
-      cout << flush;
-
     }
+    
+    if (0 == ideals.size()) { // nothing to copy
+      s2->idealsFromPstns(); // set s2's current ideals to s2's current positions
+    }
+    else {
+      s2->ideals = ideals; // copy s1's old ideals
+    }
+    s2->newIdeals(); // adjust s2 ideals toward new ones
+    double ipDist = s2->posIdealDist(ReportingLevel::Medium);
+    printf("rms (pstn, ideal) = %.5f \n", ipDist);
+    cout << flush;
     return s2;
   }
 
@@ -1014,19 +1053,47 @@ namespace SMPLib {
     const double minCltn = 1E-10;
 
     // get h's estimate of the principal actors' contribution to their own contest
-    // h's estimate of i's unilateral influence contribution to (i:j), hence positive
+    
+    // h's estimate of i's unilateral influence contribution to (i:j).
+    // When ideals perfectly track positions, this must be positive
     double contrib_i_ij = Model::vote(vr, si*ci, uii, uij);
-    assert(0 <= contrib_i_ij);
-    contrib_i_ij = minCltn + contrib_i_ij; // definitely positive
-    double chij = contrib_i_ij; // strength of complete coalition supporting i over j
-    assert(0.0 < chij);
-
-    // h's estimate of j's unilateral influence contribution to (i:j), hence negative
+    if (KBase::iMatP(accomodate)) {
+      assert(0 <= contrib_i_ij);
+    }
+    // If not, you could have the ordering (Idl_i, Pos_j, Pos_i)
+    // so that i would prefer j's position over his own.
+    
+   
+    // h's estimate of j's unilateral influence contribution to (i:j).
+    // When ideals perfectly track positions, this must be negative
     double contrib_j_ij = Model::vote(vr, sj*cj, uji, ujj);
-    assert(contrib_j_ij <= 0);
-    contrib_j_ij = minCltn - contrib_j_ij; // definitely positive
-    double chji = contrib_j_ij; // strength of complete coalition supporting j over i
+    if (KBase::iMatP(accomodate)) {
+      assert(contrib_j_ij <= 0);
+    }
+    // Similarly, you could have an ordering like (Idl_j, Pos_i, Pos_j)
+    // so that j would prefer i's position over his own.
+      
+    double chij = minCltn; // strength of complete coalition supporting i over j (initially empty)
+    double chji = minCltn; // strength of complete coalition supporting j over i (initially empty)
+    
+    // add i's contribution to the appropriate coalition
+    if (contrib_i_ij > 0.0) { chij = chij + contrib_i_ij; } 
+    assert(0.0 < chij);
+    
+    if (contrib_i_ij < 0.0) { chji = chji - contrib_i_ij; } 
     assert(0.0 < chji);
+    
+    // add j's contribution to the appropriate coalition
+    if (contrib_j_ij > 0.0) { chij = chij + contrib_j_ij; } 
+    assert(0.0 < chij);
+    
+    if (contrib_j_ij < 0.0) { chji = chji - contrib_j_ij; } 
+    assert(0.0 < chji);
+    
+    // cache those sums
+    contrib_i_ij = chij;
+    contrib_j_ij = chji;
+    
 
     const unsigned int na = model->numAct;
 
@@ -1313,23 +1380,21 @@ namespace SMPLib {
     return rmsDist;
   }
 
-  void SMPState::setupAccomodateMatrix(double adjRate) {
+  void SMPState::setAccomodate(double adjRate) {
 
     // a man's gotta know his limits
     // (with apologies to HC)
     assert(0.0 <= adjRate);
     assert(adjRate <= 1.0);
     const unsigned int na = model->numAct;
-    assert(Model::minNumActor <= na);
-    assert(na <= Model::maxNumActor);
 
-    printf("WARNING: setting SMPState::accomodate to %.3f * identity matrix \n", adjRate);
+    printf("Setting SMPState::accomodate to %.3f * identity matrix \n", adjRate);
 
     // A standard Identity matrix is helpful here because it 
     // should keep the behavior same as the original "cynical" model:
     //      ideal_{i,t} := pstn_{i,t}
-    accomodate = adjRate * KBase::iMat(na);
-
+    auto am = adjRate * KBase::iMat(na);
+    setAccomodate(am);
     return;
   }
 
@@ -1924,21 +1989,28 @@ namespace SMPLib {
     // get them into the proper internal scale:
     pos = pos / 100.0;
     sal = sal / 100.0;
+    
+    // TODO: figure out representation of "accomodate" matrix
+    cout << "Setting ideal-accomodation matrix to identity matrix" << endl;
+    auto accM = KBase::iMat(numActor);
 
     // now that it is read and verified, use the data
-    auto sm0 = SMPModel::initModel(actorNames, actorDescs, dNames, cap, pos, sal, rng, s); // JAH 20160711 added rng seed
+    auto sm0 = SMPModel::initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM, rng, s); // JAH 20160711 added rng seed
     return sm0;
   }
 
 
   // JAH 20160711 added rng seed
   SMPModel * SMPModel::initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
-    KMatrix cap, KMatrix pos, KMatrix sal, PRNG * rng, uint64_t s) {
+    const KMatrix & cap, const KMatrix & pos, const KMatrix & sal, 
+    const KMatrix & accM,
+    PRNG * rng, uint64_t s) {
     SMPModel * sm0 = new SMPModel(rng,"",s); // JAH 20160711 added rng seed
     SMPState * st0 = new SMPState(sm0);
     st0->step = [st0]() {
       return st0->stepBCN();
     };
+    
     sm0->addState(st0);
 
 
@@ -1963,6 +2035,9 @@ namespace SMPLib {
       st0->addPstn(vpi);
     }
 
+    st0->setAccomodate(accM);
+    st0->idealsFromPstns();
+    
     return sm0;
   }
 

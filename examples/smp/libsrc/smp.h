@@ -38,6 +38,7 @@
 namespace SMPLib {
 // namespace to which KBase has no access
 using std::function;
+using std::ostream;
 using std::shared_ptr;
 using std::string;
 using std::tuple;
@@ -85,7 +86,8 @@ enum class SMPBargnModel {
   InitRcvrInterpSMPBM,   // Init interpolates, so does Rcvr, each both from other
   PWCompInterSMPBM       // Power-weighted compromise of I-interp and R-interp, I&R both get same one
 };
-
+string bModName(const SMPBargnModel& bMod);
+ostream& operator<< (ostream& os, const SMPBargnModel& bMod);
 
 // -------------------------------------------------
 // Trivial, SMP-like actor with fixed attributes
@@ -153,9 +155,13 @@ public:
     virtual ~SMPState();
 
     // Calculate the weighted-Euclidean distance matrix, compared to the given positions.
-    // If none are provided, it will compare to the ideals in this state.
+    //
+    // If none are provided, it will compare ideals to the postions in this state:
     // vDiff(i,j) = distance from i's ideal to j's position, using i's salience-weights.
-    virtual void setVDiff(const vector<VctrPstn> & vpos = {});
+    //
+    // If vPos provided, it will compare those to the positions in this state:
+    // vDiff(i,j) = distance from vPos[i] to j's position, using i's salience-weights.
+    virtual void setVDiff(const vector<VctrPstn> & vPos = {});
 
     // returns h's estimate of i's risk attitude, using the risk-adjustment-rule
     double estNRA(unsigned int h, unsigned int i, BigRAdjust ra) const;
@@ -189,6 +195,17 @@ public:
     SMPBargnModel bMod = SMPBargnModel::PWCompInterSMPBM;
       // PWCompInterSMPBM, InitOnlyInterpSMPBM or InitRcvrInterpSMPBM; 
 
+    
+    void setAccomodate(double adjRate = 1.0);
+    // set ideal-accomodation matrix to scaled identity matrix, for current number of actors
+    
+    void setAccomodate(const KMatrix & aMat);
+    // set ideal-accomodation matrix to given matrix
+
+    // initialize the actors' ideals from the given list of VctrPstn. 
+    // If the list is omitted or empty, it uses their current positions
+    void idealsFromPstns(const vector<VctrPstn> &  ps = {});
+    
 protected:
 
     // this sets the values in all the AUtil matrices
@@ -223,10 +240,6 @@ protected:
     // rest the new ideal points, based on other's positions and one's old ideal point
     void newIdeals();
 
-    // initialize the actors' ideals from the given list of VctrPstn. 
-    // If the list is omitted or empty, it uses their current positions
-    void idealsFromPstns(const vector<VctrPstn> &  ps = {});
-
     // return RMS distance between ideals and positions
     double posIdealDist(ReportingLevel rl = ReportingLevel::Silent) const;
     
@@ -247,7 +260,9 @@ public:
     static SMPModel * readCSV(string fName, PRNG * rng, uint64_t s); // JAH 20160711 added rng seed
 
     static  SMPModel * initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
-                                 KMatrix cap, KMatrix pos, KMatrix sal, PRNG * rng, uint64_t s); // JAH 20160711 added rng seed
+                                 const KMatrix & cap, const KMatrix & pos, const KMatrix & sal, 
+                                 const KMatrix & accM, // 20160720 BPW added accomodation matrix
+                                 PRNG * rng, uint64_t s); // JAH 20160711 added rng seed
 
     // print history of each actor in CSV (might want to generalize to arbitrary VctrPstn)
     void showVPHistory(bool sqlP) const;

@@ -49,7 +49,7 @@ const string appVersion = "0.1";
 // -------------------------------------------------
 
 void demoActorUtils(uint64_t s, PRNG* rng);
-void demoEUSpatial(unsigned int numA, unsigned int sDim, uint64_t s, PRNG* rng);
+void demoEUSpatial(unsigned int numA, unsigned int sDim, bool accP, uint64_t s, PRNG* rng);
 
 
 }; // end of namespace
