@@ -837,7 +837,7 @@ namespace SMPLib {
       assert(uAvrg <= 1.0); // can not all be over 1.0
       return uAvrg;
     };
-    // end of Î»-fn
+    // end of λ-fn
 
 
    // The key is to build the usual matrix of U_ai (Brgn_m) for all bargains in brgns[k],
