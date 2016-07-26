@@ -140,6 +140,7 @@ include_directories (
 # note that we do not put the csv_parser into smp lib.
 set(SMPLIB_SRCS
     ${PROJECT_SOURCE_DIR}/libsrc/smp.cpp
+    ${PROJECT_SOURCE_DIR}/libsrc/smpbcn.cpp
     ${PROJECT_SOURCE_DIR}/libsrc/smpsql.cpp
     )
 
