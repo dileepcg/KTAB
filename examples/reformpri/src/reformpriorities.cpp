@@ -1,4 +1,4 @@
-// --------------------------------------------
+﻿// --------------------------------------------
 // Copyright KAPSARC. Open source MIT License.
 // --------------------------------------------
 // The MIT License (MIT)
@@ -232,7 +232,7 @@ int main(int ac, char **av) {
     printf("\n");
   };
 
-  // a list of <keyword, description, lambda-fn>
+  // a list of <keyword, description, λ-fn>
   // might be enough to do this - except for the arguments to options.
   if (ac > 1) {
     for (int i = 1; i < ac; i++) {

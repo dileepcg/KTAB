@@ -299,6 +299,9 @@ namespace DemoSMP {
       return (maxIter <= iter);
     };
     md0->stop = smpStopFn(minIter, maxIter, minDeltaRatio, minSigDelta);
+
+    // JAH 20160724 store the scenario information
+    md0->sqlScenarioDesc();
    
     cout << "Starting model run" << endl << flush;
     md0->run();
