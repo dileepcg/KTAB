@@ -27,9 +27,7 @@
 #include <time.h>
 #include "kmodel.h"
 
-//#ifdef WIN32
-//#define localtime_r(_Time, _Tm) localtime_s(_Tm, _Time)
-//#endif
+ 
 namespace KBase {
 
 using std::cout;
@@ -52,13 +50,10 @@ Model::Model(PRNG * r, string desc, uint64_t s) {
     std::chrono::time_point<std::chrono::system_clock> st;
     st = std::chrono::system_clock::now();
     std::time_t start_time = std::chrono::system_clock::to_time_t(st);
-	 
-	 
-	/*tm localTime;
-	localtime_r(&start_time, &localTime);*/
+	printf("Using PRNG seed: %020llu \n", s);
 
 	const std::chrono::duration<double> tse = st.time_since_epoch();
-	std::chrono::seconds::rep milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(tse).count() % 1000;
+	std::chrono::seconds::rep microSeconds = std::chrono::duration_cast<std::chrono::microseconds >(tse).count() % 1000000;
 
 
 	auto utcBuffId = newChars(500);
@@ -72,7 +67,7 @@ Model::Model(PRNG * r, string desc, uint64_t s) {
         scenName = utcBuff;
 	    // Scenario Id Generation  include the microsecond
 		 
-		sprintf(utcBuffId, "%s_%u", utcBuff, milliseconds);
+		sprintf(utcBuffId, "%s_%u", utcBuff, microSeconds);
 	 
         delete utcBuff;
         utcBuff = nullptr;
@@ -81,7 +76,8 @@ Model::Model(PRNG * r, string desc, uint64_t s) {
     else
     {
         scenName = desc;
-		sprintf(utcBuffId, "%s_%u", desc.c_str(), milliseconds);
+         sprintf(utcBuffId, "%s_%u", desc.c_str(), microSeconds);
+
 	}
 	//get the hash
 	uint64_t scenIdhash = (std::hash < std::string> () (utcBuffId))   ;
@@ -288,6 +284,9 @@ string vrName(const VotingRule& vr) {
     case VotingRule::Cubic:
         vrn = "Cubic";
         break;
+    case VotingRule::ASymProsp:
+         vrn = "ASymProsp";
+         break;
     default:
         throw KException("vrName - Unrecognized VotingRule");
         break;
@@ -473,6 +472,15 @@ double Model::vote(VotingRule vr, double wi, double uij, double uik) {
 
     case VotingRule::Cubic:
         v = wi * rCubic;
+        break;
+        
+    case VotingRule::ASymProsp:
+      if (rProp < 0.0) {
+        v = wi * rProp;
+      }
+      if (0.0 < rProp) {
+        v = (2.0 * wi * rProp)/ 3.0;
+      }
         break;
 
     default:
@@ -716,7 +724,8 @@ KMatrix Model::scalarPCE(unsigned int numAct, unsigned int numOpt, const KMatrix
             cout << flush;
             cout << "Utility to actors of options: " << endl;
             u.mPrintf(" %+8.3f ");
-            cout << endl;
+            cout << endl << flush;
+            //assert(false);
 
             auto vfn = [vr, &w, &u](unsigned int k, unsigned int i, unsigned int j) {
                 double vkij = vote(vr, w(0, k), u(k, i), u(k, j));

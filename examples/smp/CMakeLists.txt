@@ -24,8 +24,9 @@ set(CMAKE_BUILD_TYPE Debug)
 set(LIBRARY_OUTPUT_PATH      ${PROJECT_SOURCE_DIR}/)
 set(EXECUTABLE_OUTPUT_PATH   ${PROJECT_SOURCE_DIR}/)
 
-set (ENABLE_FLTK_GUI false CACHE  BOOL "Build app with FLTK GUI")
-set (ENABLE_QT_GUI false CACHE  BOOL "Build app with QT GUI")
+set (ENABLE_FLTK_GUI true CACHE  BOOL "Build app with FLTK GUI")
+set (ENABLE_QT_GUI true CACHE  BOOL "Build app with QT GUI")
+set (ENABLE_COPY_QT_LIBS false CACHE  BOOL "Copy Qt LIBS after build")
 
 if (UNIX)
     set (ENABLE_EFFCPP false CACHE  BOOL "Check Effective C++ Guidelines")
@@ -238,78 +239,41 @@ target_link_libraries (smpc
 
 if(ENABLE_QT_GUI)
 
-    set (QCUSTOMPLOT_PATHS
-        ${PROJECT_SOURCE_DIR}/../../qcustomplot/
-        )
+    find_package(smpq)
+    if(NOT SMPQ_FOUND)
+        message(FATAL_ERROR "Could not find SMPQ")
+    endif(NOT SMPQ_FOUND)
 
-    find_path(QCUSTOMPLOT_DIR qcustomplot.h
-        PATHS ${QCUSTOMPLOT_PATHS}
-        )
+    set(CMAKE_PREFIX_PATH ${PREFIX_PATH})
+    message(STATUS "CMAKE_PREFIX_PATH" ${CMAKE_PREFIX_PATH})
 
-    if(QCUSTOMPLOT_DIR)
-        message(STATUS "Found qcustomplot headers: ${QCUSTOMPLOT_DIR}")
-    endif(QCUSTOMPLOT_DIR)
-
-    if(NOT QCUSTOMPLOT_DIR)
-        message(FATAL "Could not find qcustomplot headers")
-    endif(NOT QCUSTOMPLOT_DIR)
-
-
-    #specifing path to find libraries
-    if(WIN32)
-        set(CMAKE_PREFIX_PATH "C:\\Qt\\Qt5.6.0\\5.6\\mingw49_32\\lib\\cmake")
-    elseif(UNIX)
-        set(CMAKE_PREFIX_PATH "/home/arunsathvik/Qt5.6.0/5.6/gcc_64/lib/cmake")
-    endif(WIN32)
-
-    #adding qt libraries
     find_package(Qt5 REQUIRED COMPONENTS Widgets Core Sql PrintSupport)
 
-    #manually adding files to the variables
-    set (QtProjectLib_src ../../examples/smp/SMPQ/mainwindow.cpp
-        ../../examples/smp/SMPQ/csv.cpp
-        ../../examples/smp/SMPQ/database.cpp
-        ${QCUSTOMPLOT_DIR}/qcustomplot.cpp
-        ../../examples/smp/SMPQ/customgraph.cpp)
-
-    set (QtProjectLib_hdr ../../examples/smp/SMPQ/mainwindow.h
-        ../../examples/smp/SMPQ/csv.h
-        ../../examples/smp/SMPQ/database.h
-        ${QCUSTOMPLOT_DIR}/qcustomplot.h)
-
-    set (QtProjectLib_ui  ../../examples/smp/SMPQ/mainwindow.ui)
-    set (QtProjectBin_src ../../examples/smp/SMPQ/main.cpp)
-    set (QtProjectRsc_qrc ../../examples/smp/SMPQ/dockwidgets.qrc)
-
-    # qt5_wrap_cpp is used to create moc files of the cpp files
     qt5_wrap_cpp(QtProjectLib_hdr_moc ${QtProjectLib_hdr})
-    # qt5_wrap_ui is used to create code from ui files
     qt5_wrap_ui(QtProjectLib_ui_uic ${QtProjectLib_ui})
-    # qt5_wrd_resources is used to add resources from qrc file
     qt5_add_resources(QtProjectLib_qrc_rcc ${QtProjectRsc_qrc})
 
-    #including source and binary directories
     include_directories (${PROJECT_SOURCE_DIR})
     include_directories (${PROJECT_BINARY_DIR})
 
-    add_library (QtProjectLib STATIC
-        ${QtProjectLib_src}# adding source files of source directory to the library
-        ${QtProjectLib_hdr_moc}# adding the moc files generated using header files to the library
-        ${QtProjectLib_qrc_rcc} # adding the rcc files generated using qrc files to the library
-        ${QtProjectLib_ui_uic}) # adding the uic files generated using ui files to the library
+    add_library (QtProjectLib STATIC ${QtProjectLib_src} ${QtProjectLib_hdr_moc} ${QtProjectLib_qrc_rcc}
+        ${QtProjectLib_ui_uic})
 
-    target_link_libraries (QtProjectLib Qt5::Core)
-    target_link_libraries (QtProjectLib Qt5::Gui)
-    target_link_libraries (QtProjectLib Qt5::Widgets)
-    target_link_libraries (QtProjectLib Qt5::Sql)
-    target_link_libraries (QtProjectLib Qt5::PrintSupport)
+    target_link_libraries (QtProjectLib Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Sql Qt5::PrintSupport)
 
-    add_executable(smpq ${QtProjectBin_src})
+    # WIN32 to suppress the console window under Windows
+    add_executable(smpq WIN32 ${QtProjectBin_src})
 
-    #to link a library to the executable
     target_link_libraries (smpq QtProjectLib)
 
+    if(ENABLE_COPY_QT_LIBS AND WIN32)
+        add_custom_command(TARGET smpq POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${EXECUTABLE_OUTPUT_PATH}smpq.exe ${EXECUTABLE_OUTPUT_PATH}smpq_bin)
+        find_package(qtdlls)
+    endif(ENABLE_COPY_QT_LIBS AND WIN32)
+
 endif (ENABLE_QT_GUI)
+
 #------------------------------------------------------------------
 
 # show some useful status/debugging information

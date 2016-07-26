@@ -126,15 +126,16 @@ void MainWindow::dbGetFilePAth(bool bl)
     if(!dbPath.isEmpty())
     {
         disconnect(scenarioComboBox,SIGNAL(currentIndexChanged(QString)),this,SLOT(scenarioComboBoxValue(QString)));
+        disconnect(turnSlider,SIGNAL(valueChanged(int)),this,SLOT(sliderStateValueToQryDB(int)));
         scenarioComboBox->clear();
         connect(scenarioComboBox,SIGNAL(currentIndexChanged(QString)),this,SLOT(scenarioComboBoxValue(QString)));
+        connect(turnSlider,SIGNAL(valueChanged(int)),this,SLOT(sliderStateValueToQryDB(int)));
 
         modeltoDB->clear();
         emit dbFilePath(dbPath);
 
     }
     statusBar()->showMessage(tr(" "));
-
 }
 
 void MainWindow::dbEditGetFilePAth(bool bl)
@@ -170,7 +171,6 @@ void MainWindow::updateScenarioList_ComboBox(QStringList * scenarios)
 
     scenario_box = scenarioComboBox->currentText();
     qDebug() <<scenario_box;
-    turnSlider->setValue(0);
     //    sliderStateValueToQryDB(0);//when new database is opened, start from zero
 }
 
@@ -237,16 +237,16 @@ void MainWindow::insertNewColumnCSV()
         while(((csv_tableWidget->columnCount()-3)/2)!=dimensionsLineEdit->text().toInt()
               && ((csv_tableWidget->columnCount()-3)/2) <= dimensionsLineEdit->text().toInt())
         {
-            if(csv_tableWidget->columnCount()%2==0)
+            if(csv_tableWidget->columnCount()%2!=0)
             {
+                QTableWidgetItem * pos = new QTableWidgetItem("Position");
+                createSeperateColumn(pos);
+
                 QTableWidgetItem * sal = new QTableWidgetItem("Saliance");
                 createSeperateColumn(sal);
             }
             else
-            {
-                QTableWidgetItem * pos = new QTableWidgetItem("Position");
-                createSeperateColumn(pos);
-            }
+                return;
         }
     }
     else if(tableType=="CSV")
@@ -254,16 +254,16 @@ void MainWindow::insertNewColumnCSV()
         while(((modeltoCSV->columnCount()-3)/2)!=dimensionsLineEdit->text().toInt()
               && ((modeltoCSV->columnCount()-3)/2) <= dimensionsLineEdit->text().toInt())
         {
-            if(modeltoCSV->columnCount()%2==0)
+            if(modeltoCSV->columnCount()%2!=0)
             {
+                modeltoCSV->insertColumns(modeltoCSV->columnCount(),1);
+                modeltoCSV->setHorizontalHeaderItem(modeltoCSV->columnCount()-1,new QStandardItem("Position"));
+
                 modeltoCSV->insertColumns(modeltoCSV->columnCount(),1);
                 modeltoCSV->setHorizontalHeaderItem(modeltoCSV->columnCount()-1,new QStandardItem("Salience"));
             }
             else
-            {
-                modeltoCSV->insertColumns(modeltoCSV->columnCount(),1);
-                modeltoCSV->setHorizontalHeaderItem(modeltoCSV->columnCount()-1,new QStandardItem("Position"));
-            }
+                return;
 
         }
     }
@@ -385,7 +385,9 @@ void MainWindow::setDBItemModelEdit(/*QSqlTableModel *modelEdit*/)
         dimensionsPushButton->setEnabled(true);
         donePushButton->setEnabled(true);
 
+        QString currentScenario = scenarioComboBox->currentText();
         scenarioComboBox->clear();
+        scenarioComboBox->addItem(currentScenario);
         scenarioDescriptionLineEdit->clear();
 
         scenarioComboBox->setEditable(true);
@@ -625,12 +627,10 @@ void MainWindow::initializeCentralViewFrame()
     connect(scenarioComboBox,SIGNAL(currentIndexChanged(QString)),this,SLOT(scenarioComboBoxValue(QString)));
 
     turnSlider = new QSlider(Qt::Horizontal,central);
-    //    turnSlider->setMinimumWidth(40);
-    //    turnSlider->setMaximumWidth(150);
-    //    turnSlider->setFixedWidth(130);
-    //    turnSlider->setTickInterval(1);
+    turnSlider->setTickInterval(1);
+    turnSlider->setTickPosition(QSlider::TicksBothSides);
     turnSlider->setPageStep(1);
-    //gCLayout->addWidget(turnSlider,1,3);
+    turnSlider->setSingleStep(1);
 
     connect(turnSlider,SIGNAL(valueChanged(int)),this,SLOT(sliderStateValueToQryDB(int)));
 
@@ -1270,10 +1270,17 @@ void MainWindow::plotGraph()
 void MainWindow::displayMenu_tableWidget(QPoint pos)
 {
     QMenu menu(this);
-    QAction *rename = menu.addAction("Rename Column Header");
+    QAction *posCol = menu.addAction("Insert Position Column");
+    QAction *salCol = menu.addAction("Insert Salience Column");
+    menu.addSeparator();
+    QAction *newRow = menu.addAction("Insert Row");
+    menu.addSeparator();
     QAction *col = menu.addAction("Remove Column");
     QAction *row = menu.addAction("Remove Row");
+    menu.addSeparator();
+    QAction *rename = menu.addAction("Rename Column Header");
     QAction *act = menu.exec(csv_tableWidget->viewport()->mapToGlobal(pos));
+
     if (act == col)
     {
         if(csv_tableWidget->currentColumn()>2)
@@ -1314,14 +1321,53 @@ void MainWindow::displayMenu_tableWidget(QPoint pos)
             statusBar()->showMessage("No Permission !  You cannot Edit Headers of"
                                      " Actor, Description and Influence Columns");
     }
+
+    if (act == posCol)
+    {
+        if(csv_tableWidget->currentColumn()>2)
+        {
+            csv_tableWidget->insertColumn(csv_tableWidget->currentColumn());
+            csv_tableWidget->setHorizontalHeaderItem(csv_tableWidget->currentColumn()-1,new QTableWidgetItem("Position"));
+            statusBar()->showMessage("Position Column Inserted");
+        }
+        else
+            statusBar()->showMessage("No Permission !  You cannot change"
+                                     " Actor, Description and Influence Columns");
+    }
+
+    if (act == salCol)
+    {
+        if(csv_tableWidget->currentColumn()>2)
+        {
+            csv_tableWidget->insertColumn(csv_tableWidget->currentColumn());
+            csv_tableWidget->setHorizontalHeaderItem(csv_tableWidget->currentColumn()-1,new QTableWidgetItem("Salience"));
+            statusBar()->showMessage("Salience Column Inserted");
+        }
+        else
+            statusBar()->showMessage("No Permission !  You cannot change"
+                                     " Actor, Description and Influence Columns");
+    }
+
+    if(act == newRow)
+    {
+        csv_tableWidget->insertRow(csv_tableWidget->currentRow());
+    }
+
 }
 
 void MainWindow::displayMenu_tableView(QPoint pos)
 {
     QMenu menu(this);
-    QAction *rename = menu.addAction("Rename Column Header");
+    QAction *posCol = menu.addAction("Insert Position Column");
+    QAction *salCol = menu.addAction("Insert Salience Column");
+    menu.addSeparator();
+    QAction *newRow = menu.addAction("Insert Row");
+    menu.addSeparator();
     QAction *col = menu.addAction("Remove Column");
     QAction *row = menu.addAction("Remove Row");
+    menu.addSeparator();
+    QAction *rename = menu.addAction("Rename Column Header");
+
     QAction *act = menu.exec(csv_tableView->viewport()->mapToGlobal(pos));
 
     if (act == col)
@@ -1364,6 +1410,38 @@ void MainWindow::displayMenu_tableView(QPoint pos)
             statusBar()->showMessage("No Permission !  You cannot Edit Headers of"
                                      " Actor, Description and Influence Columns");
     }
+    if (act == posCol)
+    {
+        if(csv_tableView->currentIndex().column()>2)
+        {
+            modeltoCSV->insertColumn(csv_tableView->currentIndex().column());
+            modeltoCSV->setHeaderData(csv_tableView->currentIndex().column()-1,Qt::Horizontal,"Position");
+            statusBar()->showMessage("Column Inserted, Header changed");
+        }
+        else
+            statusBar()->showMessage("No Permission !  You cannot Edit Headers of"
+                                     " Actor, Description and Influence Columns");
+    }
+
+    if (act == salCol)
+    {
+        if(csv_tableView->currentIndex().column()>2)
+        {
+
+            modeltoCSV->insertColumn(csv_tableView->currentIndex().column());
+            modeltoCSV->setHeaderData(csv_tableView->currentIndex().column()-1,Qt::Horizontal,"Salience");
+            statusBar()->showMessage("Column Inserted, Header changed");
+        }
+        else
+            statusBar()->showMessage("No Permission !  You cannot Edit Headers of"
+                                     " Actor, Description and Influence Columns");
+    }
+
+    if(act == newRow)
+    {
+        modeltoCSV->insertRow(csv_tableView->currentIndex().row());
+    }
+
 }
 
 void MainWindow::actorsName_Description(QList <QString> actorName,QList <QString> actorDescription)

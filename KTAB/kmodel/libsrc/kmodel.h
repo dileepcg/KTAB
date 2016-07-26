@@ -59,10 +59,15 @@ class PRNG;
 class State;
 class Actor;
 
-// How much influence to exert (vote) given a difference in [0,1] utility
+// How much influence to exert (vote) given a difference in [0,1] utility.
+// NOTE WELL: ASymProsp is asymmetric in the sense that v(i:k) + v(k:i) != 0.
+// The response to positive delta-Util is only 2/3 of the response to negative,
+// in line with "prospect theory". It is there largely to ensure that we are
+// ready to handle more realistic asymmetric rules, and not always assume symmetry.
 enum class VotingRule {
-    Binary, PropBin, Proportional, PropCbc, Cubic
+    Binary, PropBin, Proportional, PropCbc, Cubic, ASymProsp
 };
+const unsigned int NumVotingRule = 6;
 string vrName(const VotingRule& vr);
 ostream& operator<< (ostream& os, const VotingRule& vr);
 

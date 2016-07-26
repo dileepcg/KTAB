@@ -57,6 +57,7 @@ namespace KBase {
   KMatrix  inv(const KMatrix & m);
   KMatrix  clip(const KMatrix & m, double xMin, double xMax);
   KMatrix iMat(unsigned int n);
+  bool iMatP(const KMatrix & m);
   KMatrix makePerp(const KMatrix & x, const KMatrix & p);
   KMatrix  joinH(const KMatrix & mL, const KMatrix & mR);
   KMatrix  joinV(const KMatrix & mT, const KMatrix & mB);
