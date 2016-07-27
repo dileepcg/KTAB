@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="smp.xsd">
+  <name>DummyData_3Dim</name>
+  <desc>Dummy scenario to test reading format</desc>
+  <prngSeed>0x89B9E56731783372</prngSeed>
+  <Dimensions>
+    <dName>Pstn1</dName>
+    <dName>Pstn2</dName>
+    <dName>Pstn3</dName>
+  </Dimensions>
+  <Actors>
+    <Actor>
+      <name>SActor-00</name>
+      <description>Random Spatial Actor</description>
+      <capability>102.543</capability>
+      <Position>
+        <dCoord>75.79</dCoord>
+        <dCoord>6.37</dCoord>
+        <dCoord>70.45</dCoord>
+      </Position>
+      <Salience>
+        <dSal>49.53</dSal>
+        <dSal>5.91</dSal>
+        <dSal>28.15</dSal>
+      </Salience>
+    </Actor>
+    <Actor>
+      <name>SActor-01</name>
+      <description>Random Spatial Actor</description>
+      <capability>53.393</capability>
+      <Position>
+        <dCoord>82.72</dCoord>
+        <dCoord>73.5</dCoord>
+        <dCoord>64.0</dCoord>
+      </Position>
+      <Salience>
+        <dSal>30.33</dSal>
+        <dSal>21.22</dSal>
+        <dSal>24.79</dSal>
+      </Salience>
+    </Actor>
+    <Actor>
+      <name>SActor-02</name>
+      <description>Random Spatial Actor</description>
+      <capability>129.643</capability>
+      <Position>
+        <dCoord>82.45</dCoord>
+        <dCoord>90.89</dCoord>
+        <dCoord>0.07</dCoord>
+      </Position>
+      <Salience>
+        <dSal>48.47</dSal>
+        <dSal>13.55</dSal>
+        <dSal>34.62</dSal>
+      </Salience>
+    </Actor>
+    <Actor>
+      <name>SActor-03</name>
+      <description>Random Spatial Actor</description>
+      <capability>75.92</capability>
+      <Position>
+        <dCoord>62.52</dCoord>
+        <dCoord>50.82</dCoord>
+        <dCoord>62.33</dCoord>
+      </Position>
+      <Salience>
+        <dSal>20.76</dSal>
+        <dSal>39.24</dSal>
+        <dSal>22.21</dSal>
+      </Salience>
+    </Actor>
+    <Actor>
+      <name>SActor-04</name>
+      <description>Random Spatial Actor</description>
+      <capability>63.224</capability>
+      <Position>
+        <dCoord>82.34</dCoord>
+        <dCoord>45.77</dCoord>
+        <dCoord>73.31</dCoord>
+      </Position>
+      <Salience>
+        <dSal>40.96</dSal>
+        <dSal>25.43</dSal>
+        <dSal>22.59</dSal>
+      </Salience>
+    </Actor>
+    <Actor>
+      <name>SActor-05</name>
+      <description>Random Spatial Actor</description>
+      <capability>120.048</capability>
+      <Position>
+        <dCoord>84.48</dCoord>
+        <dCoord>33.7</dCoord>
+        <dCoord>88.11</dCoord>
+      </Position>
+      <Salience>
+        <dSal>22.92</dSal>
+        <dSal>39.35</dSal>
+        <dSal>15.42</dSal>
+      </Salience>
+    </Actor>
+    <Actor>
+      <name>SActor-06</name>
+      <description>Random Spatial Actor</description>
+      <capability>54.178</capability>
+      <Position>
+        <dCoord>70.96</dCoord>
+        <dCoord>33.46</dCoord>
+        <dCoord>90.36</dCoord>
+      </Position>
+      <Salience>
+        <dSal>31.75</dSal>
+        <dSal>27.93</dSal>
+        <dSal>26.03</dSal>
+      </Salience>
+    </Actor>
+  </Actors>
+</Scenario>

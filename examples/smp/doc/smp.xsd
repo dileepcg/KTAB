@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="Scenario">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string"/>
+        <xs:element name="desc" type="xs:string"/>
+        <xs:element name="prngSeed" type="xs:string"/>
+        <xs:element ref="ModelParameters" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="Dimensions"  minOccurs="0" maxOccurs="1" />
+        <xs:element ref="Actors"/>
+        <xs:element ref="IdealAdjustment" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ModelParameters">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="StateTransitions" type="xs:string"/>
+        <xs:element name="ResolutionVoting" type="xs:string"/>
+        <xs:element name="ResolutionPCE" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Dimensions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="dName"  minOccurs="1"  maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="dName">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  
+  <xs:element name="Actors">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Actor" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Actor">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string"/>
+        <xs:element name="description" type="xs:string"/>
+        <xs:element name="capability">
+          <xs:simpleType>
+            <xs:restriction base="xs:decimal">
+              <xs:minInclusive value="0.0"/>
+              <xs:maxInclusive value="1000.0"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element ref="Position" />
+        <xs:element ref="Salience" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Position">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="dCoord"  minOccurs="1"  maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="dCoord">
+    <xs:simpleType>
+      <xs:restriction base="xs:decimal">
+        <xs:minInclusive value="0.0"/>
+        <xs:maxInclusive value="100.0"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  
+  <xs:element name="Salience">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="dSal" minOccurs="1"  maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dSal">
+  
+    <xs:simpleType>
+      <xs:restriction base="xs:decimal">
+        <xs:minInclusive value="0.0"/>
+        <xs:maxInclusive value="100.0"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  
+  <xs:element name="IdealAdjustment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="iaPair" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="iaPair">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="adjustingIdeal" type="xs:string"/>
+        <xs:element name="referencePos" type="xs:string"/>
+        <xs:element name="adjust" type="xs:decimal"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

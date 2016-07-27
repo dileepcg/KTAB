@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="smp.xsd">
+  <name>DummyData_3Dim</name>
+  <desc>A very simple test of multi-dim SMP, using psuedonyms</desc>
+  <prngSeed>100</prngSeed>
+  
+  <ModelParameters>
+    <StateTransitions>Deterministic</StateTransitions>
+    <ResolutionVoting>CubicProportional</ResolutionVoting>
+    <ResolutionPCE>Markov</ResolutionPCE>
+  </ModelParameters>
+  
+  <Dimensions>
+    <dName>FirstDim</dName>
+    <dName>SecondDim</dName>
+    <dName>YADN</dName>
+  </Dimensions>
+  
+  <Actors>
+    <Actor>
+      <name>Alice</name>
+      <description>One of the SMP actors</description>
+      <capability>72.2</capability>
+      <Position>
+        <dCoord>42.1</dCoord>
+        <dCoord>15.7</dCoord>
+      </Position>
+      <Salience>
+        <dSal>83.8</dSal>
+        <dSal>97.2</dSal>
+      </Salience>
+    </Actor>
+    
+    <Actor>
+      <name>Bob</name>
+      <description>The second SMP actor</description>
+      <capability>72.2</capability>
+      <Position>
+        <dCoord>42.1</dCoord>
+        <dCoord>15.7</dCoord>
+      </Position>
+      <Salience>
+        <dSal>83.8</dSal>
+        <dSal>97.2</dSal>
+      </Salience>
+    </Actor>
+    
+    <Actor>
+      <name>Carol</name>
+      <description>Third SMP actor</description>
+      <capability>72.2</capability>
+      <Position>
+        <dCoord>42.1</dCoord>
+        <dCoord>15.7</dCoord>
+      </Position>
+      <Salience>
+        <dSal>83.8</dSal>
+        <dSal>97.2</dSal>
+      </Salience>
+    </Actor>
+    
+  </Actors>
+  
+  
+  <IdealAdjustment>
+    <iaPair>
+      <adjustingIdeal>Alice</adjustingIdeal>
+      <referencePos>Alice</referencePos>
+      <adjust>0.87</adjust>
+    </iaPair>
+    <iaPair>
+      <adjustingIdeal>Bob</adjustingIdeal>
+      <referencePos>Bob</referencePos>
+      <adjust>0.75</adjust>
+    </iaPair>
+    <iaPair>
+      <adjustingIdeal>Bob</adjustingIdeal>
+      <referencePos>Alice</referencePos>
+      <adjust>0.07</adjust>
+    </iaPair>
+  </IdealAdjustment>
+</Scenario>
