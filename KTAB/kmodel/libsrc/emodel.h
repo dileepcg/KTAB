@@ -67,7 +67,8 @@ namespace KBase {
   template <class PT>
   class EModel : public Model {
   public:
-    explicit EModel(PRNG * r, string d = "", uint64_t s=0); // JAH 20160711 added rng seed
+    // JAH 20160711 added rng seed 20160730 JAH added sql flags
+    explicit EModel(PRNG * r, string d = "", uint64_t s=0, vector<bool> = {});
     virtual ~EModel();
 
     void setOptions();

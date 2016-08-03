@@ -184,7 +184,8 @@ namespace DemoLeon {
   class LeonModel : public Model {
     friend class LeonActor;
   public:
-    explicit LeonModel(PRNG * r, string d="", uint64_t s=0); // JAH 20160711 added rng seed
+    // JAH 20160711 added rng seed 20160730 JAH added sql flags
+    explicit LeonModel(PRNG * r, string d="", uint64_t s=0, vector<bool> f={});
     virtual ~LeonModel();
 
     // syntheize random, but not-ridiculous, data for a base year

@@ -56,6 +56,7 @@ using KBase::VctrPstn;
 using KBase::VUI;
 using KBase::BigRAdjust;
 using KBase::BigRRange;
+using KBase::KTable; // JAH 20160728
 
 class SMPActor;
 class SMPState;
@@ -250,27 +251,26 @@ protected:
 
 class SMPModel : public Model {
 public:
-    explicit SMPModel(PRNG * rng, string desc = "", uint64_t s=0); // JAH 20160711 added rng seed
+    explicit SMPModel(PRNG * rng, string desc = "", uint64_t s=0, vector<bool> f={}); // JAH 20160711 added rng seed
     virtual ~SMPModel();
+
+    static const unsigned int maxDimDescLen = 256; // JAH 20160727 added
 
     static double bsUtil(double sd, double R);
     static double bvDiff(const KMatrix & vd, const  KMatrix & vs);
     static double bvUtil(const KMatrix & vd, const  KMatrix & vs, double R);
 
-    static SMPModel * readCSV(string fName, PRNG * rng, uint64_t s); // JAH 20160711 added rng seed
+    static SMPModel * readCSV(string fName, PRNG * rng, uint64_t s, vector<bool> f); // JAH 20160711 added rng seed
 
     static  SMPModel * initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
                                  const KMatrix & cap, const KMatrix & pos, const KMatrix & sal, 
                                  const KMatrix & accM, // 20160720 BPW added accomodation matrix
-                                 PRNG * rng, uint64_t s); // JAH 20160711 added rng seed
+                                 PRNG * rng, uint64_t s, vector<bool> f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
 
     // print history of each actor in CSV (might want to generalize to arbitrary VctrPstn)
-    void showVPHistory(bool sqlP) const;
+    void showVPHistory() const;
 
-	void populateSpatialCapabilityTable(bool sqlP) const;
-
-	void populateSpatialSalienceTable(bool sqlP) const;
-	void populateActorDescriptionTable(bool sqlP  ) const;
+	void LogInfoTables(); // JAH 20160731
 
     // output the two files needed to draw Sankey diagrams
     void sankeyOutput(string inputCSV) const;
@@ -283,7 +283,7 @@ public:
 
     static double stateDist(const SMPState* s1, const SMPState* s2);
 
-	static string createSQL(unsigned int n) ;
+    static KTable * createSQL(unsigned int n) ;
 	 
     // this does not set AUtil, just output it to SQLite
     //virtual void sqlAUtil(unsigned int t);
@@ -291,7 +291,8 @@ public:
 protected:
     //sqlite3 *smpDB = nullptr; // keep this protected, to ease multi-threading
     //string scenName = "Scen";
-	static const int NumTables = 3; // TODO : Add one to this num when new table is added
+    static const int NumTables = 4; // TODO : Add one to this num when new table is added
+    static const int NumSQLLogGrps = 0; // TODO : Add one to this num when new logging group is added
 protected:
     // note that the function to write to table #k must be kept
     // synchronized with the result of createTableSQL(k) !

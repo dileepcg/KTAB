@@ -491,7 +491,7 @@ namespace DemoLeon {
 
   // -------------------------------------------------
 
-  LeonModel::LeonModel(PRNG * r, string d, uint64_t s) : Model(r, d, s) {
+  LeonModel::LeonModel(PRNG * r, string d, uint64_t s, vector<bool> f) : Model(r, d, s, f) {
     // some arbitrary yet plausible default values
     maxSub = 0.50;
     maxTax = 1.00;

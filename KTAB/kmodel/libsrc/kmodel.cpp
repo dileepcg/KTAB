@@ -37,14 +37,21 @@ using std::get;
 using std::tuple;
 
 // --------------------------------------------
-// JAH 20160711 added seed
-Model::Model(PRNG * r, string desc, uint64_t s) {
+// JAH 20160711 added seed 20160730 JAH added sql flags
+Model::Model(PRNG * r, string desc, uint64_t s, vector<bool> f) {
     history = vector<State*>();
     actrs = vector<Actor*>();
     numAct = 0;
     stop = nullptr;
     assert(nullptr != r);
     rng = r;
+
+    sqlFlags = f; // JAH 20160730 save the vec of SQL flags
+    printf("SQL Logging Flags\n");
+    for(unsigned int i = 0; i< sqlFlags.size();i++)
+    {
+      printf("Grp %u = %u\n",i,sqlFlags[i] ? 1:0);
+    }
 
     // Record the UTC time so it can be used as the default scenario name
     std::chrono::time_point<std::chrono::system_clock> st;
@@ -120,6 +127,14 @@ Model::~Model() {
     }
     numAct = 0;
     rng = nullptr;
+
+    // JAH 20160802 garbage collect the KTables vector
+    while (0 < KTables.size())
+    {
+        KTable* t = KTables[KTables.size()-1];
+        delete t;
+        KTables.pop_back();
+    }
 }
 
 

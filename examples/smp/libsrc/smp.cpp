@@ -552,12 +552,17 @@ namespace SMPLib {
     };
     gSetup(this);
     int myT = myTurn();
-    model->sqlAUtil(myT);
 
-    //Populate PosEquiv table
-    model->sqlPosEquiv(myT);
-    model->sqlPosProb(myT);
-    model->sqlPosVote(myT);
+    // JAH 20160802 toggle population of PosUtil, PosEquiv, PosVote, and PosBrob
+    // en masse based on value at index 1 of the sqlFlags vector
+    // VectorPosition, which is in this same group, is handled separately
+    if(model->sqlFlags[1])
+    {
+        model->sqlAUtil(myT);
+        model->sqlPosEquiv(myT);
+        model->sqlPosProb(myT);
+        model->sqlPosVote(myT);
+    }
     // That gets recorded upon the next state - but it
     // therefore misses the very last state.
     auto s2 = doBCN();
@@ -754,7 +759,7 @@ namespace SMPLib {
   // -------------------------------------------------
 
   // JAH 20160711 added rng seed
-  SMPModel::SMPModel(PRNG * r, string desc, uint64_t s) : Model(r, desc, s) {
+  SMPModel::SMPModel(PRNG * r, string desc, uint64_t s, vector<bool> f) : Model(r, desc, s, f) {
     // note that numDim, posTol, and dimName are initialized in class declaration
 
     // TODO: get cleaner opening of smpDB
@@ -894,72 +899,92 @@ namespace SMPLib {
     return;
   }
 
-  void SMPModel::showVPHistory(bool sqlP) const {
+  // JAH 20160801 changed to refer to model sqlFlags vector to decide
+  // whether or not to populate the table
+  void SMPModel::showVPHistory() const {
     assert(numAct == actrs.size());
     assert(numDim == dimName.size());
 
-    assert(nullptr != smpDB);
-    char* zErrMsg = nullptr;
+    // first need to get the group ID for this table
+    // so then we can get the flag to populate the table or not
+    // note the implicit assumption that there will never be 43+ groups :-)
+    unsigned int grpID = 42;
+    for (unsigned int t = 0; t<KTables.size(); t++)
+    {
+        if(KTables[t]->tabName=="VectorPosition")
+        {
+            grpID = KTables[t]->tabGrpID;
+            break;
+        }
+    }
+    // be sure that it found this table
+    assert(grpID != 42);
+    assert(grpID < sqlFlags.size());
 
-    createSQL(Model::NumTables + 0); // Make sure VectorPosition table is present
-    auto sqlBuff = newChars(sqlBuffSize); 
-    sprintf(sqlBuff,
-      "INSERT INTO VectorPosition (ScenarioId, Turn_t, Act_i, Dim_k, Coord) VALUES ('%s', ?1, ?2, ?3, ?4)",
-      scenId.c_str());
+    // JAH 20160801 only populate the table if this group is turned on
+    if(sqlFlags[grpID])
+    {
+        assert(nullptr != smpDB);
+        char* zErrMsg = nullptr;
 
-    assert(nullptr != smpDB);
-    const char* insStr = sqlBuff;
-    sqlite3_stmt *insStmt;
-    sqlite3_prepare_v2(smpDB, insStr, strlen(insStr), &insStmt, NULL);
-    assert(nullptr != insStmt); //make sure it is ready
+        //createSQL(Model::NumTables + 0); // Make sure VectorPosition table is present
+        auto sqlBuff = newChars(sqlBuffSize);
+        sprintf(sqlBuff,
+          "INSERT INTO VectorPosition (ScenarioId, Turn_t, Act_i, Dim_k, Coord) VALUES ('%s', ?1, ?2, ?3, ?4)",
+          scenId.c_str());
 
-    // Prepared statements cache the execution plan for a query after the query optimizer has
-    // found the best plan, so there is no big gain with simple insertions.
-    // What makes a huge difference is bundling a few hundred into one atomic "transaction".
-    // For this case, runtime droped from 62-65 seconds to 0.5-0.6 (vs. 0.30-0.33 with no SQL at all).
+        assert(nullptr != smpDB);
+        const char* insStr = sqlBuff;
+        sqlite3_stmt *insStmt;
+        sqlite3_prepare_v2(smpDB, insStr, strlen(insStr), &insStmt, NULL);
+        assert(nullptr != insStmt); //make sure it is ready
 
-    sqlite3_exec(smpDB, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
+        // Prepared statements cache the execution plan for a query after the query optimizer has
+        // found the best plan, so there is no big gain with simple insertions.
+        // What makes a huge difference is bundling a few hundred into one atomic "transaction".
+        // For this case, runtime droped from 62-65 seconds to 0.5-0.6 (vs. 0.30-0.33 with no SQL at all).
 
-    // show positions over time
-    for (unsigned int i = 0; i < numAct; i++) {
-      for (unsigned int k = 0; k < numDim; k++) {
-        printf("%s , %s , ", actrs[i]->name.c_str(), dimName[k].c_str());
-        for (unsigned int t = 0; t < history.size(); t++) {
-          auto st = history[t];
-          auto pit = st->pstns[i];
-          auto vpit = (const VctrPstn*)pit;
-          assert(1 == vpit->numC());
-          assert(numDim == vpit->numR());
-          printf("%5.1f , ", 100 * (*vpit)(k, 0)); // have to print "100.0" sometimes
-          if (sqlP) {
-            int rslt = 0;
-            rslt = sqlite3_bind_int(insStmt, 1, t);
-            assert(SQLITE_OK == rslt);
-            rslt = sqlite3_bind_int(insStmt, 2, i);
-            assert(SQLITE_OK == rslt);
-            rslt = sqlite3_bind_int(insStmt, 3, k);
-            assert(SQLITE_OK == rslt);
-            const double coord = (*vpit)(k, 0);
-            rslt = sqlite3_bind_double(insStmt, 4, coord);
-            assert(SQLITE_OK == rslt);
-            rslt = sqlite3_step(insStmt);
-            assert(SQLITE_DONE == rslt);
-            sqlite3_clear_bindings(insStmt);
-            assert(SQLITE_DONE == rslt);
-            rslt = sqlite3_reset(insStmt);
-            assert(SQLITE_OK == rslt);
+        sqlite3_exec(smpDB, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
+
+        // show positions over time
+        for (unsigned int i = 0; i < numAct; i++) {
+          for (unsigned int k = 0; k < numDim; k++) {
+            printf("%s , %s , ", actrs[i]->name.c_str(), dimName[k].c_str());
+            for (unsigned int t = 0; t < history.size(); t++) {
+              auto st = history[t];
+              auto pit = st->pstns[i];
+              auto vpit = (const VctrPstn*)pit;
+              assert(1 == vpit->numC());
+              assert(numDim == vpit->numR());
+              printf("%5.1f , ", 100 * (*vpit)(k, 0)); // have to print "100.0" sometimes
+              int rslt = 0;
+              rslt = sqlite3_bind_int(insStmt, 1, t);
+              assert(SQLITE_OK == rslt);
+              rslt = sqlite3_bind_int(insStmt, 2, i);
+              assert(SQLITE_OK == rslt);
+              rslt = sqlite3_bind_int(insStmt, 3, k);
+              assert(SQLITE_OK == rslt);
+              const double coord = (*vpit)(k, 0);
+              rslt = sqlite3_bind_double(insStmt, 4, coord);
+              assert(SQLITE_OK == rslt);
+              rslt = sqlite3_step(insStmt);
+              assert(SQLITE_DONE == rslt);
+              sqlite3_clear_bindings(insStmt);
+              assert(SQLITE_DONE == rslt);
+              rslt = sqlite3_reset(insStmt);
+              assert(SQLITE_OK == rslt);
+            }
+            cout << endl;
           }
         }
+
+        sqlite3_exec(smpDB, "END TRANSACTION", NULL, NULL, &zErrMsg);
+        sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
         cout << endl;
-      }
+
+        delete sqlBuff;
+        sqlBuff = nullptr;
     }
-
-    sqlite3_exec(smpDB, "END TRANSACTION", NULL, NULL, &zErrMsg);
-    sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
-    cout << endl;
-
-    delete sqlBuff;
-    sqlBuff = nullptr;
 
     // show probabilities over time.
     // Note that we have to set the aUtil matrices for the last one.
@@ -996,180 +1021,10 @@ namespace SMPLib {
     }
     return;
   }
-  //Populates the SpatialCapability table
-  void SMPModel::populateSpatialCapabilityTable(bool sqlP) const {
-    // verify the actor size
-    assert(numAct == actrs.size());
-    // check the database availability
-    assert(nullptr != smpDB);
-    char* zErrMsg = nullptr;
 
-    createSQL(Model::NumTables + 2); // Make sure SpatialCapability table present
-    auto sqlBuff = newChars(sqlBuffSize);
-    // form sql insert command
-    sprintf(sqlBuff,
-      "INSERT INTO SpatialCapability (ScenarioId, Turn_t, Act_i, Cap) VALUES ('%s', ?1, ?2, ?3)",
-      scenId.c_str());
 
-    assert(nullptr != smpDB);
-    const char* insStr = sqlBuff;
-    sqlite3_stmt *insStmt;
-    // fill the Scenario
-    sqlite3_prepare_v2(smpDB, insStr, strlen(insStr), &insStmt, NULL);
-    assert(nullptr != insStmt); //make sure it is ready
-
-    // Start transctions
-    sqlite3_exec(smpDB, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
-    // for each turn extract the information
-    for (unsigned int t = 0; t < history.size(); t++) {
-      auto st = history[t];
-      // getr the each actor capability value for each turn
-      auto cp = (const SMPState*)history[t];
-      auto caps = cp->actrCaps();
-      for (unsigned int i = 0; i < numAct; i++) {
-        if (sqlP) { // Populate each field
-          int rslt = 0;
-          rslt = sqlite3_bind_int(insStmt, 1, t);
-          assert(SQLITE_OK == rslt);
-          rslt = sqlite3_bind_int(insStmt, 2, i);
-          assert(SQLITE_OK == rslt);
-          rslt = sqlite3_bind_double(insStmt, 3, caps(0, i));
-          assert(SQLITE_OK == rslt);
-          rslt = sqlite3_step(insStmt);
-          assert(SQLITE_DONE == rslt);
-          sqlite3_clear_bindings(insStmt);
-          assert(SQLITE_DONE == rslt);
-          rslt = sqlite3_reset(insStmt);
-          assert(SQLITE_OK == rslt);
-        }
-      }
-    }
-    sqlite3_exec(smpDB, "END TRANSACTION", NULL, NULL, &zErrMsg);
-    sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
-
-    delete sqlBuff;
-    sqlBuff = nullptr;
-
-    return;
-  }
-  //Populates the SpatialSliencetable
-  void SMPModel::populateSpatialSalienceTable(bool sqlP) const {
-    // Verify the actor and dimesnsion
-    assert(numAct == actrs.size());
-    assert(numDim == dimName.size());
-
-    char* zErrMsg = nullptr;
-    createSQL(Model::NumTables + 1); // make sure SpatialSalience table present if not create
-    auto sqlBuff = newChars(sqlBuffSize);
-    // Form a insert command
-    sprintf(sqlBuff,
-      "INSERT INTO SpatialSalience (ScenarioId, Turn_t, Act_i, Dim_k,Sal) VALUES ('%s', ?1, ?2, ?3, ?4)",
-      scenId.c_str());
-
-    // Verify the database is not-null
-    assert(nullptr != smpDB);
-    const char* insStr = sqlBuff;
-    sqlite3_stmt *insStmt;
-    // fill the Scenario
-    sqlite3_prepare_v2(smpDB, insStr, strlen(insStr), &insStmt, NULL);
-    assert(nullptr != insStmt); //make sure it is ready
-
-    // Start transctions
-    sqlite3_exec(smpDB, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
-    // For each turn information exatrct the table required information
-    for (unsigned int t = 0; t < history.size(); t++) {
-      // Get the indivuidual turn
-      auto st = history[t];
-      // get the SMPState for turn
-      auto cp = (const SMPState*)history[t];
-      // Extract information for each actor and dimension
-      for (unsigned int i = 0; i < numAct; i++) {
-        for (unsigned int k = 0; k < numDim; k++) {
-          // Populate the actor
-          auto ai = ((const SMPActor*)actrs[i]);
-          // Get the Salience Value for each actor
-          double sal = ai->vSal(k, 0);
-          if (sqlP) {
-            int rslt = 0;
-            rslt = sqlite3_bind_int(insStmt, 1, t);
-            assert(SQLITE_OK == rslt);
-            rslt = sqlite3_bind_int(insStmt, 2, i);
-            assert(SQLITE_OK == rslt);
-            rslt = sqlite3_bind_int(insStmt, 3, k);
-            assert(SQLITE_OK == rslt);
-            // populate Salience value
-            rslt = sqlite3_bind_double(insStmt, 4, sal);
-            assert(SQLITE_OK == rslt);
-            rslt = sqlite3_step(insStmt);
-            assert(SQLITE_DONE == rslt);
-            sqlite3_clear_bindings(insStmt);
-            assert(SQLITE_DONE == rslt);
-            rslt = sqlite3_reset(insStmt);
-            assert(SQLITE_OK == rslt);
-          }
-        }
-      }
-    }
-    sqlite3_exec(smpDB, "END TRANSACTION", NULL, NULL, &zErrMsg);
-    sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
-
-    delete sqlBuff;
-    sqlBuff = nullptr;
-
-    return;
-  }
-  //Populate the actor description table
-  void SMPModel::populateActorDescriptionTable(bool sqlP) const {
-    // Verify the actor
-    assert(numAct == actrs.size());
-    // Verify the database is non-null
-    assert(nullptr != smpDB);
-    createSQL(7); // make sure ActorDescription table is present
-    // buffer to hold data
-    char* zErrMsg = nullptr;
-    auto sqlBuff = newChars(sqlBuffSize);
-    // Form a insert command
-    sprintf(sqlBuff,
-      "INSERT INTO ActorDescription (ScenarioId,  Act_i, Name,Desc) VALUES ('%s', ?1, ?2, ?3)",
-      scenId.c_str());
-    const char* insStr = sqlBuff;
-    sqlite3_stmt *insStmt;
-    // fill the Scenario
-    sqlite3_prepare_v2(smpDB, insStr, strlen(insStr), &insStmt, NULL);
-    assert(nullptr != insStmt); //make sure it is ready
-
-    // Start transctions
-    sqlite3_exec(smpDB, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
-    // For each actor fill the requird information
-    for (unsigned int i = 0; i < actrs.size(); i++) {
-      Actor * act = actrs.at(i);
-      if (sqlP) {
-        int rslt = 0;
-        rslt = sqlite3_bind_int(insStmt, 1, i);
-        assert(SQLITE_OK == rslt);
-        rslt = sqlite3_bind_text(insStmt, 2, act->name.c_str(), -1, SQLITE_TRANSIENT);
-        assert(SQLITE_OK == rslt);
-        rslt = sqlite3_bind_text(insStmt, 3, act->desc.c_str(), -1, SQLITE_TRANSIENT);
-        assert(SQLITE_OK == rslt);
-        rslt = sqlite3_step(insStmt);
-        assert(SQLITE_DONE == rslt);
-        sqlite3_clear_bindings(insStmt);
-        assert(SQLITE_DONE == rslt);
-        rslt = sqlite3_reset(insStmt);
-        assert(SQLITE_OK == rslt);
-      }
-    }
-    sqlite3_exec(smpDB, "END TRANSACTION", NULL, NULL, &zErrMsg);
-    sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
-
-    delete sqlBuff;
-    sqlBuff = nullptr;
-
-    return;
-  }
-
-  // JAH 20160711 added rng seed
-  SMPModel * SMPModel::readCSV(string fName, PRNG * rng, uint64_t s) {
+  // JAH 20160711 added rng seed 20160730 JAH added sql flags
+  SMPModel * SMPModel::readCSV(string fName, PRNG * rng, uint64_t s, vector<bool> f) {
     using KBase::KException;
     char * errBuff; // as sprintf requires
     csv_parser csv(fName);
@@ -1234,6 +1089,7 @@ namespace SMPLib {
     auto dNames = vector<string>();
     for (unsigned int j = 0; j < numDim; j++) {
       string insi = csv.get_value(2, 4 + 2 * j);
+      assert(insi.length() <= maxDimDescLen); // JAH 20160727 added max length condition
       dNames.push_back(insi);
       printf("Dimension %2u: %s \n", j, dNames[j].c_str());
     }
@@ -1302,21 +1158,24 @@ namespace SMPLib {
     auto accM = KBase::iMat(numActor);
 
     // now that it is read and verified, use the data
-    auto sm0 = SMPModel::initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM, rng, s); // JAH 20160711 added rng seed
+    // JAH 20160711 added rng seed 20160730 JAH added sql flags
+    auto sm0 = SMPModel::initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM, rng, s, f);
     return sm0;
   }
 
 
-  // JAH 20160711 added rng seed
+  // JAH 20160711 added rng seed 20160730 JAH added sql flags
   SMPModel * SMPModel::initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
     const KMatrix & cap, const KMatrix & pos, const KMatrix & sal, 
     const KMatrix & accM,
-    PRNG * rng, uint64_t s) {
-    SMPModel * sm0 = new SMPModel(rng,"",s); // JAH 20160711 added rng seed
+    PRNG * rng, uint64_t s, vector<bool> f)
+  {
+    assert(f.size() == Model::NumSQLLogGrps+NumSQLLogGrps);
+    SMPModel * sm0 = new SMPModel(rng,"",s,f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
     SMPState * st0 = new SMPState(sm0);
     st0->step = [st0]() {
       return st0->stepBCN();
-    };
+  };
     
     sm0->addState(st0);
 
@@ -1347,8 +1206,6 @@ namespace SMPLib {
     
     return sm0;
   }
-
-
 
 }; // end of namespace
 

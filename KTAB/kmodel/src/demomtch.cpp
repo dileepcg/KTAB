@@ -302,7 +302,7 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
 
   // -------------------------------------------------
   // JAH 20160711 added rng seed
-  MtchModel::MtchModel(PRNG* rng, string d, uint64_t s) : Model(rng, d, s) {
+  MtchModel::MtchModel(PRNG* rng, string d, uint64_t s, vector<bool> f) : Model(rng, d, s, f) {
     numCat = 0;
     numItm = 0;
   }

@@ -58,6 +58,7 @@ class KMatrix;
 class PRNG;
 class State;
 class Actor;
+class KTable;
 
 // How much influence to exert (vote) given a difference in [0,1] utility.
 // NOTE WELL: ASymProsp is asymmetric in the sense that v(i:k) + v(k:i) != 0.
@@ -224,7 +225,8 @@ class Model {
 public:
 
     sqlite3 *smpDB = nullptr; // keep this protected, to ease later multi-threading
-    explicit Model(PRNG * r, string d, uint64_t s); // JAH 20160711 added seed
+    // JAH 20160711 added seed 20160730 JAH added sql flags
+    explicit Model(PRNG * r, string d, uint64_t s, vector<bool> f);
     virtual ~Model();
 
     static const unsigned int minNumActor = 3;
@@ -233,6 +235,8 @@ public:
     static const unsigned int maxScenNameLen = 512; // might be auto-generated in sensitivy analysis
     static const unsigned int maxActNameLen = 25; // quite generous, as we expect 1-5
     static const unsigned int maxActDescLen = 256;
+
+    static const unsigned int sqlBuffSize = 250; // big enough buffer to build all desired SQLite statements
 
 
     // parameters which every Model instance must set
@@ -259,9 +263,6 @@ public:
     // calculate strength of coalitions for general actors and options.
     static KMatrix coalitions(function<double(unsigned int ak, unsigned int pi, unsigned int pj)> vfn,
                               unsigned int numAct, unsigned int numOpt);
-
-
-
 
     // calculate pv[i>j] from coalitions
     static KMatrix vProb(VPModel vpm, const KMatrix & c);
@@ -290,7 +291,8 @@ public:
     PRNG * rng = nullptr;
     vector<State*> history = {};
 
-
+    vector<KTable*> KTables = {}; // JAH added 20160728 this will hold info for all defined tables
+    vector<bool> sqlFlags= {};    // JAH added 20160730 this will hold the logging flag for each group of tables
 
     // output an existing actor util table, for the given turn, to SQLite
     void sqlAUtil(unsigned int t);
@@ -301,14 +303,11 @@ public:
     void sqlPosVote(unsigned int t);
 	void sqlBargainEntries(unsigned int t, int bargainId, int Baragainer, int initiator, int receiver, double val);
 	void sqlUpdateBargainTable(unsigned int t, double IntProb, int Init_Seld, double Recd_Prob, int Recd_Seld, int Brgn_Act_i);
-	void sqlBargnCoords(unsigned int t, int bargnID,  const KBase::VctrPstn & initPos, const KBase::VctrPstn & rcvrPos);
+    void sqlBargainCoords(unsigned int t, int bargnID,  const KBase::VctrPstn & initPos, const KBase::VctrPstn & rcvrPos);
 	void sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat);
     void sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMatrix Util_mat, unsigned int act_i);
 
-    // the old version of this provided as external constants all the internal values,
-    // so I reduced the possiblity of error and confusion by eliminating the redundant inputs.
-    //void sqlScenarioDesc(const char *ScenName, const char *ScenDesc, const char * ScenId);
-    void sqlScenarioDesc();
+    void LogInfoTables(); // JAH 20160731
 
     static void demoSQLite();
 
@@ -320,10 +319,11 @@ public:
     // string getScenarioName() const { return scenName; };
 	string getScenarioID() const { return scenId; };
 
-    static string createSQL(unsigned int n);
+    static KTable * createSQL(unsigned int n);
 protected:
     //static string createTableSQL(unsigned int tn);
     static const int NumTables = 13; //TODO: constant need to be redefined when new table is added
+    static const int NumSQLLogGrps = 4; // TODO : Add one to this num when new logging group is added
     // note that the function to write to table #k must be kept
     // synchronized with the result of createSQL(k) !
 
@@ -465,7 +465,25 @@ public:
 protected:
 };
 
+// JAH 20160728 KTAB logging table object
+// this holds the SQL code needed to generate the table, the name of the table
+// (to make it easy to find a table in a vector of KTables), the id number used
+// for createSQL, as well as a group ID number, which is used to toggle logging
+// for logical groups of tables
+class KTable {
+public:
+    KTable(unsigned int ID, const string &name, const string &SQL, unsigned int grpID);
+    virtual ~KTable();
 
+    unsigned int tabID;
+    string tabName;
+    string tabSQL;
+    unsigned int tabGrpID;
+// be sure you use protection on your privates!
+protected:
+
+private:
+};
 
 }; // end of namespace
 

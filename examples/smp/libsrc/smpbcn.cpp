@@ -250,14 +250,21 @@ SMPState* SMPState::doBCN() const {
 
             // TODO: what does this data represent?
             //Brgn table base entries
-            model->sqlBargainEntries(t, brgnJIJ->getID(), i, i, i, bestEU);
-            model->sqlBargainEntries(t, brgnIIJ->getID(), i, i, j, bestEU);
+            // JAH 20160802 control logging added
+            if (model->sqlFlags[3])
+            {
+                model->sqlBargainEntries(t, brgnJIJ->getID(), i, i, i, bestEU);
+                model->sqlBargainEntries(t, brgnIIJ->getID(), i, i, j, bestEU);
+             }
 
             cout << "Using "<<bMod<<" to form proposed bargains" << endl;
             switch (bMod) {
             case SMPBargnModel::InitOnlyInterpSMPBM:
-                // record the only one used into SQLite
-                model->sqlBargnCoords(t, brgnIIJ->getID(), brgnIIJ->posInit, brgnIIJ->posRcvr);
+                // record the only one used into SQLite JAH 20160802 use the flag
+                if(model->sqlFlags[3])
+                {
+                    model->sqlBargainCoords(t, brgnIIJ->getID(), brgnIIJ->posInit, brgnIIJ->posRcvr);
+                }
                 // record this one onto BOTH the initiator and receiver queues
                 brgns[i].push_back(brgnIIJ); // initiator's copy, delete only it later
                 brgns[j].push_back(brgnIIJ); // receiver's copy, just null it out later
@@ -270,9 +277,12 @@ SMPState* SMPState::doBCN() const {
 
 
             case SMPBargnModel::InitRcvrInterpSMPBM:
-                // record the pair used into SQLite
-                model->sqlBargnCoords(t, brgnIIJ->getID(), brgnIIJ->posInit, brgnIIJ->posRcvr);
-                model->sqlBargnCoords(t, brgnJIJ->getID(), brgnJIJ->posInit, brgnJIJ->posRcvr);
+                // record the pair used into SQLite JAH 20160802 use the flag
+                if(model->sqlFlags[3])
+                {
+                    model->sqlBargainCoords(t, brgnIIJ->getID(), brgnIIJ->posInit, brgnIIJ->posRcvr);
+                    model->sqlBargainCoords(t, brgnJIJ->getID(), brgnJIJ->posInit, brgnJIJ->posRcvr);
+                }
                 // record these both onto BOTH the initiator and receiver queues
                 brgns[i].push_back(brgnIIJ); // initiator's copy, delete only it later
                 brgns[i].push_back(brgnJIJ); // initiator's copy, delete only it later
@@ -285,8 +295,11 @@ SMPState* SMPState::doBCN() const {
 
 
             case SMPBargnModel::PWCompInterSMPBM:
-                // record the only one used into SQLite
-                model->sqlBargnCoords(t, brgnIJ->getID(), brgnIJ->posInit, brgnIJ->posRcvr);
+                // record the only one used into SQLite JAH 20160802 use the flag
+                if(model->sqlFlags[3])
+                {
+                    model->sqlBargainCoords(t, brgnIJ->getID(), brgnIJ->posInit, brgnIJ->posRcvr);
+                }
                 // record this one onto BOTH the initiator and receiver queues
                 brgns[i].push_back(brgnIJ); // initiator's copy, delete only it later
                 brgns[j].push_back(brgnIJ); // receiver's copy, just null it out later
@@ -421,12 +434,13 @@ SMPState* SMPState::doBCN() const {
         model->sqlUpdateBargainTable(t, p(0, 0), mMax, p(maxArrcount - 1, 0), mMax, k);
 
 
-        //populate the Bargain Vote table
-        // model->sqlBargainVote(t, k, k, w);
-
-        //populate the Bargain util table
-        model->sqlBargainUtil(t, k, u_im);
-
+        //populate the Bargain Vote & Util tables
+        // JAH added sql flag logging control
+        if (model->sqlFlags[3])
+        {
+            // model->sqlBargainVote(t, k, k, w);
+            model->sqlBargainUtil(t, k, u_im);
+        }
 
         // TODO: create a fresh position for k, from the selected bargain mMax.
         VctrPstn * pk = nullptr;
@@ -515,7 +529,6 @@ SMPState* SMPState::doBCN() const {
 // Note that the  aUtil vector of KMatrix must be set before starting this.
 // TODO: offer a choice the different ways of estimating value-of-a-state: even sum or expected value.
 // TODO: we may need to separate euConflict from this at some point
-// TODO: add a boolean flag to record this is SQLite, which touches at least three tables
 tuple<double, double> SMPState::probEduChlg(unsigned int h, unsigned int k, unsigned int i, unsigned int j, bool sqlP) const {
 
     // you could make other choices for these two sub-models
@@ -647,7 +660,10 @@ tuple<double, double> SMPState::probEduChlg(unsigned int h, unsigned int k, unsi
     const double duChlg = euChlg - euSQ; //  delta-util of challenge versus status-quo
     auto rslt = tuple<double, double>(phij, duChlg);
 
-    if (sqlP) {
+    // JAH 20160802 switched to use the model sql flags vector to control logging
+    // I keep sqlP and short-circuit & it because sometimes probEduChlg is called to
+    // do some temporary calcs which should not be store - this is controlled with sqlP
+    if (sqlP && model->sqlFlags[2]) {
         // now that the computation is finished, record everything into SQLite
         //
         // record tpvArray into SQLite turn, est (h), init (i), third party (n), receiver (j), and tpvArray[n]

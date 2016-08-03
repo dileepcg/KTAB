@@ -226,7 +226,7 @@ double RPActor::posUtil(const Position * ap1) const
   
   // --------------------------------------------
   // JAH 20160711 added rng seed
-  RPModel::RPModel(PRNG* rng, string d, uint64_t s) : Model(rng, d, s) {
+  RPModel::RPModel(PRNG* rng, string d, uint64_t s, vector<bool> f) : Model(rng, d, s, f) {
     // nothing yet
   }
 
