@@ -193,7 +193,7 @@ public:
     // return actor's normalized risk attitude (if set)
     double aNRA(unsigned int i) const;
 
-    SMPBargnModel bMod = SMPBargnModel::PWCompInterSMPBM;
+    SMPBargnModel bMod = SMPBargnModel::InitOnlyInterpSMPBM;
       // PWCompInterSMPBM, InitOnlyInterpSMPBM or InitRcvrInterpSMPBM; 
 
     
