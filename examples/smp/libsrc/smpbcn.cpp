@@ -26,7 +26,7 @@
 // --------------------------------------------
 
 #include "smp.h"
-
+#include <map>
 
 namespace SMPLib {
 using std::cout;
@@ -35,6 +35,7 @@ using std::flush;
 using std::function;
 using std::get;
 using std::string;
+using std::map;
 
 using KBase::PRNG;
 using KBase::KMatrix;
@@ -122,7 +123,6 @@ SMPState* SMPState::doBCN() const {
     brgns.resize(na);
     for (unsigned int i = 0; i < na; i++) {
         brgns[i] = vector<BargainSMP*>();
-        brgns[i].push_back(nullptr); // null bargain is SQ
     }
 
     const int t = myTurn();
@@ -135,7 +135,18 @@ SMPState* SMPState::doBCN() const {
     // For each actor, identify good targets, and propose bargains to them.
     // (This loop would be an excellent place for high-level parallelism)
     for (unsigned int i = 0; i < na; i++) {
-        auto chlgI = bestChallenge(i, recordBargainingP);
+		auto ai = ((const SMPActor*)(model->actrs[i]));
+		auto posI = ((const VctrPstn*)pstns[i]);
+
+		auto sqBrgnI = new BargainSMP(ai, ai, *posI, *posI);
+		brgns[i].push_back(sqBrgnI);
+
+		if (model->sqlFlags[3])
+		{
+			model->sqlBargainEntries(t, sqBrgnI->getID(), i, i, 0);
+		}
+		
+		auto chlgI = bestChallenge(i, recordBargainingP);
         const double bestEU = get<2>(chlgI);
         if (0 < bestEU) {
             const int bestJ = get<0>(chlgI); //
@@ -147,9 +158,7 @@ SMPState* SMPState::doBCN() const {
             assert(0 <= t); // need to be on model's history list
             printf("In turn %i actor %u has most advantageous target %u worth %.3f\n", t, i, j, bestEU);
 
-            auto ai = ((const SMPActor*)(model->actrs[i]));
             auto aj = ((const SMPActor*)(model->actrs[j]));
-            auto posI = ((const VctrPstn*)pstns[i]);
             auto posJ = ((const VctrPstn*)pstns[j]);
 
             // Look for counter-intuitive cases
@@ -253,9 +262,10 @@ SMPState* SMPState::doBCN() const {
             // JAH 20160802 control logging added
             if (model->sqlFlags[3])
             {
-                model->sqlBargainEntries(t, brgnJIJ->getID(), i, i, i, bestEU);
-                model->sqlBargainEntries(t, brgnIIJ->getID(), i, i, j, bestEU);
-             }
+                //model->sqlBargainEntries(t, brgnJIJ->getID(), i, i, i, bestEU);
+                //model->sqlBargainEntries(t, brgnIIJ->getID(), i, i, j, bestEU);
+				model->sqlBargainEntries(t, brgnIJ->getID(), i, j, bestEU);
+			}
 
             cout << "Using "<<bMod<<" to form proposed bargains" << endl;
             switch (bMod) {
@@ -351,18 +361,19 @@ SMPState* SMPState::doBCN() const {
     auto brgnUtil = [this, brgns](unsigned int nk, unsigned int nai, unsigned int nbj) {
         const unsigned int na = model->numAct;
         BargainSMP * b = brgns[nk][nbj];
-        double uAvrg = 0.0;
+		assert(nullptr != b);
+		double uAvrg = 0.0;
 
-        if (nullptr == b) { // SQ bargain
-            uAvrg = 0.0;
+		if (b->actInit == b->actRcvr) { // SQ bargain
+			uAvrg = 0.0;
             for (unsigned int n = 0; n < na; n++) {
                 // nai's estimate of the utility to nai of position n, i.e. the true value
                 uAvrg = uAvrg + aUtil[nai](nai, n);
             }
         }
 
-        if (nullptr != b) { // all positions unchanged, except Init and Rcvr
-            uAvrg = 0.0;
+		else { // all positions unchanged, except Init and Rcvr
+			uAvrg = 0.0;
             auto ndxInit = model->actrNdx(b->actInit);
             assert((0 <= ndxInit) && (ndxInit < na)); // must find it
             double uPosInit = ((SMPActor*)(model->actrs[nai]))->posUtil(&(b->posInit), this);
@@ -396,7 +407,10 @@ SMPState* SMPState::doBCN() const {
 
     SMPState* s2 = new SMPState(model);
 
-    // (This loop would be a good place for high-level parallelism)
+	map<unsigned int, KBase::KMatrix> actorBargains;
+	map<unsigned int, unsigned int> actorMaxBrgNdx;
+
+	// (This loop would be a good place for high-level parallelism)
     for (unsigned int k = 0; k < na; k++) {
         unsigned int nb = brgns[k].size();
         auto buk = [brgnUtil, k](unsigned int nai, unsigned int nbj) {
@@ -411,7 +425,8 @@ SMPState* SMPState::doBCN() const {
         auto p = Model::scalarPCE(na, nb, w, u_im, vr, vpm, ReportingLevel::Medium);
         assert(nb == p.numR());
         assert(1 == p.numC());
-        cout << "done" << endl << flush;
+		actorBargains.insert(map<unsigned int, KBase::KMatrix>::value_type(k, p));
+		cout << "done" << endl << flush;
 
         int maxArrcount = p.numR();
         //int rslt = 0; // never used
@@ -429,10 +444,8 @@ SMPState* SMPState::doBCN() const {
         }
         // 0 <= mMax assured for uint
         assert(mMax < nb);
-        cout << "Chosen bargain (" << stm << "): " << mMax << "/" << nb << endl;
-        // update for bern table for remaining fields
-        model->sqlUpdateBargainTable(t, p(0, 0), mMax, p(maxArrcount - 1, 0), mMax, k);
-
+		actorMaxBrgNdx.insert(map<unsigned int, unsigned int>::value_type(k, mMax));
+		cout << "Chosen bargain (" << stm << "): " << mMax+1 << " out of " << nb << " bargains" << endl;
 
         //populate the Bargain Vote & Util tables
         // JAH added sql flag logging control
@@ -445,8 +458,8 @@ SMPState* SMPState::doBCN() const {
         // TODO: create a fresh position for k, from the selected bargain mMax.
         VctrPstn * pk = nullptr;
         auto bkm = brgns[k][mMax];
-        if (nullptr == bkm) {
-            auto oldPK = (VctrPstn *)pstns[k];
+		if (bkm->actInit == bkm->actRcvr) { // SQ
+			auto oldPK = (VctrPstn *)pstns[k];
             pk = new VctrPstn(*oldPK);
         }
         else {
@@ -471,7 +484,115 @@ SMPState* SMPState::doBCN() const {
         cout << endl << flush;
     }
 
-    // Some bargains are nullptr, and there are two copies of every non-nullptr randomly
+	sqlite3 *db = model->smpDB;
+	auto sqlBuff = newChars(300);
+
+	// JAH 20160822 fixed the oversight of not conditioning on the scenario
+	sprintf(sqlBuff, "UPDATE Bargn SET Init_Prob = ?1, Init_Seld = ?2, Recd_Prob = ?3, Recd_Seld = ?4 \
+	  WHERE (\"%s\" = ScenarioId) and (?5 = Turn_t) and (?6 = BargnId) and (?7 = Init_Act_i) and (?8 = Recd_Act_j)",
+	  model->getScenarioID().c_str());
+
+	const char* updateStr = sqlBuff;
+	sqlite3_stmt *updateStmt = nullptr;
+
+	// prepare the sql statement to update the db
+	sqlite3_prepare_v2(model->smpDB, updateStr, strlen(updateStr), &updateStmt, NULL);
+
+	assert(nullptr != updateStmt); // make sure it is ready
+
+								   // Error message in case
+	char* zErrMsg = nullptr;
+
+	// start for the transaction
+	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
+
+	// Update the bargain table for the bargain values for init actor and recd actor
+	// along with the info whether a bargain got selected or not in the respective actor's queue
+	for (unsigned int i = 0; i < brgns.size(); i++) {
+		auto ai = ((const SMPActor*)(model->actrs[i]));
+		double initProb = -0.1;
+		int initSelected = -1;
+		auto bargains_i = brgns[i];
+		size_t initBgnNdx = 0;
+		auto initActr = -1;
+		auto rcvrActr = -1;
+		uint64_t bgID;
+		size_t countDown = 2; // Stop iterating if cases for i:i and i:j processed
+		for (auto bg : bargains_i) {
+			assert(nullptr != bg);
+			if (bg->actInit == bg->actRcvr) { // For SQ case
+				initActr = model->actrNdx(bg->actInit);
+				rcvrActr = initActr;
+				initProb = (actorBargains[initActr])(initBgnNdx, 0);
+				initSelected = initBgnNdx == actorMaxBrgNdx[initActr] ? 1 : 0;
+				/*cout << __LINE__ << " " << "SQ" << " " << bg->getID() \
+				<< " " << initActr << ":" << rcvrActr << " " \
+				<< initProb << " " << initSelected << endl;*/
+
+				bindExecute(updateStmt, t, bg->getID(),
+					initActr, initProb, initSelected,
+					rcvrActr, -1.0, 0);
+
+				if (0 == --countDown) {
+					break;
+				}
+			}
+			else {
+				if (ai == bg->actInit) { // this bargain is initiated by current actor
+					initActr = model->actrNdx(bg->actInit);
+					initProb = (actorBargains[initActr])(initBgnNdx, 0);
+					initSelected = initBgnNdx == actorMaxBrgNdx[initActr] ? 1 : 0;
+					rcvrActr = model->actrNdx(bg->actRcvr);
+					bgID = bg->getID();
+
+					// Get the bargains of receiver actor
+					auto brgnRcvr = brgns[rcvrActr];
+					size_t rcvrBgNdx = 0;
+					double rcvrProb = -1.0;
+					int rcvrSelected = -1;
+					for (auto bgRcv : brgnRcvr) {
+						assert(nullptr != bgRcv);
+						if (ai == bgRcv->actInit) {
+							rcvrProb = (actorBargains[rcvrActr])(rcvrBgNdx, 0);
+
+							// Check if it is the selected bargain for receiver actor
+							rcvrSelected = actorMaxBrgNdx[rcvrActr] == rcvrBgNdx ? 1 : 0;
+
+							/*std::cout.precision(4);
+							cout << std::fixed;
+							cout << "Line " << __LINE__ << " " << bgID << " " \
+							<< initActr << ":" << rcvrActr \
+							<< " init_prob: " << initProb \
+							<< " init_selected: " << initSelected \
+							<< " rcvr_prob: " << rcvrProb \
+							<< " rcvr_selected: " << rcvrSelected << endl << endl;*/
+
+							--countDown;
+							bindExecute(updateStmt, t, bg->getID(),
+								initActr, initProb, initSelected,
+								rcvrActr, rcvrProb, rcvrSelected);
+							break;
+						}
+						++rcvrBgNdx;
+					}
+
+					if (0 == countDown) {
+						break;
+					}
+				}
+			}
+
+			++initBgnNdx;
+		}
+	}
+
+	sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
+	sqlite3_finalize(updateStmt); // finalize statement to avoid resource leaks
+
+	delete sqlBuff;
+	sqlBuff = nullptr;
+	model->smpDB = db;
+	// Some bargains are nullptr, and there are two copies of every non-nullptr randomly
     // arranged. If we delete them as we find them, then the second occurance will be corrupted,
     // so the code crashes when it tries to access the memory to see if it matches something
     // already deleted. Hence, we scan them all, building a list of unique bargains,
@@ -522,7 +643,47 @@ SMPState* SMPState::doBCN() const {
     return s2;
 }
 
+void SMPState::bindExecute(sqlite3_stmt *updateStmt, size_t turn, int bargnID,
+	int initActor, double initProb, bool isInitSelected,
+	int recvActor, double recvProb, bool isRecvSelected) const {
+	int rslt = 0;
 
+	rslt = sqlite3_bind_double(updateStmt, 1, initProb);
+	assert(SQLITE_OK == rslt);
+
+	//Init_Seld
+	rslt = isInitSelected ? sqlite3_bind_int(updateStmt, 2, 1) : sqlite3_bind_int(updateStmt, 2, 0);
+	assert(SQLITE_OK == rslt);
+
+	// For SQ cases, there would be no receiver
+	if (initActor != recvActor) {
+		rslt = sqlite3_bind_double(updateStmt, 3, recvProb);
+		assert(SQLITE_OK == rslt);
+
+		//Recd_Seld
+		rslt = isRecvSelected ? sqlite3_bind_int(updateStmt, 4, 1) : sqlite3_bind_int(updateStmt, 4, 0);
+		assert(SQLITE_OK == rslt);
+	}
+
+	rslt = sqlite3_bind_int(updateStmt, 5, turn);
+	assert(SQLITE_OK == rslt);
+
+	rslt = sqlite3_bind_int(updateStmt, 6, bargnID);
+	assert(SQLITE_OK == rslt);
+
+	rslt = sqlite3_bind_int(updateStmt, 7, initActor);
+	assert(SQLITE_OK == rslt);
+
+	rslt = sqlite3_bind_int(updateStmt, 8, recvActor);
+	assert(SQLITE_OK == rslt);
+
+	rslt = sqlite3_step(updateStmt);
+	assert(SQLITE_DONE == rslt);
+	sqlite3_clear_bindings(updateStmt);
+	assert(SQLITE_DONE == rslt);
+	rslt = sqlite3_reset(updateStmt);
+	assert(SQLITE_OK == rslt);
+}
 
 // h's estimate of the victory probability and expected delta in utility for k from i challenging j,
 // compared to status quo.
@@ -742,8 +903,8 @@ tuple<double, double> SMPState::probEduChlg(unsigned int h, unsigned int k, unsi
 
         sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
         sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
-        printf("Stored SQL for turn %u of all estimators, actors, and positions \n", t);
-        cout << flush; // so this prints before subsequent assertion failures
+        //printf("Stored SQL for turn %u of all estimators, actors, and positions \n", t);
+        //cout << flush; // so this prints before subsequent assertion failures
 
         delete sqlBuff;
         sqlBuff = nullptr;

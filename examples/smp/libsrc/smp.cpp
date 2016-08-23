@@ -461,18 +461,11 @@ namespace SMPLib {
 
   void SMPState::showBargains(const vector < vector < BargainSMP* > > & brgns) const {
     for (unsigned int i = 0; i < brgns.size(); i++) {
-      printf("Bargains involving actor %u: ", i);
+      printf("Bargains involving actor %2u: ", i);
       for (unsigned int j = 0; j < brgns[i].size(); j++) {
         BargainSMP* bij = brgns[i][j];
-        if (nullptr != bij) {
-          showOneBargain(bij);
-          // int a1 = model->actrNdx(bij->actInit);
-          // int a2 = model->actrNdx(bij->actRcvr);
-          // printf(" [%i:%i (%llu)] ", a1, a2, bij->getID());
-        }
-        else {
-          printf(" SQ ");
-        }
+		assert(nullptr != bij);
+		showOneBargain(bij);
       }
       cout << endl << flush;
     }
@@ -1025,7 +1018,7 @@ namespace SMPLib {
 
   // JAH 20160711 added rng seed 20160730 JAH added sql flags
   SMPModel * SMPModel::readCSV(string fName, PRNG * rng, uint64_t s, vector<bool> f) {
-    using KBase::KException;
+     using KBase::KException;
     char * errBuff; // as sprintf requires
     csv_parser csv(fName);
     // Get values according to row number and column number.

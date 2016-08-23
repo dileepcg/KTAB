@@ -31,16 +31,16 @@
 
 class CSV : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    CSV();
-    QStandardItemModel * model;
+  CSV();
+  QStandardItemModel * model;
 public slots:
-    void readCSVFile(QString path);
+  void readCSVFile(QString path);
 
 signals:
-    void csvModel(QStandardItemModel * ,QStringList ScenarioName);
-    void sendMessage(QString className, QString Message);
+  void csvModel(QStandardItemModel * ,QStringList ScenarioName);
+  void sendMessage(QString className, QString Message);
 
 };
 

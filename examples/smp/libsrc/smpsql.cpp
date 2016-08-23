@@ -97,6 +97,7 @@ KTable * SMPModel::createSQL(unsigned int n)  {
             grpID = 0;
 			break;
 
+
         case 3: // names of dimensions, so the GUI can use it JAH 20160727
         {
             char *sqlBuff = newChars(500);
@@ -108,9 +109,10 @@ KTable * SMPModel::createSQL(unsigned int n)  {
             sql = std::string(sqlBuff);
             delete sqlBuff;
             sqlBuff = nullptr;
+
             name = "DimensionDescription";
             grpID = 0;
-        }
+         }
         break;
 		default:
 			throw(KException("SMPModel::createSQL unrecognized table number"));

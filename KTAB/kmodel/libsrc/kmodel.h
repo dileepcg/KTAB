@@ -301,8 +301,7 @@ public:
     // output an existing actor posprob table, for the given turn, to SQLite
     void sqlPosProb(unsigned int t);
     void sqlPosVote(unsigned int t);
-	void sqlBargainEntries(unsigned int t, int bargainId, int Baragainer, int initiator, int receiver, double val);
-	void sqlUpdateBargainTable(unsigned int t, double IntProb, int Init_Seld, double Recd_Prob, int Recd_Seld, int Brgn_Act_i);
+	void sqlBargainEntries(unsigned int t, int bargainId, int initiator, int receiver, double val);
     void sqlBargainCoords(unsigned int t, int bargnID,  const KBase::VctrPstn & initPos, const KBase::VctrPstn & rcvrPos);
 	void sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat);
     void sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMatrix Util_mat, unsigned int act_i);

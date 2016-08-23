@@ -281,6 +281,7 @@ namespace DemoSMP {
     printf("L-corr of prob and net support: %+.4f \n", KBase::lCorr((w*u), trans(p)));
     printf("A-corr of prob and net support: %+.4f \n", aCorr((w*u), trans(p)));
 
+
     // JAH 20160802 added call to executeSMP
     executeSMP(md0);
 
@@ -293,9 +294,10 @@ namespace DemoSMP {
   void readEUSpatial(uint64_t seed, string inputCSV, PRNG* rng, vector<bool> f) {
     // JAH 20160711 added rng seed 20160730 JAH added sql flags
     auto md0 = SMPModel::readCSV(inputCSV, rng, seed, f);
+
     // JAH 20160802 added call to executeSMP
     executeSMP(md0);
-    // output what R needs for Sankey diagrams
+     // output what R needs for Sankey diagrams
     md0->sankeyOutput(inputCSV);
 
     delete md0;
