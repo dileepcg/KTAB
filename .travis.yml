@@ -1,47 +1,74 @@
 language: cpp
 
-sudo: required
-dist: trusty
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      before_install:  # kludge enabling Travis to pick up correct compiler!
+        - sudo unlink /usr/bin/g++
+        - sudo ln -s /usr/bin/g++-4.9 /usr/bin/g++
+        - sudo unlink /usr/bin/gcc
+        - sudo ln -s /usr/bin/gcc-4.9 /usr/bin/gcc
+      env: COMPILER=g++-4.9
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      before_install:   # kludge enabling Travis to pick up correct compiler!
+        - sudo unlink /usr/bin/g++
+        - sudo ln -s /usr/bin/g++-5 /usr/bin/g++
+        - sudo unlink /usr/bin/gcc
+        - sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc
+      env: COMPILER=g++-5
+    - os: linux
+      dist: trusty
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.5 main"
+          packages:
+            - clang-3.5
+      env: COMPILER=clang++-3.5
+    - os: linux
+      dist: trusty
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.6 main"
+          packages:
+            - g++-4.9
+            - clang-3.6
+      env: COMPILER=clang++-3.6
+    - os: osx
+      osx_image: xcode7.2
 
-compiler:
-  - gcc
-  - clang
-  
-# this step is for making alterations to the default environment before
-# installing additional dependencies.
-before_install:
-  - sudo apt-get remove cmake   # default Ubuntu-trusty only has cmake 2.8.12!
-  - sudo apt-get remove gcc g++  # default Ubuntu-trusty only has version 4.8.4!
-
-# this step is for adding additional dependencies required for the project that 
-# are common across the various build configurations.
 install:
-  # install newer cmake version
-  - sudo apt-get install --assume-yes software-properties-common
-  - sudo add-apt-repository -y ppa:george-edison55/cmake-3.x
-  - sudo apt-get update --assume-yes
-  - sudo apt-get install --assume-yes cmake
-  - cmake --version  # This allows us to confirm which version of cmake has been installed.
-  
-  # install new version of GCC compilers
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update --assume-yes
-  - sudo apt-get install gcc-4.9 g++-4.9
-  - sudo ln -s /usr/bin/g++-4.9 /usr/bin/g++  # symbolic link so that we can call directly using g++
-  - sudo unlink /usr/bin/gcc  # apparently this link already exists...need to remove it!
-  - sudo ln -s /usr/bin/gcc-4.9 /usr/bin/gcc  # symbolic link so that we can call directly using gcc
-
-  # next install additional required dependencies
-  - sudo apt-get install --assume-yes libsqlite3-0 libx11-6 libfltk1.3 libxaw7
-  - sudo apt-get install --assume-yes libxmu6 libxpm4 libxft2 libxt6 libfontconfig1 fluid
+  - if [[ $TRAVIS_OS_NAME == linux ]]; then sudo bash ./install-linux-deps.sh; fi
+  - if [[ $TRAVIS_OS_NAME == osx ]]; then bash ./install-osx-deps.sh; fi
 
   # install tinyxml2
   - git clone https://github.com/leethomason/tinyxml2.git
   - cd tinyxml2
   - cmake . && sudo make install
   - cd ..
-  
-# this step runs a custom build script that builds the various components of
-# KTAB in the required order.
-script:     
+
+script:
  - ./reconfig.sh
