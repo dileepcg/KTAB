@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/KAPSARC/KTAB.svg?branch=master)](https://travis-ci.org/KAPSARC/KTAB)
+[![Build status](https://ci.appveyor.com/api/projects/status/iebb8gg63ugqwfpi/branch/master?svg=true)](https://ci.appveyor.com/project/davidrpugh/ktab/branch/master)
+
 
 # KTAB #
 
@@ -12,7 +14,7 @@ All KTAB models represent stochastic decision-making among comparatively small n
 Examples are provided to illustrate the range of modeling which can be done in the framework and to provide templates for further work. Examples in the kmodel directory include the following:
 
 - Using an input/output economic model to bargain over tax/subsidy rates,
-- Simple discrete matching 
+- Simple discrete matching
 - Negotiating the priority order to tasks to undertake (and which to drop)
 
 
@@ -24,20 +26,20 @@ Examples are provided to illustrate the range of modeling which can be done in t
 
 - A simple example of using KTAB to fit parameters. Similar to econometric models, the parameters of a PCE are adjusted until the result closely matches the expected results. The fitted parameters could then be used to analyze possible changes.
 
-These are merely illustrative examples.  For rigorous work, one could make whatever local modifications were needed to produce a model which met one's own standards for validation. 
+These are merely illustrative examples.  For rigorous work, one could make whatever local modifications were needed to produce a model which met one's own standards for validation.
 
 ## Building KTAB ##
 
-KTAB is written in portable, cross-platform C++14. 
+KTAB is written in portable, cross-platform C++14.
 
 KTAB uses CMake for configuration; downloads and instructions can be obtained from [www.cmake.org](http://www.cmake.org). The basic procedure is to configure kutils with CMake, then build the library and examples with your favorite IDE. Then configure kmodel with CMake and build it. Detailed build instructions can be found in the subdirectories, starting with kutils' [README](KTAB/kutils/README.md). After building kutils, you can follow kmodel's [README](KTAB/kmodel/README.md). Following these instructions, under both Windows and Linux, it is not necessary to modify your PATH at any point of the installation.
 
-Example of how to build models outside the main library structure, as one would do for a custom model, are in the examples directories; see the overall [README](examples/README.md) and the README files for each. 
+Example of how to build models outside the main library structure, as one would do for a custom model, are in the examples directories; see the overall [README](examples/README.md) and the README files for each.
 
 
 The code is compiled, linked, and tested with absolutely no modification, simultaneously on both Windows and Linux: there is one single body of cross-platform code, not  separate versions for each OS. All platform- or system-specific configuration is done by CMake. Because no platform-specific code is allowed, porting to Mac or other platforms should be feasible. It was developed and tested on 64-bit Windows and Linux platforms, including the following:
 
-* Windows 
+* Windows
   * Windows 7 Professional with Visual Studio 2010 Express,
   * Windows 8 with Visual Studio 2013 Express,
   * Windows 10 Professional with Visual Studio 2015 Community,
@@ -48,7 +50,7 @@ The code is compiled, linked, and tested with absolutely no modification, simult
 
 ### Language Versions ###
 
-The C++14 standard is supported by the following versions of 
+The C++14 standard is supported by the following versions of
 these common compilers:
 
 * GCC 4.9.0, or higher
@@ -56,7 +58,7 @@ these common compilers:
 * Visual Studio 2015, or higher
 
 We expect to upgrade to C++17 when it becomes well-supported
-by gcc, clang, and VS, especially structured bindings, aka 
+by gcc, clang, and VS, especially structured bindings, aka
 parallel assignment with pattern matching.
 
 ## User Interfaces ##
@@ -84,7 +86,7 @@ For details, see the following URLs:
 
 - [http://opensource.org/](http://opensource.org/)
 - [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT)
- 
+
 
 ----------
 
