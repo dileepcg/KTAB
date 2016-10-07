@@ -658,7 +658,7 @@ void Model::sqlBargainCoords(unsigned int t, int bargnID, const KBase::VctrPstn 
 
 
 
-void Model::sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat)
+void Model::sqlBargainUtil(unsigned int t, vector<uint64_t> bargnIds,  KBase::KMatrix Util_mat)
 {
 	// initiate the database
 	sqlite3 * db = smpDB;
@@ -684,24 +684,25 @@ void Model::sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat
 
 	// start for the transaction
 	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
-
-    for (unsigned int i = 0; i < Util_mat_col; i++)
+	uint64_t Bargn_i;
+    for (unsigned int i = 0; i < Util_mat_row; i++)
     {
-		for (unsigned int j = 0; j < Util_mat_row; j++)
+		for (unsigned int j = 0; j < Util_mat_col; j++)
 		{
-
+			
 			int rslt = 0;
 			// Turn_t
 			rslt = sqlite3_bind_int(insStmt, 1, t);
 			assert(SQLITE_OK == rslt);
 			//Bargn_i
-			rslt = sqlite3_bind_int(insStmt, 2, Bargn_i+i);
+			Bargn_i = bargnIds[j];
+			rslt = sqlite3_bind_int(insStmt, 2, Bargn_i);
 			assert(SQLITE_OK == rslt);
 			//Act_i
-			rslt = sqlite3_bind_int(insStmt, 3, j);
+			rslt = sqlite3_bind_int(insStmt, 3, i);
 			assert(SQLITE_OK == rslt);
 			//Util
-			rslt = sqlite3_bind_double(insStmt, 4, Util_mat(j, i));
+			rslt = sqlite3_bind_double(insStmt, 4, Util_mat(i, j));
 			assert(SQLITE_OK == rslt);
 			// finish  
 			assert(SQLITE_OK == rslt);
@@ -824,7 +825,7 @@ void Model::sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMat
 
 	// prepare the sql statement to insert
 	sprintf(sqlBuff,
-		"INSERT INTO BargnVote  (ScenarioId, Turn_t,Bargn_i,  Bargn_j, Act_k, Vote) VALUES ('%s', ?1, ?2, ?3,?4,?5)",scenId.c_str());
+		"INSERT INTO BargnVote  (ScenarioId, Turn_t,BargnId_i,  BargnId_j, Act_k, Vote) VALUES ('%s', ?1, ?2, ?3,?4,?5)",scenId.c_str());
 	
     assert(nullptr != db);
 	const char* insStr = sqlBuff;

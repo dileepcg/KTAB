@@ -112,7 +112,6 @@ uint64_t BargainSMP::getID() const {
     return myBargainID;
 }
 
-
 // --------------------------------------------
 
 
@@ -124,7 +123,6 @@ SMPState* SMPState::doBCN() const {
     for (unsigned int i = 0; i < na; i++) {
         brgns[i] = vector<BargainSMP*>();
     }
-
     const int t = myTurn();
     assert(0 <= t); // need to be in the model's history list
 
@@ -203,7 +201,6 @@ SMPState* SMPState::doBCN() const {
             auto Vjij = probEduChlg(j, i, i, j, recordBargainingP);
             double pjiJ = get<1>(Vjij); // j's estimate of the probability that i defeats j
             BargainSMP* brgnJIJ = SMPActor::interpolateBrgn(ai, aj, posI, posJ, pjiJ, 1 - pjiJ, ivb);
-
             // calcluate weights as capability times salience
             double sci = brgnIIJ->actInit->sCap;
             double svi = sum(brgnIIJ->actInit->vSal);
@@ -365,6 +362,7 @@ SMPState* SMPState::doBCN() const {
 		double uAvrg = 0.0;
 
 		if (b->actInit == b->actRcvr) { // SQ bargain
+
 			uAvrg = 0.0;
             for (unsigned int n = 0; n < na; n++) {
                 // nai's estimate of the utility to nai of position n, i.e. the true value
@@ -409,16 +407,28 @@ SMPState* SMPState::doBCN() const {
 
 	map<unsigned int, KBase::KMatrix> actorBargains;
 	map<unsigned int, unsigned int> actorMaxBrgNdx;
-
+	vector<vector<uint64_t>> bargnIds;
+	
 	// (This loop would be a good place for high-level parallelism)
-    for (unsigned int k = 0; k < na; k++) {
+
+		
+/*for (unsigned int k = 0; k < na; k++) {
         unsigned int nb = brgns[k].size();
         auto buk = [brgnUtil, k](unsigned int nai, unsigned int nbj) {
             return brgnUtil(k, nai, nbj);
-        };
-        auto u_im = KMatrix::map(buk, na, nb);
+        };*/
 
-        cout << "u_im: " << endl;
+		// By Dileep : now generate the data which are to be filled into BargnUtil
+		for (unsigned int k = 0; k < na; k++) {
+		unsigned int nb = brgns[k].size();
+		auto buk = [this](unsigned int nai, unsigned int nbj) {
+			return SMPModel::bsUtil(vDiff(nai, nbj), nra(nai, 0));
+		};
+        auto u_im = KMatrix::map(buk, na, nb); //KMatrix::map(uFn1, na, na);
+		//auto u_im = SMPModel::bsUtil(vDiff(nai, j), nra(i, 0));
+		//	bargnIds.assign(na, 0);
+		
+	    cout << "u_im: " << endl;
         u_im.mPrintf(" %.5f ");
 
         cout << "Doing probCE for the " << nb << " bargains of actor " << k << " ... " << flush;
@@ -449,10 +459,19 @@ SMPState* SMPState::doBCN() const {
 
         //populate the Bargain Vote & Util tables
         // JAH added sql flag logging control
-        if (model->sqlFlags[3])
-        {
-            // model->sqlBargainVote(t, k, k, w);
-            model->sqlBargainUtil(t, k, u_im);
+		if (model->sqlFlags[3])
+		{
+			vector<uint64_t> bargnIdsRows;// = vector<vector<uint64_t>>();
+
+			for (int j = 0; j < nb; j++)
+			{
+				bargnIdsRows.push_back(brgns[k][j]->getID());
+			}
+			//By Dileep :The below two lines whill change; they are here only for compilation purpose
+			uint64_t BargainId = brgns[k][0]->getID();
+            model->sqlBargainVote(t, BargainId, BargainId, u_im,k);
+			//By Dileep :Now we will fill in the BargnUtil table
+            model->sqlBargainUtil(t, bargnIdsRows, u_im);
         }
 
         // TODO: create a fresh position for k, from the selected bargain mMax.
