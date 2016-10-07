@@ -306,11 +306,8 @@ public:
     void sqlPosVote(unsigned int t);
     void sqlBargainEntries(unsigned int t, int bargainId, int initiator, int receiver, double val);
     void sqlBargainCoords(unsigned int t, int bargnID,  const KBase::VctrPstn & initPos, const KBase::VctrPstn & rcvrPos);
-<<<<<<< HEAD
-    void sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat);
-=======
     void sqlBargainUtil(unsigned int t, vector<uint64_t> bargnIds,  KBase::KMatrix Util_mat);
->>>>>>> master
+
     void sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMatrix Util_mat, unsigned int act_i);
 
     void LogInfoTables(); // JAH 20160731
