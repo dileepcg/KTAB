@@ -131,10 +131,10 @@ namespace DemoSMP {
     return;
   }
 
-  void readEUSpatial(uint64_t seed, string inputCSV, PRNG* rng, vector<bool> f, string dbFilePath) {
+  void readEUSpatial(uint64_t seed, string inputCSV,  vector<bool> f, string dbFilePath) {
     SMPModel::setDBPath(dbFilePath); // setting DB Name
     // JAH 20160711 added rng seed 20160730 JAH added sql flags
-    auto md0 = SMPModel::readCSV(inputCSV, rng, seed, f);
+    auto md0 = SMPModel::readCSV(inputCSV, seed, f);
 
     // JAH 20160802 added call to executeSMP
     executeSMP(md0);
@@ -179,17 +179,13 @@ void MainWindow::runPushButtonClicked(bool bl)
       // 0 = Information Tables, 1 = Position Tables, 2 = EDU Tables, 3 = Bargain Resolution Tables
       std::vector<bool> sqlFlags = {true,true,true,true};
 
-      // tmp args
-      //euSmpP = true;
-
-      PRNG * rng = new PRNG();
-      seed = rng->setSeed(seed); // 0 == get a random number
+     
+      // Notice that we NEVER use anything but the default seed.
       printf("Using PRNG seed:  %020llu \n", seed);
       printf("Same seed in hex:   0x%016llX \n", seed);
 
-      DemoSMP::readEUSpatial(seed, csvPath.toStdString(), rng,sqlFlags, dbFilePath.toStdString());
-
-      delete rng;
+      DemoSMP::readEUSpatial(seed, csvPath.toStdString(),sqlFlags, dbFilePath.toStdString());
+       
       KBase::displayProgramEnd(sTime);
       statusBar()->showMessage(" Process Completed !! ");
       smpDBPath(dbFilePath);

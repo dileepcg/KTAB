@@ -204,6 +204,7 @@ TARGET_LINK_LIBRARIES(mtchApp
 ADD_EXECUTABLE(demomodel
   src/demo.cpp
   src/edemo.cpp
+  src/demoMatrixEMod.cpp
   src/sqlitedemo.cpp
   src/tinyxml2demo.cpp
   src/zactor.cpp

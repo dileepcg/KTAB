@@ -51,6 +51,35 @@ namespace RfrmPri {
 
     printf("There are %u actors and %u reform items \n", numA, numRefItem);
 
+    
+
+    KMatrix aCap = KMatrix(1, numA);
+    for (unsigned int i = 0; i < numA; i++) {
+      auto ri = ((const RPActor *)(rpm->actrs[i]));
+      aCap(0, i) = ri->sCap;
+    }
+    cout << "Actor capabilities: " << endl;
+    aCap.mPrintf(" %.2f ");
+    cout << endl;
+    
+    
+    cout << "Effective gov cost of items:" << endl;
+    (rpm->govCost).mPrintf("%.3f ");
+    cout << endl; 
+    cout << "Government budget: " << rpm->govBudget << endl << flush;
+    assert (0 < rpm->govBudget);
+    
+    
+    cout << "Value to actors (rows) of individual reform items (columns):"<<endl; 
+     for (unsigned int i=0; i<rpm->actrs.size(); i++) {
+    auto rai = ((const RPActor*)(rpm->actrs[i]));
+    for (unsigned int j = 0; j <numRefItem; j++) { 
+      double vij =  rai->riVals[j];
+      printf(" %6.2f ", vij);
+    }
+    cout << endl << flush;
+    }
+    
     cout << "Computing positions ... " << endl;
     vector<VUI> positions; // list of all positions
     VUI pstn;
@@ -64,7 +93,8 @@ namespace RfrmPri {
     }
     const unsigned int numPos = positions.size();
     cout << "For " << numRefItem << " reform items there are " << numPos << " positions" << endl;
-
+    
+   
     // -------------------------------------------------
     // The next section sets up actor utilities.
     // First, we compute the unnormalized, raw utilities. The 'utilActorPos' checks
@@ -73,9 +103,6 @@ namespace RfrmPri {
     // so utilActorPos can use it in the future. Finally, we normalize the rows and
     // display the normalized utility matrix.
     cout << "Computing utilities of positions ... " << endl;
-    cout << "Effective gov costs:" << endl;
-    (rpm->govCost).mPrintf("%.3f ");
-    cout << endl;
     auto ruFn = [positions, rpm](unsigned int ai, unsigned int pj) {
       auto pstn = positions[pj];
       double uip = rpm->utilActorPos(ai, pstn);
@@ -102,6 +129,7 @@ namespace RfrmPri {
     }
     KMatrix uij = KBase::rescaleRows(rawUij, 0.0, 1.0); // von Neumann utility scale
 
+    
     cout << "Complete (normalized) utility matrix of all possible positions (rows) versus actors (columns)" << endl << flush;
     for (unsigned int pj = 0; pj < numPos; pj++) {
       printf("%3u  ", pj);
@@ -136,12 +164,8 @@ namespace RfrmPri {
       bestAP.push_back(positions[bestJ]);
     }
 
+
     cout << "Computing zeta ... " << endl;
-    KMatrix aCap = KMatrix(1, numA);
-    for (unsigned int i = 0; i < numA; i++) {
-      auto ri = ((const RPActor *)(rpm->actrs[i]));
-      aCap(0, i) = ri->sCap;
-    }
     KMatrix zeta = aCap * uij;
     assert((1 == zeta.numR()) && (numPos == zeta.numC()));
 
@@ -273,9 +297,11 @@ int main(int ac, char **av) {
   }
 
 
-  PRNG * rng = new PRNG();
   if (0 == seed) {
-    seed = rng->setSeed(seed); // 0 == get a random number
+    PRNG * rng = new PRNG();
+    seed = rng->setSeed(0); // 0 == get a random number
+    delete rng;
+    rng = nullptr;
   }
   printf("Using PRNG seed:  %020llu \n", seed);
   printf("Same seed in hex:   0x%016llX \n", seed);
@@ -283,7 +309,7 @@ int main(int ac, char **av) {
   // Windows only prints part, with lu, lX, llu, and llX.
 
 
-  auto rpm = new RPModel(rng);
+  auto rpm = new RPModel("", seed);
   if (xmlP) {
     rpm->readXML(inputXML);
     cout << "done reading XML" << endl << flush;
@@ -379,9 +405,6 @@ int main(int ac, char **av) {
   delete rpm; // and actors, and states
   rpm = nullptr;
   rps0 = nullptr;
-
-  delete rng;
-  rng = nullptr;
 
   KBase::displayProgramEnd(sTime);
 

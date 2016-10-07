@@ -27,6 +27,9 @@
 
 #include "demoleon.h"
 
+using std::cout;
+using std::endl;
+using std::flush;
 
 using KBase::PRNG;
 using KBase::KMatrix;
@@ -38,7 +41,6 @@ using KBase::State;
 using KBase::PCEModel;
 using KBase::VotingRule;
 using KBase::VPModel;
-
 
 namespace DemoLeon {
   const double TolIFD = 1E-6;
@@ -226,6 +228,46 @@ namespace DemoLeon {
   }
 
 
+// i's estimate of the GDP from j's policy.
+// This computes more than it needs to, so it is inefficient, but
+// the time-cost is negligable compared to the rest of the processing.
+double LeonState::estGDP(unsigned int i, unsigned int j) {
+    auto lMod = (LeonModel*) model;
+    assert(i < lMod->L + lMod->N);
+    assert(j < lMod->L + lMod->N);
+
+    auto delta = [] (double x, double y) {
+        const double d = 1E-10;
+        return (2.0*fabs(x-y))/(d + fabs(x) + fabs(y));
+    };
+
+    auto vpj = ((const VctrPstn *)(pstns[j]));
+    KMatrix pj = KMatrix(*vpj);
+    auto vs = lMod->vaShares(pj, false);
+    
+
+    double factorVA = 0.0;
+    for (unsigned int k=0; k<lMod->L; k++) { // sum VA over factors
+        factorVA = factorVA + vs(0, k);
+    }
+
+    double sectorVA = 0.0;
+    for (unsigned int k=0; k<lMod->N; k++) { // sum VA over sectors
+        sectorVA = sectorVA + vs(0, lMod->L+k);
+    }
+
+
+    double gdpij = 0.0;
+    if (i < lMod->L) {
+        gdpij = factorVA;
+    }
+    else {
+        gdpij = sectorVA;
+    }
+
+    return gdpij;
+}
+
   LeonState* LeonState::doSUSN(ReportingLevel rl) const {
     using std::cout;
     using std::endl;
@@ -350,7 +392,8 @@ namespace DemoLeon {
 
       auto aPos = ((VctrPstn*)(pstns[h]));
       printf("---------------------------------------- \n");
-      printf("Search for best next-position of actor %2u \n", h);
+      // JAH 20160811 changed to display actor names and not just id
+      printf("Search for best next-position of actor %s\n", eMod->actrs[h]->name.c_str());
       //printf("Search for best next-position of actor %2i starting from ", h);
       //trans(*aPos).printf(" %+.6f ");
       cout << flush;
@@ -491,7 +534,7 @@ namespace DemoLeon {
 
   // -------------------------------------------------
 
-  LeonModel::LeonModel(PRNG * r, string d, uint64_t s, vector<bool> f) : Model(r, d, s, f) {
+  LeonModel::LeonModel(string d, uint64_t s, vector<bool> f) : Model(d, s, f) {
     // some arbitrary yet plausible default values
     maxSub = 0.50;
     maxTax = 1.00;
@@ -514,6 +557,25 @@ namespace DemoLeon {
     }
     return dSum;
   }
+
+
+
+
+// Go back through the state history and print every actor's estimate of GDP from every other actor's policy-position
+void LeonModel::printEstGDP() {
+    for (unsigned int t=0; t<history.size(); t++) {
+        auto ls = (LeonState*)(history[t]);
+        auto fn = [this, ls](unsigned int i, unsigned int j) {
+            return ls->estGDP(i,j);
+        };
+        auto gdp = KMatrix::map(fn, numAct, numAct);
+        printf("For turn %u, estimated GDP by actor (row) of positions (policy): \n", t);
+        gdp.mPrintf("%8.2f ");
+        cout << endl << flush;
+    }
+
+    return;
+}
 
   // L factors, M consumption groups, N sectors
   tuple<KMatrix, KMatrix, KMatrix, KMatrix> LeonModel::makeBaseYear(unsigned int numF, unsigned int numCG, unsigned int numS, PRNG* rng) {
@@ -1015,6 +1077,81 @@ namespace DemoLeon {
     return;
   }
 
+  // JAH 20160809 let me state up front that I feel dirty passing in the pre-computed
+  // inverted L matrices, rather than passing in A,B,C,K and having it all compute them.
+  // I'm kind of forced to, though, since the data we have for our example has B,C,K
+  // matrices with "other stuff" which I can't just delete, and which makes no sense to
+  // expect for a general "prep model" function, since a general "prep model" function
+  // would expect differently-sized matrices.
+  // numFac = L, numCon = M, numSec = N
+  void LeonModel::prepModel(unsigned int numFac, unsigned int numCon, unsigned int numSec,
+  KMatrix & baseDemnd, KMatrix & dmndElast, KMatrix & revShare, KMatrix & lAlpha, KMatrix & lBeta)
+  {
+    using std::cout;
+    using std::endl;
+
+    // check stuff first - compiler doesn't like the asserts for nullptr inequality(?), so comment out
+    assert(numFac > 0);
+    assert(numCon > 0);
+    assert(numSec > 0);
+    //assert(nullptr != baseDemnd);
+    assert(baseDemnd.numR() == numSec);
+    assert(baseDemnd.numC() ==1);
+    //assert(dmndElast != nullptr);
+    assert(dmndElast.numR() == numSec);
+    assert(dmndElast.numC() == 1);
+    //assert(nullptr != revShare);
+    assert(revShare.numR() == numFac);
+    assert(revShare.numC() == numSec);
+    //assert(nullptr != lAlpha);
+    assert(lAlpha.numR() == numSec);
+    assert(lAlpha.numC() == numSec);
+    //assert(nullptr != lBeta);
+    assert(lBeta.numR() == numSec);
+    assert(lBeta.numC() == numSec);
+
+    // insert items into the model
+    N = numSec;
+    L = numFac;
+    M = numCon;
+
+    x0 = baseDemnd;
+    cout << "Base Year Demand:" << endl;
+    x0.mPrintf(" %.4f ");
+    cout << endl;
+
+    eps = dmndElast;
+    cout << "Export Elasticities:" << endl;
+    eps.mPrintf(" %.4f ");
+    cout << endl;
+
+    rho = revShare;
+    cout << "Factor Value-Add Shares" << endl;
+    rho.mPrintf(" %0.4f ");
+
+    aL = lAlpha;
+    cout << "Leontief Matrix for Factors: Lalpha=inverse(I-A) (solves q=d+Aq):" << endl;
+    aL.mPrintf(" %.4f  ");
+    cout << endl;
+
+    bL = lBeta;
+    cout << "Leontief Matrix for Sectors: Lbeta=inverse(I-A+BCK) (solves q=d+Aq+BCKq):" << endl;
+    bL.mPrintf(" %.4f  ");
+    cout << endl;
+
+    // this is just copied almost verbatim (vercodim?) from makeIOModel
+    vas = KMatrix(1, N);
+    for (unsigned int j = 0; j < N; j++) {
+      double vj = 0.0;
+      for (unsigned int h = 0; h < L; h++) {
+        vj = vj + revShare(h, j);
+      }
+      vas(0, j) = vj;
+    }
+
+    return;
+  }
+
 
   // the usual CES demand function:  (q1/q0) = (p0/p1)^eps ,
   // applied to each component where p0 = 1 and p1 = p0+tau
@@ -1187,7 +1324,8 @@ namespace DemoLeon {
     return mAbs;
   }
 
-  // row-vector of factor shares (e.g. L of them, e.g. labor), then sector shares (N of them)
+// Return row-vector of expected factor shares (e.g. L of them, e.g. labor), then expected sector shares (N of them).
+// As they are estimated by different economic models, sum of factor VA will usually NOT match sum of sector VA
   KMatrix  LeonModel::vaShares(const KMatrix & tax, bool normalizeSharesP) const {
 
     using KBase::sum;
@@ -1200,7 +1338,7 @@ namespace DemoLeon {
     auto budgetL = rho * qA;
 
 
-    auto qB = bL * xt;
+    auto qB = bL * xt; // N-by-1 column vector
     auto budgetS = KMatrix(1, N);
     for (unsigned int j = 0; j < N; j++) {
       double vs = qB(j, 0) * vas(0, j);
@@ -1311,14 +1449,16 @@ namespace DemoLeon {
     // Thus, generate K basis tax vectors, of N components each, and take the K policy
     // parameters as the weighting vectors (+/-) on those basis taxes.
 
-    auto eMod0 = new LeonModel(rng);
+
+    // JAH 20160830 changed to pass in the seed
+    auto eMod0 = new LeonModel("", s);
     eMod0->stop = nullptr; // no stop-run method, for now
 
     const unsigned int maxIter = 50; // TODO: realistic limit
     double qf = 1000.0;
-    eMod0->stop = [maxIter](unsigned int iter, const State * s) {
-      return (maxIter <= iter);
-    };
+
+
+
     eMod0->stop = [maxIter, qf](unsigned int iter, const State * s) {
       bool tooLong = (maxIter <= iter);
       bool quiet = false;
@@ -1444,7 +1584,7 @@ namespace DemoLeon {
       cout << "Pos vector: ";
       trans(*pi).mPrintf(" %+7.3f ");
       cout << "Cap vector: ";
-      trans(ai->vCap).mPrintf(" %7.2f ");
+      trans(ai->vCap).mPrintf(" %7.3f ");
       printf("minS: %.3f \n", ai->minS);
       printf("refS: %.3f \n", ai->refS);
       printf("maxS: %.3f \n", ai->maxS);
@@ -1498,6 +1638,9 @@ namespace DemoLeon {
 
     eMod0->run();
 
+    cout <<  endl;
+    cout<<"Estimates of GDP over time"<<endl;
+    eMod0->printEstGDP();
 
     delete eMod0; // and all the actors in it
     eMod0 = nullptr;
@@ -1581,6 +1724,355 @@ namespace DemoLeon {
     delete vhc;
     vhc = nullptr;
 
+
+    cout <<  endl;
+    cout<<"Estimates of GDP over time"<<endl;
+    eMod0->printEstGDP();
+    
+    delete eMod0; // and all the actors in it
+    eMod0 = nullptr;
+
+    return;
+  }
+
+  // JAH 20160809 create a version of the Leon App that can
+  // run with real-ish data; this could eventually be extended
+  // to take in the setup data from csv
+  // note that this bypasses entirely demoSetup, makeBaseYear, and makeIOModel
+  void demoRealEcon(uint64_t s, PRNG* rng)
+  {
+    using std::vector;
+    using std::cout;
+    using std::endl;
+    using std::flush;
+    using std::get;
+
+    // setup Leon model - this is all copied from demoSetup
+    auto eMod0 = new LeonModel("", s);
+    eMod0->stop = nullptr; // no stop-run method, for now
+
+    const unsigned int maxIter = 50; // TODO: realistic limit
+    double qf = 1000.0;
+
+
+
+    eMod0->stop = [maxIter, qf](unsigned int iter, const State * s) {
+      bool tooLong = (maxIter <= iter);
+      bool quiet = false;
+      if (1 < iter) {
+      auto sf = [](unsigned int i1, unsigned int i2, double d12) {
+        printf("sDist [%2i,%2i] = %.2E   ", i1, i2, d12);
+        return;
+      };
+
+      auto s0 = ((const LeonState*)(s->model->history[0]));
+      auto s1 = ((const LeonState*)(s->model->history[1]));
+      auto d01 = LeonModel::stateDist(s0, s1);
+      sf(0, 1, d01);
+
+      auto sx = ((const LeonState*)(s->model->history[iter - 0]));
+      auto sy = ((const LeonState*)(s->model->history[iter - 1]));
+      auto dxy = LeonModel::stateDist(sx, sy);
+      sf(iter - 0, iter - 1, dxy);
+
+      quiet = (dxy < d01 / qf);
+      if (quiet)
+        printf("Quiet \n");
+      else
+        printf("Not Quiet \n");
+
+      cout << endl << flush;
+      }
+      return (tooLong || quiet);
+    };
+
+    auto eSt0 = new LeonState(eMod0);
+    eMod0->addState(eSt0);
+    eSt0->step = nullptr; // no step method, for now
+
+    // SETUP THE DATA NOW - THIS IS THE NEW STUFF
+    const unsigned int N = 9;
+    const unsigned int M = 1; // DEBUG correct?
+    const unsigned int L = 3;
+
+    // x0 base year demand by sector
+    // this is from '[IO-USA-1981.xlsx]C+E'!K6:K14
+    vector<double> x0Input = {22.7533, 10.8967, 303.6836, 371.6834, 459.8229, 142.8963, 447.9898, 689.6980, 761.5760};
+    auto baseDemnd = KMatrix::vecToKmat(x0Input,N,1);
+
+    // export demand price elasticities - still have to simulate
+    auto dmndElast = KMatrix::uniform(rng, N, 1, 2.0, 3.0);
+
+    // aL Leontief factors matrix
+    // this is from '[IO-USA-1981.xlsx]A'!M33:U41
+    vector<double> aLinput = {1.3513, 0.0088, 0.0281, 0.0341, 0.1747, 0.0282, 0.0174, 0.0112, 0.0329,
+      0.0733, 1.0705, 0.0571, 0.0712, 0.2776, 0.1585, 0.0302, 0.0137, 0.0486,
+      0.0305, 0.0460, 1.0192, 0.0262, 0.0343, 0.0535, 0.0208, 0.0437, 0.0331,
+      0.0845, 0.0939, 0.4882, 1.5812, 0.1313, 0.1038, 0.0447, 0.0340, 0.0983,
+      0.3590, 0.0663, 0.1927, 0.1984, 1.5308, 0.2326, 0.1121, 0.0489, 0.2017,
+      0.0969, 0.0505, 0.1050, 0.1295, 0.1488, 1.2582, 0.1068, 0.0467, 0.1074,
+      0.0862, 0.0280, 0.1266, 0.1041, 0.0981, 0.0542, 1.0390, 0.0168, 0.0581,
+      0.1284, 0.0705, 0.0566, 0.0577, 0.0722, 0.0617, 0.0963, 1.1826, 0.0889,
+      0.0854, 0.0455, 0.1695, 0.1146, 0.1216, 0.1074, 0.1771, 0.0889, 1.1485};
+    auto lAlpha = KMatrix::vecToKmat(aLinput,N,N);
+
+    // bL Leontief sectors matrix
+    // this is from '[IO-USA-1981.xlsx]Omega'!D26:N34
+    vector<double> bLinput = {1.4070, 0.0152, 0.0346, 0.0431, 0.1902, 0.0424, 0.0236, 0.0265, 0.0389,
+      0.1015, 1.0854, 0.0688, 0.0880, 0.2981, 0.1872, 0.0418, 0.0439, 0.0589,
+      0.1678, 0.1353, 1.0690, 0.0847, 0.1142, 0.1776, 0.0856, 0.4307, 0.0884,
+      0.4487, 0.2635, 0.6520, 1.8212, 0.3751, 0.5158, 0.1937, 0.3591, 0.2381,
+      0.4455, 0.1039, 0.2265, 0.2460, 1.5909, 0.3140, 0.1466, 0.1452, 0.2321,
+      0.1536, 0.0767, 0.1294, 0.1644, 0.1865, 1.3220, 0.1320, 0.1054, 0.1288,
+      0.1644, 0.0639, 0.1622, 0.1525, 0.1505, 0.1379, 1.0969, 0.0928, 0.0881,
+      0.1577, 0.0832, 0.0680, 0.0738, 0.0902, 0.0896, 0.1094, 1.2125, 0.0990,
+      0.1399, 0.0728, 0.1923, 0.1460, 0.1567, 0.1627, 0.2040, 0.1673, 1.1698};
+    auto lBeta = KMatrix::vecToKmat(bLinput,N,N);
+
+//    // transactions matrix - think I don't really need this, in fact
+//    // from '[IO-USA-1981.xlsx]Trans-O'!C29:K37
+//    vector<double> transO = {54.5599, 0.0000, 0.8421, 8.3292, 111.4680, 0.0000, 1.6436, 3.2026, 7.8575,
+//      0.2745, 16.9755, 5.1045, 25.2678, 210.1173, 53.9029, 0.0876, 0.1198, 2.7220,
+//      11.0784, 27.3947, 5.9957, 23.8326, 16.5904, 50.8224, 17.4627, 352.7097, 32.5168,
+//      20.8095, 26.3265, 259.7468, 658.6728, 82.6806, 91.4987, 29.9324, 34.0753, 74.5726,
+//      34.5284, 7.6392, 54.0495, 107.4505, 388.2805, 64.8286, 33.1338, 12.1021, 128.6472,
+//      6.8535, 8.4077, 25.8689, 84.5289, 76.8644, 112.9855, 52.7938, 24.8829, 73.2268,
+//      11.7001, 6.3596, 69.0192, 98.2826, 65.2734, 26.4137, 41.1844, 10.0193, 45.5339,
+//      13.8841, 15.7759, 11.9451, 27.3992, 15.9873, 14.8652, 52.0347, 156.2178, 69.7162,
+//      4.6344, 5.8584, 79.9983, 70.0523, 57.0329, 30.4654, 110.1180, 60.8488, 128.9934};
+//     auto secTrans = KMatrix::vecToKmat(transO,N,N);
+
+    // revenue share vector
+    // from '[IO-USA-1981.xlsx]A'!C32:K34
+    vector<double> rho = {0.1849, 0.3774, 0.1702, 0.1369, 0.0880, 0.2135, 0.3888, 0.3967, 0.3308,
+      0.0906, 0.1655, 0.0489, 0.0601, 0.0387, 0.1046, 0.2225, 0.2070, 0.1726,
+      0.1384, 0.2061, 0.1979, 0.2010, 0.1293, 0.1598, 0.0507, 0.1183, 0.0986};
+    auto revShare = KMatrix::vecToKmat(rho,L,N);
+
+    // set up for scenarios of capacities
+    // 0 = random, 1 = equal, 2 = self-weighted, 3 = input-weighted
+    unsigned int capscen = 3;
+    KMatrix caps = KMatrix();  // must declare it here even if capscen == 0 because of scope
+    switch (capscen){
+      case 0:
+        // just keep the randomizer code below
+        break;
+      case 1:
+      {
+        // every actor has the same capability in each dim (which are all summed anyway)
+        caps = KMatrix(N+L,N,1.0);
+        cout << "Capabilities Matrix (Scen 1)" << endl;
+        caps.mPrintf(" %0.3f ");
+        break;
+      }
+      case 2:
+      {
+        // set up with cap = 1 for each sector in his own dim, and 1/N everywhere else
+        // factors all have 1/N capability - not that this automatically underweights them
+        // relative to the sectors
+        auto eye = KMatrix(N,N, 1.0/N);
+        for (unsigned int r = 0; r<N; r++)
+        {
+          for (unsigned int c = 0; c<N; c++)
+          {
+            if(r==c)
+            {
+              eye(r,c) = 1.0;
+            }
+          }
+        }
+        caps = KBase::joinV(KMatrix(L,N,1.0/N),eye);
+        cout << "Capabilities Matrix (Scen 2)" << endl;
+        caps.mPrintf(" %0.3f ");
+        break;
+        // P.S. JAH 20160830 looking through the existing code, I determined that this
+        // is wasted effort, as the vector of weights for each actor is simply summed
+        // to a scalar number :-(; keeping this scenario for possible future use
+      }
+      case 3:
+      {
+        // JAH 20161003 weight each sector according to it's total VA
+        // from '[IO-USA-1981.xlsx]Trans-O'!C26:N26
+        vector<double> compVA = {1537.2745, 750.0555, 923.6700,
+          62.8064, 205.5044, 249.9203, 458.6496, 275.9301, 199.5496, 458.0236, 571.5965, 729.0196};
+        caps = KMatrix::vecToKmat(compVA,N+L,1);
+        cout << "Capabilities Matrix (Scen 3)" << endl;
+        caps.mPrintf(" %0.3f ");
+        break;
+      }
+    }
+
+    // now prep it all
+    eMod0->prepModel(L,M,N,baseDemnd,dmndElast,revShare,lAlpha,lBeta);
+
+    // factors and sectors - JAH 20161003 changed order of actors
+    vector<string> actNames = {"HH Pay", "Other Pay", "Imports",
+      "Agr", "Ming", "Const", "DurGood", "NDurGood", "Trans,C,U","W&R Trade", "Fin,Ins,RE", "Other Srv"};
+    vector<string> actDescs = {"HH Pay", "Other Pay", "Imports", "Agriculture",
+      "Mining", "Construction", "Durable goods manufacturing", "Nondurable goods manufacturing",
+      "Transportation, communication and utilities", "Wholesale and retail trade",
+      "Finance, insurance and real estate", "Other services"};
+
+    // NOW BACK TO STUFF COPIED FROM demoSetup (with obvious edits)
+    // determine the reference level, as well as upper and lower
+    // bounds on economic gain/loss for these actors in this economy.
+    unsigned int nRuns = 2500;
+    cout << "Calibrate utilities via Monte Carlo of " << nRuns << " runs ... " << flush;
+    const KMatrix runs = eMod0->monteCarloShares(nRuns, rng); // row 0 is always 0 tax
+    cout << "done" << endl << flush;
+
+    cout << "EU State for Econ actors with vector capabilities" << endl;
+    const unsigned int numA = N + L;
+    const unsigned int eDim = N;
+    printf("Number of actors %u \n", numA);
+    printf("Number of econ policy factors %u \n", eDim);
+    // Note that if eDim < numA, then they do not have enough degrees of freedom to
+    // precisely target benefits. If eDim > numA, then they do.
+
+    {   // this block makes local all the temp vars used to build the state.
+
+      // for this demo, assign consistent voting rule to the actors.
+      // Note that because they have vector capabilities, not scalar,
+      // we cannot do a simple scalar election, and the only way to
+      // build the 'coalitions' matrix is by voting of the actors themselves.
+      auto overallVR = VotingRule::Proportional;
+
+      // now create those actors and display them
+      // JAH edited to use actor name & descs from the realish data
+      auto es = vector<Actor*>();
+      for (unsigned int i = 0; i < numA; i++) {
+      auto ai = new LeonActor(actNames[i], actDescs[i], eMod0, i);
+      // JAH 20160814 changed to allow scenarios
+      switch (capscen){
+        case 0:
+          ai->randomize(rng);
+          break;
+        default:
+          // get a row from the scenario capabilities matrix and transpose to the column used by Actor
+          ai->vCap = KBase::trans(caps.getRow(i));
+          break;
+      }
+      ai->vr = overallVR;
+      ai->setShareUtilScale(runs);
+      es.push_back(ai);
+      }
+      assert(numA == es.size());
+
+      // now we give them positions that are slightly better for themselves
+      // than the base case. this is just a random sampling.
+      auto ps = vector<VctrPstn*>();
+      for (unsigned int i = 0; i < numA; i++) {
+      double maxAbs = 0.0; // with 0.0, all have zero-tax SQ as their initial position
+      auto ai = (const LeonActor*)es[i];
+      auto t0 = KMatrix::uniform(rng, eDim, 1, -maxAbs, +maxAbs);
+      auto t1 = eMod0->makeFTax(t0);
+      VctrPstn* ep = nullptr;
+      const double minU = 0.0; // could be ai->refU, or with default, 0.6
+      const double maxU = 1.0; // could be (1+ai->refU)/2, or with default, 0.8
+      assert(0 < ai->refU);
+      double ui = -1;
+      while ((ui < minU) || (maxU < ui)) {
+        if (nullptr != ep) {
+        delete ep;
+        }
+        t0 = KMatrix::uniform(rng, eDim, 1, -maxAbs, +maxAbs);
+        t1 = eMod0->makeFTax(t0);
+        ep = new VctrPstn(t1);
+        ui = ai->posUtil(ep);
+      }
+      ps.push_back(ep);
+      }
+      assert(numA == ps.size());
+
+      for (unsigned int i = 0; i < numA; i++) {
+      eMod0->addActor(es[i]);
+      eSt0->addPstn(ps[i]);
+      }
+    }
+    // end of local-var block
+
+    for (unsigned int i = 0; i < numA; i++) {
+      auto ai = (const LeonActor*)eMod0->actrs[i];
+      auto pi = (const VctrPstn*)eSt0->pstns[i];
+      printf("%2u: %s , %s \n", i, ai->name.c_str(), ai->desc.c_str());
+      cout << "voting rule: " << ai->vr << endl;
+      cout << "Pos vector: ";
+      trans(*pi).mPrintf(" %+7.3f ");
+      cout << "Cap vector: ";
+      trans(ai->vCap).mPrintf(" %7.3f ");
+      printf("minS: %.3f \n", ai->minS);
+      printf("refS: %.3f \n", ai->refS);
+      printf("maxS: %.3f \n", ai->maxS);
+      cout << endl << flush;
+    }
+
+    eSt0->setAUtil(-1, KBase::ReportingLevel::Low);
+    auto u = eSt0->aUtil[0];
+    assert(numA == eSt0->model->numAct);
+
+    auto vfn = [eMod0, eSt0](unsigned int k, unsigned int i, unsigned int j) {
+      assert(j != i);
+      auto ak = ((LeonActor*)(eMod0->actrs[k]));
+      double vk = ak->vote(i,i, j, eSt0);
+      return vk;
+    };
+
+    KMatrix c = Model::coalitions(vfn, eMod0->actrs.size(), eSt0->pstns.size());
+    cout << "Coalition strength matrix" << endl;
+    c.mPrintf(" %9.3f ");
+    cout << endl << flush;
+
+    auto vpm = VPModel::Linear;
+
+    auto pv = Model::vProb(vpm, c);
+    cout << "Probability Opt_i > Opt_j" << endl;
+    pv.mPrintf(" %.4f ");
+    cout << endl;
+
+    auto p = Model::probCE(PCEModel::ConditionalPCM, pv);
+    cout << "Probability Opt_i" << endl;
+    p.mPrintf(" %.4f ");
+
+    auto eu0 = u*p;
+    cout << "Expected utility to actors: " << endl;
+    eu0.mPrintf(" %.4f ");
+    cout << endl << flush;
+
+    // from here on out, the content is copied from demoEUEcon
+    //LeonState * eSt0 = ((LeonState *)(eMod0->history[0]));
+
+    eSt0->aUtil = vector<KMatrix>(); // dropping any old ones
+    eSt0->step = [eSt0]() {
+      return eSt0->stepSUSN();
+    };
+
+    eMod0->run();
+
+    // JAH 2060814 want to display a matrix of final policies, as well as the final mean policy
+    // this is predominantly for automatic extraction of results
+    auto stfinal = eMod0->history[eMod0->history.size()-1];
+    printf("%u Iterations Completed\nFINAL POLICIES\n",eMod0->history.size()-1);
+
+    // compute the mean - I tried to get this as a method of the LeonModel and LeonState, but failed :-(
+    auto p0 = ((VctrPstn*)(stfinal->pstns[0]));
+    // want to display as row vectors, so might as well start of transposing
+    KMatrix meanP = KMatrix(p0->numC(),p0->numR(), 0.0);
+    for (unsigned int i = 0; i < eMod0->numAct; i++)
+    {
+      auto iPos = ((VctrPstn*)(stfinal->pstns[i]));
+      auto y = KBase::trans(*iPos);
+      meanP = meanP + y;
+      y.mPrintf(" %+0.4f ");
+    }
+    meanP = meanP / numA;
+    // talk
+    printf("FINAL MEAN POLICY\n");
+    meanP.mPrintf(" %+0.4f ");
+
+    cout <<  endl;
+    cout<<"Estimates of GDP over time"<<endl;
+    eMod0->printEstGDP();
+
     delete eMod0; // and all the actors in it
     eMod0 = nullptr;
 
@@ -1599,8 +2091,9 @@ int main(int ac, char **av) {
   auto sTime = KBase::displayProgramStart();
   uint64_t seed = dSeed;
   bool run = true;
-  bool euEconP = true; // debugging with Visual Studio
+    bool euEconP = false;
   bool maxEconP = false;
+  bool rlEconP = false;
 
   auto showHelp = []() {
     printf("\n");
@@ -1608,6 +2101,7 @@ int main(int ac, char **av) {
     printf("--help            print this message\n");
     printf("--euEcon          exp. util. of IO econ model\n");
     printf("--maxEcon         max support of IO econ model\n");
+    printf("--rlEcon          same as euEcon but with the synthesized data\n");
     printf("--seed <n>        set a 64bit seed, in decimal\n");
     printf("                  0 means truly random\n");
     printf("                  default: %020llu \n", dSeed);
@@ -1630,6 +2124,9 @@ int main(int ac, char **av) {
       else if (strcmp(av[i], "--maxEcon") == 0) {
         maxEconP = true;
       }
+      else if (strcmp(av[i], "--rlEcon") == 0) {
+        rlEconP = true;
+       }
       else if (strcmp(av[i], "--help") == 0) {
         run = false;
       }
@@ -1652,21 +2149,30 @@ int main(int ac, char **av) {
   printf("Using PRNG seed:  %020llu \n", seed);
   printf("Same seed in hex:   0x%016llX \n", seed);
 
-  const unsigned int numF = 5; // 2;
-  const unsigned int numG = 5; // 2;
-  const unsigned int numS = 10; //5;
+  // don't understand why these were set to L = M = 5 and N = 10; the article had L = 3, M = 2, N = 5
+  const unsigned int numF = 3; // 5; // 2;
+  const unsigned int numG = 2; //5; // 2;
+  const unsigned int numS = 5; //10; //5;
 
   // note that we reset the seed every time, so that in case something
   // goes wrong, we need not scroll back too far to find the
   // seed required to reproduce the bug.
 
+  // JAH 20160811; Even if someone runs leonApp with the maxEcon flag,
+  // both euEcon and maxEcon are run. I'm unsure what maxEcon really
+  // does vis-a-vis euEcon, but this seems like unintended behavior to me.
   if (euEconP) {
-    cout << "-----------------------------------" << endl;
+    cout << "E----------------------------------" << endl;
     DemoLeon::demoEUEcon(seed, numF, numG, numS, rng);
   }
   if (maxEconP) {
-    cout << "-----------------------------------" << endl;
+    cout << "M----------------------------------" << endl;
     DemoLeon::demoMaxEcon(seed, numF, numG, numS, rng);
+  }
+  if (rlEconP)
+  {
+      cout << "R----------------------------------" << endl;
+      DemoLeon::demoRealEcon(seed, rng);
   }
   cout << "-----------------------------------" << endl;
 

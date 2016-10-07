@@ -2,22 +2,22 @@
 // Copyright KAPSARC. Open source MIT License.
 // --------------------------------------------
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2015 King Abdullah Petroleum Studies and Research Center
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 // and associated documentation files (the "Software"), to deal in the Software without
 // restriction, including without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom 
+// distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom
 // the Software is furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all copies or
 // substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // --------------------------------------------
 
@@ -42,38 +42,38 @@
 #include "kmodel.h"
 
 namespace DemoLeon {
-  // namespace to which KBase has no access
+// namespace to which KBase has no access
 
-  using std::string;
-  using std::tuple;
-  using std::vector;
+using std::string;
+using std::tuple;
+using std::vector;
 
-  using KBase::KMatrix;
-  using KBase::PRNG;
-  using KBase::ReportingLevel;
- using KBase::VUI;
+using KBase::KMatrix;
+using KBase::PRNG;
+using KBase::ReportingLevel;
+using KBase::VUI;
 
-  using KBase::Actor;
-  using KBase::Position;
-  using KBase::State;
-  using KBase::Model;
-  using KBase::VotingRule;
+using KBase::Actor;
+using KBase::Position;
+using KBase::State;
+using KBase::Model;
+using KBase::VotingRule;
 
-  using KBase::VctrPstn;
+using KBase::VctrPstn;
 
-  class LeonModel;
-  class LeonState;
-  class LeonActor;
+class LeonModel;
+class LeonState;
+class LeonActor;
 
-  // ------------------------------------------------- 
-  
-  LeonModel* demoSetup(unsigned int numFctr, unsigned int numCGrp, unsigned int numSect, uint64_t s, PRNG* rng);
-  void demoEUEcon(uint64_t s, PRNG* rng);
-  void demoMaxEcon(uint64_t s, PRNG* rng);
-  // ------------------------------------------------- 
-  // trivial economic actor, with fixed attributes and a linear utility function
-  class LeonActor : public Actor {
-  public:
+// -------------------------------------------------
+
+LeonModel* demoSetup(unsigned int numFctr, unsigned int numCGrp, unsigned int numSect, uint64_t s, PRNG* rng);
+void demoEUEcon(uint64_t s, PRNG* rng);
+void demoMaxEcon(uint64_t s, PRNG* rng);
+// -------------------------------------------------
+// trivial economic actor, with fixed attributes and a linear utility function
+class LeonActor : public Actor {
+public:
     LeonActor(string n, string d, LeonModel* em, unsigned int id);
     ~LeonActor();
 
@@ -92,13 +92,13 @@ namespace DemoLeon {
     // for them, as determined by their gradient vector, but
     // they have no ideal position: utility = dot(grad, position),
     // so they want as much of the goods as they can get - and less of the bads.
-    // 
+    //
     // They have different capabilities to lobby for things they
     // care about, as expressed in their capability vector.
     //
     // With scalar cap, their proportional vote for P1 over P2 would be the following:
     //
-    // vk(P1:p2) = c * ( dot(g,P1) - dot(g,P2)) 
+    // vk(P1:p2) = c * ( dot(g,P1) - dot(g,P2))
     //           = c * sum_k (gk*p1k - gk*p2k)
     //
     // This would be quite reasonable behavior, but it would not exerise the SW interfaces.
@@ -112,7 +112,7 @@ namespace DemoLeon {
     // Note that this voting rule can not be represented as a function of the
     // difference in overall utilities. If two policies differ only on a dimension for
     // which they lack capability, they exert zero influence (vote=0) even though
-    // there is a big utility difference. If two other policies differ by just as 
+    // there is a big utility difference. If two other policies differ by just as
     // much utility on a dimension for which they have ample capability, they may
     // exert strong influence. Same (delta-Util) input, but different (influence)
     // outputs: no function can do that.
@@ -127,7 +127,7 @@ namespace DemoLeon {
     //
     // The point is NOT to demonstrate a realistic model of either economic
     // bargaining or vector-capabilities, because this one certainly is not,
-    // but to show that we are not locked into either SMP or scalar-capabilities. 
+    // but to show that we are not locked into either SMP or scalar-capabilities.
     //
     KMatrix vCap = KMatrix();
     VotingRule vr = VotingRule::Proportional; // plausible default
@@ -146,53 +146,61 @@ namespace DemoLeon {
     void randomize(PRNG* rng);
     void setShareUtilScale(const KMatrix & runs);
     double shareToUtil(double gdpShare) const;
-  };
+};
 
 
-  class LeonState : public State {
-  public:
-   explicit LeonState(LeonModel * em);
+class LeonState : public State {
+public:
+    explicit LeonState(LeonModel * em);
     ~LeonState();
     const LeonModel * eMod = nullptr; // saves a lot of type-casting
 
-    
+
     // use the parameters of your state to compute the relative probability of each actor's position
     virtual tuple <KMatrix, VUI>  pDist(int persp) const ;
-    
+
     LeonState* stepSUSN();
-    
-  protected:
+
+    // i's estimate of the GDP
+    double estGDP(unsigned int i, unsigned int j);
+
+protected:
     LeonState * doSUSN(ReportingLevel rl) const;
     virtual bool equivNdx(unsigned int i, unsigned int j) const;
-    
-    void setAllAUtil(ReportingLevel rl);
-    
-  private:
-  };
 
-  // Each actor's  utility function assigns a utility of 0 to the lowest GDP
-  // share they could plausibly get, and 1 to the highest they could plausibly get.
-  // This can be done simply by generating a thousand revenue-neutral but otherwise random
-  // taxe vectors, and observing the highest and lowest GDP shares for each actor.
-  // It is not a complete sample, so you will sometimes see utilities slightly outside the 
-  // [0,1] range. This is not a problem, as all actors are basically on the same scale.
-  //
-  // Of course, the zero-tax vector is feasible, and it is taken as the reference / base case
-  // for every actor. I'd like to assign a utility of 0.6 for each actor to the GDP share they
-  // get in the base case, with linear interpolation/extrapolation on either side of it. 
-  // This makes all the actors somewhat risk-averse.
-  class LeonModel : public Model {
+    void setAllAUtil(ReportingLevel rl);
+
+private:
+};
+
+// Each actor's  utility function assigns a utility of 0 to the lowest GDP
+// share they could plausibly get, and 1 to the highest they could plausibly get.
+// This can be done simply by generating a thousand revenue-neutral but otherwise random
+// taxe vectors, and observing the highest and lowest GDP shares for each actor.
+// It is not a complete sample, so you will sometimes see utilities slightly outside the
+// [0,1] range. This is not a problem, as all actors are basically on the same scale.
+//
+// Of course, the zero-tax vector is feasible, and it is taken as the reference / base case
+// for every actor. I'd like to assign a utility of 0.6 for each actor to the GDP share they
+// get in the base case, with linear interpolation/extrapolation on either side of it.
+// This makes all the actors somewhat risk-averse.
+class LeonModel : public Model {
     friend class LeonActor;
-  public:
+    friend class LeonState;
+public:
     // JAH 20160711 added rng seed 20160730 JAH added sql flags
-    explicit LeonModel(PRNG * r, string d="", uint64_t s=0, vector<bool> f={});
+    explicit LeonModel( string d="", uint64_t s=KBase::dSeed, vector<bool> f= {});
     virtual ~LeonModel();
 
-    // syntheize random, but not-ridiculous, data for a base year
+    // synthesize random, but not-ridiculous, data for a base year
     tuple<KMatrix, KMatrix, KMatrix, KMatrix> makeBaseYear(unsigned int numF, unsigned int numCG, unsigned int numS, PRNG* rng);
 
     // given base year data (real or synthetic), construct a plausible I/O model from that data.
     void makeIOModel(const KMatrix & trns, const KMatrix & rev, const KMatrix & xprt, const KMatrix & cons, PRNG* rng);
+
+    // JAH 20160809 added
+    void prepModel(unsigned int numFac, unsigned int numCon, unsigned int numSec,
+                   KMatrix & baseDemnd, KMatrix & dmndElast, KMatrix & revShare, KMatrix & lAlpha, KMatrix & lBeta);
 
     // Estimate vector of export demands, given a vector tau of tax/subsidy rates.
     // assuming base year prices of 1.0
@@ -204,20 +212,25 @@ namespace DemoLeon {
     // Given an arbitrary tax/subsidy vector, search for the nearest which is revenue-neutral.
     // It may flip the signs of some components. It may throw KException, so be prepared.
     KMatrix makeFTax(const KBase::KMatrix& tax) const;
-    
-    double infsDegree(const KMatrix & tax) const; 
 
+    double infsDegree(const KMatrix & tax) const;
+
+    // Return row-vector of expected factor shares (e.g. L of them, e.g. labor), then expected sector shares (N of them).
+    // As they are estimated by different economic models, sum of factor VA will usually NOT match sum of sector VA
     KMatrix vaShares(const KMatrix & tax, bool normalizeSharesP) const;
 
     KMatrix monteCarloShares(unsigned int nRuns, KBase::PRNG* rng);
-    
+
     // considering all the positions as vectors, return the distance between states.
     static double stateDist (const LeonState* s1 , const LeonState* s2 );
 
     /// how close together positions must be to be considered equivalent
     double posTol = 1E-5;
 
-  protected:
+    // Go back through the state history and print every actor's estimate of GDP from every other actor's policy-position
+    void printEstGDP();
+
+protected:
     unsigned int L = 0; // factors of production
     unsigned int M = 0; // consumption groups
     unsigned int N = 0; // economic sectors
@@ -252,9 +265,9 @@ namespace DemoLeon {
     // vas: row-vector of fractional value-added shares per sector (i.e. rho added over factors)
     KMatrix  vas = KMatrix();
 
-  private:
+private:
 
-  };
+};
 
 
 };

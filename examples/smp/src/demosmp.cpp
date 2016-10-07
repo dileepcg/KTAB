@@ -136,20 +136,20 @@ namespace DemoSMP {
         return;
     }
 
-  void demoEUSpatial(unsigned int numA, unsigned int sDim, bool accP, uint64_t s, PRNG* rng, vector<bool> f) {
+  void demoEUSpatial(unsigned int numA, unsigned int sDim, bool accP, uint64_t s,  vector<bool> f) {
     printf("Using PRNG seed: %020llu \n", s);
      // JAH 20160711 added rng seed 20160730 JAH added sql flags
-    auto md0 = new SMPModel(rng, "", s, f);
+    auto md0 = new SMPModel( "", s, f);
     //rng->setSeed(s); // seed is now set in Model::Model
     if (0 == numA) {
       double lnMin = log(4);
       double lnMax = log(25);
       // median is 10  = exp( [log(4)+log(25)] /2 ) = sqrt(4*25)
-      double na = exp(rng->uniform(lnMin, lnMax));
+      double na = exp(md0->rng->uniform(lnMin, lnMax));
       numA = ((unsigned int)(na + 0.5)); // i.e. [5,10] inclusive
     }
     if (0 == sDim) {
-      sDim = 1 + (rng->uniform() % 3); // i.e. [1,3] inclusive
+      sDim = 1 + (md0->rng->uniform() % 3); // i.e. [1,3] inclusive
     }
 
     cout << "EU State for SMP actors with scalar capabilities" << endl;
@@ -191,8 +191,8 @@ namespace DemoSMP {
       string di = "Random spatial actor";
 
       auto ai = new SMPActor(ni, di);
-      ai->randomize(rng, sDim);
-      auto iPos = new VctrPstn(KMatrix::uniform(rng, sDim, 1, 0.0, 1.0)); // SMP is always on [0,1] scale
+      ai->randomize(md0->rng, sDim);
+      auto iPos = new VctrPstn(KMatrix::uniform(md0->rng, sDim, 1, 0.0, 1.0)); // SMP is always on [0,1] scale
       md0->addActor(ai);
       st0->addPstn(iPos);
     }
@@ -216,7 +216,7 @@ namespace DemoSMP {
     if (accP) {
       cout << "Using randomized matrix for ideal-accomodation"<<endl<<flush;
       for (unsigned int i=0; i<md0->numAct; i++) {
-        aMat(i,i) = rng->uniform(0.1, 0.5); // make them lag noticably
+        aMat(i,i) = md0->rng->uniform(0.1, 0.5); // make them lag noticably
       }
     }
     else {
@@ -290,9 +290,9 @@ namespace DemoSMP {
     return;
   }
 
-  void readEUSpatial(uint64_t seed, string inputCSV, PRNG* rng, vector<bool> f) {
+  void readEUSpatial(uint64_t seed, string inputCSV,  vector<bool> f) {
     // JAH 20160711 added rng seed 20160730 JAH added sql flags
-    auto md0 = SMPModel::readCSV(inputCSV, rng, seed, f);
+    auto md0 = SMPModel::readCSV(inputCSV, seed,  f);
 
     // JAH 20160802 added call to executeSMP
     executeSMP(md0);
@@ -370,8 +370,13 @@ int main(int ac, char **av) {
     return 0;
   }
 
-  PRNG * rng = new PRNG();
-  seed = rng->setSeed(seed); // 0 == get a random number
+  if (0 == seed) {
+    PRNG * rng = new PRNG();
+    seed = rng->setSeed(seed); // 0 == get a random number
+    delete rng;
+    rng = nullptr;
+  }
+
   printf("Using PRNG seed:  %020llu \n", seed);
   printf("Same seed in hex:   0x%016llX \n", seed);
 
@@ -380,16 +385,15 @@ int main(int ac, char **av) {
   // seed required to reproduce the bug.
   if (euSmpP) {
     cout << "-----------------------------------" << endl;
-    DemoSMP::demoEUSpatial(0, 0, randAccP, seed, rng,sqlFlags);
+    DemoSMP::demoEUSpatial(0, 0, randAccP, seed,sqlFlags);
   }
   if (csvP) {
     cout << "-----------------------------------" << endl;
-    DemoSMP::readEUSpatial(seed, inputCSV, rng,sqlFlags);
+    DemoSMP::readEUSpatial(seed, inputCSV,sqlFlags);
   }
   cout << "-----------------------------------" << endl;
 
 
-  delete rng;
   KBase::displayProgramEnd(sTime);
   return 0;
 }

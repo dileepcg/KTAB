@@ -226,7 +226,8 @@ public:
 
     sqlite3 *smpDB = nullptr; // keep this protected, to ease later multi-threading
     // JAH 20160711 added seed 20160730 JAH added sql flags
-    explicit Model(PRNG * r, string d, uint64_t s, vector<bool> f);
+    // BPW 2016-09-28 removed redundant PRNG input variable
+    explicit Model(string d, uint64_t s, vector<bool> f);
     virtual ~Model();
 
     static const unsigned int minNumActor = 3;
@@ -239,9 +240,11 @@ public:
     static const unsigned int sqlBuffSize = 250; // big enough buffer to build all desired SQLite statements
 
 
-    // parameters which every Model instance must set
-    VPModel vpm = VPModel::Linear; // arbitrary default
-    PCEModel pcem = PCEModel::ConditionalPCM; // arbitrary default
+    // default 'victory probability model' is Linear
+    VPModel vpm = VPModel::Linear;
+
+    // default 'probabilistic Condorcet election' model is Conditional
+    PCEModel pcem = PCEModel::ConditionalPCM;
 
     // In the abstract, you run a model by stepping it until it is time to stop.
     // In detail, each step is likely to record copious information to
@@ -282,8 +285,8 @@ public:
 
     unsigned int addState(State* s); // returns new number of states, always at least 1
 
-    function <bool(unsigned int iter, const State* s)> stop = nullptr;
     // you have to provide this λ-fn
+    function <bool(unsigned int iter, const State* s)> stop = nullptr;
 
     // these should probably be less public and more protected
     vector<Actor*> actrs = {};
@@ -320,7 +323,9 @@ public:
     static double estNRA(double rh, double  ri, BigRAdjust ra) ;
 
     // string getScenarioName() const { return scenName; };
-    string getScenarioID() const { return scenId; };
+    string getScenarioID() const {
+        return scenId;
+    };
 
     static KTable * createSQL(unsigned int n);
 protected:
@@ -376,7 +381,10 @@ public:
     void setAUtil(int perspH = -1, ReportingLevel rl = ReportingLevel::Silent);
 
     void setUENdx();
+    
+    // determine if the i-th position in this state is equivalent to the j-th position
     virtual bool equivNdx(unsigned int i, unsigned int j) const = 0;
+    
     double posProb(unsigned int i, const VUI & unq, const KMatrix & pdt) const;
 
     // return the turn-number of this state.

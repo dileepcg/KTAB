@@ -241,7 +241,7 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
     return w;
   }
 
-  MtchModel* MtchModel::randomMS(unsigned int numA, unsigned int numI, VotingRule vr, MtchActor::PropModel pMod, PRNG * rng) {
+  MtchModel* MtchModel::randomMS(unsigned int numA, unsigned int numI, VotingRule vr, MtchActor::PropModel pMod, uint64_t seed) {
 
     // The situation is a set of numA actors dividing a pile of numI sweets among themselves.
     // Hence, the categories are "for actor 0", "for actor 1", etc. so numCat = numAct
@@ -272,14 +272,14 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
     cout << "Using voting rule " << vr << endl;
 
     cout << "Randomly generated actors with random positions: " << endl;
-    auto md0 = new MtchModel(rng);
+    auto md0 = new MtchModel("", seed);
     md0->numItm = numI;
     md0->numCat = numC;
     auto st0 = new MtchState(md0);
     for (unsigned int i = 0; i < numA; i++){
-      auto ai = MtchActor::rAct(numI, minCap, maxCap, rng, i);
+      auto ai = MtchActor::rAct(numI, minCap, maxCap, md0->rng, i);
       ai->vr = vr;
-      MtchPstn* pi = MtchActor::rPos(numI, numA, rng);
+      MtchPstn* pi = MtchActor::rPos(numI, numA, md0->rng);
       md0->addActor(ai);
       st0->addPstn(pi);
 
@@ -302,7 +302,7 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
 
   // -------------------------------------------------
   // JAH 20160711 added rng seed
-  MtchModel::MtchModel(PRNG* rng, string d, uint64_t s, vector<bool> f) : Model(rng, d, s, f) {
+  MtchModel::MtchModel(string d, uint64_t s, vector<bool> f) : Model(d, s, f) {
     numCat = 0;
     numItm = 0;
   }
@@ -313,10 +313,11 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
   }
 
   // -------------------------------------------------
-  void demoDivideSweets(uint64_t s, PRNG* rng) {
+  void demoDivideSweets(uint64_t s ) {
 
-    printf("Using PRNG seed: %020llu \n", s);
-    rng->setSeed(s);
+   printf("Using PRNG seed: %020llu \n", s);
+   auto rng = new PRNG();
+   rng->setSeed(s);
 
     const unsigned int numI = 25;
     const unsigned int numA = 7;
@@ -393,8 +394,9 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
   }
 
   // ------------------------------------------------- 
-  void demoMaxSupport(uint64_t s, PRNG* rng) {
+  void demoMaxSupport(uint64_t s) {
     printf("Using PRNG seed: %020llu \n", s);
+    auto rng = new PRNG();
     rng->setSeed(s);
 
     const unsigned int numA = 7;
@@ -598,9 +600,10 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
 
 
 
-  void demoMtchSUSN(uint64_t s, PRNG* rng) {
+  void demoMtchSUSN(uint64_t s) {
 
     printf("Using PRNG seed: %020llu \n", s);
+    auto rng = new PRNG();
     rng->setSeed(s);
 
 
@@ -610,7 +613,7 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
 
     const VotingRule vr = VotingRule::Proportional;
 
-    auto md0 = MtchModel::randomMS(numA, numI, vr, MtchActor::PropModel::ExpUtil, rng);
+    auto md0 = MtchModel::randomMS(numA, numI, vr, MtchActor::PropModel::ExpUtil, s);
     for (unsigned int i = 0; i < numA; i++) {
       auto ai = (MtchActor*)(md0->actrs[i]);
       if (0 == (i % 3)) {
@@ -669,14 +672,12 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
     return;
   }
 
-  void multiMtchSUSN(uint64_t s, PRNG* rng) {
-
+  void multiMtchSUSN(uint64_t s) {
     printf("Using PRNG seed: %020llu \n", s);
-    rng->setSeed(s);
     unsigned int numTrial = 3;
     unsigned int numStbl = 0;
     for (unsigned int i = 1; i <= numTrial; i++) {
-      if (oneMtchSUSN(s, rng))
+      if (oneMtchSUSN(s))
         numStbl++;
       printf("Stabilized: %u in %u / %u runs\n", numStbl, i, numTrial);
     }
@@ -684,7 +685,7 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
     return;
   }
 
-  bool oneMtchSUSN(uint64_t s, PRNG* rng) {
+  bool oneMtchSUSN(uint64_t s) {
 
     unsigned int numA = 6;  // number of actors
     unsigned int numC = numA;
@@ -692,7 +693,7 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
 
     const VotingRule vr = VotingRule::Proportional;
 
-    auto md0 = MtchModel::randomMS(numA, numI, vr, MtchActor::PropModel::ExpUtil, rng);
+    auto md0 = MtchModel::randomMS(numA, numI, vr, MtchActor::PropModel::ExpUtil, s);
     for (unsigned int i = 0; i < numA; i++) {
       auto ai = (MtchActor*)(md0->actrs[i]);
       if (0 == (i % 3)) {
@@ -1088,15 +1089,15 @@ int main(int ac, char **av) {
   // seed required to reproduce the bug.  
   if (dosP) {
     cout << "-----------------------------------" << endl;
-    DemoMtch::demoDivideSweets(seed, rng);
+    DemoMtch::demoDivideSweets(seed);
   }
   if (maxSupP) {
     cout << "-----------------------------------" << endl;
-    DemoMtch::demoMaxSupport(seed, rng);
+    DemoMtch::demoMaxSupport(seed);
   }
   if (mtchSUSNP) {
     cout << "-----------------------------------" << endl;
-    DemoMtch::demoMtchSUSN(seed, rng);
+    DemoMtch::demoMtchSUSN(seed);
   }
   cout << "-----------------------------------" << endl;
 

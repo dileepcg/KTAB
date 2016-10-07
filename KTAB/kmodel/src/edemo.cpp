@@ -207,28 +207,29 @@ namespace MDemo { // a namespace of which M, A, P, S know nothing
 
   // --------------------------------------------
 
-  void demoEMod(uint64_t s, PRNG* rng) {
+  void demoEMod(uint64_t s) {
     using KBase::EModel;
-
-
+    cout << endl;
     printf("Using PRNG seed: %020llu \n", s);
-    rng->setSeed(s);
 
     printf("Creating EModel objects ... \n");
 
     string n2D = "EModel-TwoDPoint";
-    auto em2D = new EModel<TwoDPoint>(rng, n2D);
+    auto em2D = new EModel<TwoDPoint>(n2D, s);
     cout << "Populating " << n2D << endl;
     em2D->enumOptions = theta2D;
     em2D->setOptions();
-    cout << "Now have " << em2D->numOptions() << endl;
+    cout << "Now have " << em2D->numOptions() << " enumerated options" << endl;
 
+    cout << endl;
     string nBV = "EModel-VBool";
-    EModel<VBool>* emBV = new EModel<VBool>(rng, nBV);
+    EModel<VBool>* emBV = new EModel<VBool>( nBV, s);
     cout << "Populating " << nBV << endl;
-    emBV->enumOptions = tbv(17, 3, rng); //  thetaBV(4);
+    const unsigned int numActTBV = 17;
+    const unsigned int numBitsTBV = 4; 
+    emBV->enumOptions = tbv(numActTBV, numBitsTBV, emBV->rng); //  thetaBV(4);
     emBV->setOptions();
-    cout << "Now have " << emBV->numOptions() << endl;
+    cout << "Now have " << emBV->numOptions() << " enumerated options" << endl;
 
     printf("Deleting EModel objects ... \n");
     delete em2D;

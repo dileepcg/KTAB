@@ -81,7 +81,7 @@ namespace ComSelLib {
   class CSModel : public Model {
   public:
     // JAH 20160711 added rng seed JAH 20160802 added sql flags
-    explicit CSModel(unsigned int nd, PRNG* r, string d = "", uint64_t s=0, vector<bool> f={});
+    explicit CSModel(unsigned int nd, string d = "", uint64_t s=KBase::dSeed, vector<bool> f={});
     virtual ~CSModel();
 
 

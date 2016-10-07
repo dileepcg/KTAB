@@ -17,6 +17,12 @@ if [ "$1" == "" ]
 fi
 
 
+if [ -a /usr/local/ktab ]
+  then
+    echo "Removing previous system KTAB lib and include"
+    rm -rf /usr/local/ktab/lib /usr/local/ktab/include
+fi
+
 # note that two double-quotes are part of the string
 DQGEN=$DQ$GEN$DQ
 

@@ -254,7 +254,7 @@ namespace SMPLib {
 
   class SMPModel : public Model {
   public:
-    explicit SMPModel(PRNG * rng, string desc = "", uint64_t s=0, vector<bool> f={}); // JAH 20160711 added rng seed
+    explicit SMPModel( string desc = "", uint64_t s=KBase::dSeed, vector<bool> f={}); // JAH 20160711 added rng seed
     virtual ~SMPModel();
 
     static string dbPath; //to store db file name from SMPQ GUI, default is testsmp.db
@@ -266,12 +266,13 @@ namespace SMPLib {
     static double bvDiff(const KMatrix & vd, const  KMatrix & vs);
     static double bvUtil(const KMatrix & vd, const  KMatrix & vs, double R);
 
-    static SMPModel * readCSV(string fName, PRNG * rng, uint64_t s, vector<bool> f); // JAH 20160711 added rng seed
+    static SMPModel * readCSV(string fName, uint64_t s, vector<bool> f); // JAH 20160711 added rng seed
+    static SMPModel * readXML(string fName, uint64_t s, vector<bool> f);  
 
     static  SMPModel * initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
                                  const KMatrix & cap, const KMatrix & pos, const KMatrix & sal,
                                  const KMatrix & accM, // 20160720 BPW added accomodation matrix
-                                 PRNG * rng, uint64_t s, vector<bool> f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
+                                 uint64_t s, vector<bool> f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
 
     // print history of each actor in CSV (might want to generalize to arbitrary VctrPstn)
     void showVPHistory() const;

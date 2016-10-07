@@ -183,7 +183,7 @@ double RPActor::posUtil(const Position * ap1) const
     // which may or may not be square
     const KMatrix c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
     const KMatrix pv = Model::vProb(vpm, c); // square
-    const KMatrix p = Model::probCE(PCEModel::ConditionalPCM, pv); // column
+    const KMatrix p = Model::probCE(rpMod->pcem, pv); // column
     const KMatrix eu = uMat*p; // column
 
     assert(numA == eu.numR());
@@ -226,7 +226,7 @@ double RPActor::posUtil(const Position * ap1) const
   
   // --------------------------------------------
   // JAH 20160711 added rng seed
-  RPModel::RPModel(PRNG* rng, string d, uint64_t s, vector<bool> f) : Model(rng, d, s, f) {
+  RPModel::RPModel(string d, uint64_t s, vector<bool> f) : Model( d, s, f) {
     // nothing yet
   }
 
@@ -501,11 +501,11 @@ void RPModel::readXML(string fileName)
     }
     catch (const KException& ke)
     {
-      cout << "Caught KException in readXML: " << ke.msg << endl << flush;
+      cout << "Caught KException in RPModel::readXML: " << ke.msg << endl << flush;
     }
     catch (...)
     {
-      cout << "Caught unidentified exception in readXML" << endl << flush;
+      cout << "Caught unidentified exception in RPModel::readXML" << endl << flush;
     }
 
     return;
@@ -636,6 +636,11 @@ void RPModel::configScen(unsigned int numA, const double aCap[], const KMatrix &
       prob.push_back(pj);
       pj = pj * pDecline;
     }
+    
+    //cout << "Value to actors (rows) of individual reform items (columns): " << endl;
+    //utils.mPrintf(" %6.2f ");
+    //cout << endl << flush;
+    
     return;
   }
 
@@ -649,6 +654,10 @@ double RPModel::utilActorPos(unsigned int ai, const VUI &pstn) const
     assert(nullptr != rai);
     double costSoFar = 0;
     double uip = 0.0;
+    assert (0 < govBudget);
+    //cout << "govBudget: " << govBudget << endl;
+
+    
     for (unsigned int j = 0; j < pstn.size(); j++)
     {
       unsigned int rj = pstn[j];

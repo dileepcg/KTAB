@@ -36,7 +36,7 @@
 #include "sqlitedemo.h"
 #include "edemo.h"
 #include "tinyxml2demo.h"
-
+#include "demoMatrixEMod.h"
 
 using std::cout;
 using std::endl;
@@ -64,6 +64,7 @@ using KBase::GHCSearch;
 
 namespace MDemo { // a namespace of which M, A, P, S know nothing
 
+// --------------------------------------------
 
 void demoPCE(uint64_t s, PRNG* rng) {
     printf("Using PRNG seed: %020llu \n", s);
@@ -291,7 +292,8 @@ int main(int ac, char **av) {
 
     if (emodP) {
         cout << "-----------------------------------" << endl;
-        MDemo::demoEMod(seed, rng);
+        MDemo::demoEMod(seed);
+        eModKEM::demoEKem(seed);
     }
 
     if (sqlP) {

@@ -145,7 +145,6 @@ namespace KBase {
     vFillVec(nr, nc, iv);
   }
 
-
   // if double mv[] = { 11, 12, 13, 21, 22, 23 }, then
   // mArrayInit (mv, 2, 3) yields
   // 11  12  13
@@ -509,6 +508,40 @@ namespace KBase {
 
     return m2;
   }
+
+  // JAH 20160809 create a matrix by reshaping from a vector
+  KMatrix KMatrix::vecToKmat(vector<double> vec, unsigned int nr, unsigned int nc)
+  {
+      // be sure the size of the desired matrix is consistent with the data
+      assert(vec.size() == nr*nc);
+
+      // init to the right size ...
+      auto mat = KMatrix(nr,nc,0.0);
+      int rowShift = 0; // rowshift is used to "block" chunks of data in the vector to create rows
+      // ... then fill in the data from the vector
+      for(unsigned int r = 0; r<nr; r++)
+      {
+          for(unsigned int c = 0; c<nc; c++)
+          {
+              mat(r,c) = vec[r+rowShift+c];
+          }
+          rowShift += (nc-1);
+      }
+      return mat;
+  }
+
+  KMatrix KMatrix::getRow(unsigned int nr)
+  {
+    // be sure the requested row number is < numrows
+    assert(nr < this->numR());
+    auto thisrow = KMatrix(1,this->numC(),0.0);
+    for (unsigned int c = 0; c<this->numC(); c++)
+    {
+      thisrow(0,c) = (*this)(nr,c);
+    }
+    return thisrow;
+  }
+
 } // end of namespace
 
 // --------------------------------------------

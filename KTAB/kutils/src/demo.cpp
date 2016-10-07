@@ -381,6 +381,29 @@ namespace UDemo {
       printf("ok\n\n");
     }
 
+    // JAH 20160809 added test for the new vector init
+    cout << endl << "Test matrix reshaped from vector" << endl;
+    vector<double> dat = {1,2,3,4,5,6,7,8,9,10,11,12};
+    // all in one row
+    printf("1 x 12\n");
+    auto mat1 = KMatrix::vecToKmat(dat,1,12);
+    mat1.mPrintf("%2.0f ");
+    // 3 x 4
+    printf("3 x 4\n");
+    auto mat2 = KMatrix::vecToKmat(dat,3,4);
+    mat2.mPrintf("%2.0f ");
+    // 2 x 6
+    printf("2 x 6\n");
+    auto mat3 = KMatrix::vecToKmat(dat,2,6);
+    mat3.mPrintf("%2.0f ");
+
+    // JAH 20160814 added test for the new getrows nonstatic function
+    cout << "Row 0 of previous 2x6 matrix" << endl;
+    auto row1 = mat3.getRow(0);
+    row1.mPrintf(" %2.0f ");
+    cout << "Row 1 of previous 3x4 matrix" << endl;
+    auto row2 = mat2.getRow(1);
+    row2.mPrintf(" %2.0f ");
     return;
   }
 
@@ -1977,7 +2000,9 @@ int main(int ac, char **av) {
 
 
   PRNG * rng = new PRNG();
-  seed = rng->setSeed(seed); // 0 == get a random number
+  if (0 == seed) {
+    seed = rng->setSeed(seed); // 0 == get a random number
+  }
 
   //printf("Using PRNG seed:  %020llu \n", seed);
   //printf("Same seed in hex:   0x%016llX \n", seed);

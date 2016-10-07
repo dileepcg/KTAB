@@ -52,7 +52,7 @@ namespace MDemo {
   using KBase::VBool;
 
   // --------------------------------------------
-  void demoEMod(uint64_t s, PRNG* rng);
+  void demoEMod(uint64_t s);
   // --------------------------------------------
 
   struct TwoDPoint {

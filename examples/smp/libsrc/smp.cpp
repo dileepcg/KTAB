@@ -754,7 +754,7 @@ namespace SMPLib {
   string SMPModel::dbPath="testsmp.db"; // Initializing to have testsmp.db as a default DB name
 
   // JAH 20160711 added rng seed
-  SMPModel::SMPModel(PRNG * r, string desc, uint64_t s, vector<bool> f) : Model(r, desc, s, f) {
+  SMPModel::SMPModel(string desc, uint64_t s, vector<bool> f) : Model( desc, s, f) {
     // note that numDim, posTol, and dimName are initialized in class declaration
     // TODO: get cleaner opening of smpDB
     sqlTest();
@@ -1017,7 +1017,7 @@ namespace SMPLib {
   }
 
   // JAH 20160711 added rng seed 20160730 JAH added sql flags
-  SMPModel * SMPModel::readCSV(string fName, PRNG * rng, uint64_t s, vector<bool> f) {
+  SMPModel * SMPModel::readCSV(string fName,  uint64_t s, vector<bool> f) {
      using KBase::KException;
     char * errBuff; // as sprintf requires
     csv_parser csv(fName);
@@ -1152,19 +1152,27 @@ namespace SMPLib {
 
     // now that it is read and verified, use the data
     // JAH 20160711 added rng seed 20160730 JAH added sql flags
-    auto sm0 = SMPModel::initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM, rng, s, f);
+    auto sm0 = SMPModel::initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM,  s, f);
     return sm0;
   }
 
+
+
+  SMPModel * SMPModel::readXML(string fName, uint64_t s, vector<bool> f) {
+    SMPModel* smp = nullptr;
+
+
+    return smp;
+  }
 
   // JAH 20160711 added rng seed 20160730 JAH added sql flags
   SMPModel * SMPModel::initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
                                  const KMatrix & cap, const KMatrix & pos, const KMatrix & sal,
                                  const KMatrix & accM,
-                                 PRNG * rng, uint64_t s, vector<bool> f)
+                                 uint64_t s, vector<bool> f)
   {
     assert(f.size() == Model::NumSQLLogGrps+NumSQLLogGrps);
-    SMPModel * sm0 = new SMPModel(rng,"",s,f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
+    SMPModel * sm0 = new SMPModel("",s,f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
     SMPState * st0 = new SMPState(sm0);
     st0->step = [st0]() {
         return st0->stepBCN();

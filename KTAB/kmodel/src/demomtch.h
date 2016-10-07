@@ -67,11 +67,11 @@ class MtchState;
 class MtchModel;
 
 // -------------------------------------------------
-void demoDivideSweets(uint64_t s, PRNG* rng);
-void demoMaxSupport(uint64_t s, PRNG* rng);
-void demoMtchSUSN(uint64_t s, PRNG* rng);
-void multiMtchSUSN(uint64_t s, PRNG* rng);
-bool oneMtchSUSN(uint64_t s, PRNG* rng);
+void demoDivideSweets(uint64_t s);
+void demoMaxSupport(uint64_t s);
+void demoMtchSUSN(uint64_t s);
+void multiMtchSUSN(uint64_t s);
+bool oneMtchSUSN(uint64_t s);
 
 void showMtchPstn(const MtchPstn & mp);
 bool stableMtchState(unsigned int iter, const State* s);
@@ -151,10 +151,10 @@ private:
 class MtchModel : public Model {
 public:
     // JAH 20160711 added rng seed JAH 20160730 JAH added sql flags
-    explicit MtchModel(PRNG* rng, string d="", uint64_t s=0, vector<bool> f={});
+    explicit MtchModel(string d="", uint64_t s=KBase::dSeed, vector<bool> f={});
     virtual ~MtchModel();
 
-    static MtchModel* randomMS(unsigned int numA, unsigned int numI, VotingRule vr, MtchActor::PropModel pMod, PRNG * rng);
+    static MtchModel* randomMS(unsigned int numA, unsigned int numI, VotingRule vr, MtchActor::PropModel pMod, uint64_t seed);
 
     unsigned int numItm = 0;
     unsigned int numCat = 0;  // happens to equal numAct, in this demo

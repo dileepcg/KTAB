@@ -77,7 +77,7 @@ namespace ComSelLib {
 
   // --------------------------------------------
   // JAH 20160711 added rng seed JAH 20160802 added sql flags
-  CSModel::CSModel(unsigned int nd, PRNG* r, string d, uint64_t s, vector<bool> f) : Model(r, d, s, f) {
+  CSModel::CSModel(unsigned int nd,  string d, uint64_t s, vector<bool> f) : Model(d, s, f) {
 
     assert(nd > 0);
 
