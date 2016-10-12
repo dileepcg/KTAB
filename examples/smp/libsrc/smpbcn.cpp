@@ -420,7 +420,7 @@ SMPState* SMPState::doBCN() const {
 
         auto u_im = KMatrix::map(buk, na, nb);
 		//	bargnIds.assign(na, 0);
-		
+	
 	    cout << "u_im: " << endl;
         u_im.mPrintf(" %.5f ");
 
