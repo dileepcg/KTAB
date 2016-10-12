@@ -416,13 +416,12 @@ SMPState* SMPState::doBCN() const {
 	// (This loop would be a good place for high-level parallelism)
 	for (unsigned int k = 0; k < na; k++) {
 		unsigned int nb = brgns[k].size();
-		auto buk = [this](unsigned int nai, unsigned int nbj) {
+		/*auto buk = [this](unsigned int nai, unsigned int nbj) {
 		return SMPModel::bsUtil(vDiff(nai, nbj), nra(nai, 0));
-		};
+		};*/
 
-        auto u_im = KMatrix::map(buk, na, nb);
-		//	bargnIds.assign(na, 0);
-	
+        auto u_im = KMatrix::map(aUtil[k], na, nb);
+			
 	    cout << "u_im: " << endl;
         u_im.mPrintf(" %.5f ");
 
