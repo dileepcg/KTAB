@@ -45,6 +45,16 @@ namespace KBase {
   class KMatrix;
   class PRNG;
 
+  KMatrix subMatrix(const KMatrix & m1,
+    unsigned int i1, unsigned int i2,  // requires i1 <= i2
+    unsigned int j1, unsigned int j2); // requires j1 <= j2
+
+  // return row-vector from row number i
+  KMatrix hSlice(const KMatrix & m1, unsigned int i);
+
+  // return column-vector from column j
+  KMatrix vSlice(const KMatrix & m1, unsigned int j);
+
   KMatrix trans(const KMatrix & m);
   double  norm(const KMatrix & m);
   double  sum(const KMatrix & m);

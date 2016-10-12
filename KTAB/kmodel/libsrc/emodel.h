@@ -54,26 +54,26 @@
 #include "kmodel.h"
 
 namespace KBase {
-  using std::shared_ptr;
-  using std::string;
-  using std::tuple;
-  using std::vector;
+using std::shared_ptr;
+using std::string;
+using std::tuple;
+using std::vector;
 
 
 
-  // -------------------------------------------------
-  // this model relies on an explicit enumeration of all possible
-  // outcomes/positions: a few tens of thousands of discrete choices.
-  // PT is the position-type
+// -------------------------------------------------
+// this model relies on an explicit enumeration of all possible
+// outcomes/positions: a few tens of thousands of discrete choices.
+// PT is the position-type
 
-  template <class PT>
-    class EModel : public Model {
-  public:
+template <class PT>
+class EModel : public Model {
+public:
     // JAH 20160711 added rng seed 20160730 JAH added sql flags
     explicit EModel(string d = "", uint64_t s=KBase::dSeed, vector<bool> = {});
     virtual ~EModel();
 
-    void setOptions(); // just error-check before calling 'enumOptions'
+    virtual void setOptions(); // just error-check before calling 'enumOptions'
     unsigned int numOptions() const;
     PT* nthOption(unsigned int i) const;
 
@@ -83,58 +83,55 @@ namespace KBase {
     // Enumerate theta, the set of options
     function <vector <PT*> ()> enumOptions = nullptr;
 
-    // if supplied, set the baseUtils object
-    function <void ()> setBaseUtils = nullptr;
-
-  protected:
+protected:
     vector <PT*> theta = {}; // the enumerated space of all possible positions/outcomes
-    KMatrix* baseUtils = nullptr; // if set, the basic util(actor,option) matrix
+    static const unsigned int minNumOptions = 3;
 
-  private:
-  };
+private:
+};
 
 
- 
 
-   // -------------------------------------------------
-  // enumerated positions are just handles that index into the set theta.
-  //
-  template <class PT>
-    class EPosition : public Position {
-  public:
+
+// -------------------------------------------------
+// enumerated positions are just handles that index into the set theta.
+//
+template <class PT>
+class EPosition : public Position {
+public:
     EPosition(EModel<PT>* m, int n);
     virtual ~EPosition();
 
-  protected:
+protected:
     virtual void print(ostream& os) const;
-    
+
     int ndx = -1;
 
-  private:
+private:
     const EModel<PT>* eMod = nullptr; // saves a lot of type-casting later
 
-  };
+};
 
-  // -------------------------------------------------
-  template <class PT>
-    class EState : public State {
-  public:
-    explicit EState(EModel<PT>* mod);
+// -------------------------------------------------
+template <class PT>
+class EState : public State {
+public:
+    explicit EState( EModel<PT>* mod);
     virtual ~EState();
     void setValues();
-    
+
     void show() const;
 
     EState<PT>* stepSUSN();
 
-    // TODO: finish  pDist
-    // use the parameters of your state to compute the relative probability of
+    // TODO: verify pDist
+    // use the parameters of this state to compute the relative probability of
     // each actor's position. persp = -1 means use everyone's separate perspectives
     //(i.e. get actual probabilities, not one actor's beliefs)
     tuple <KMatrix, VUI> pDist(int persp) const;
 
 
-  protected:
+protected:
 
     void setAllAUtil(ReportingLevel rl);
 
@@ -162,38 +159,38 @@ namespace KBase {
 
 
     EState<PT>* doSUSN(ReportingLevel rl) const;
-    
+
     // Given the utility matrix, uMat, calculate the expected utility to each actor,
     // as a column-vector. Again, this is from the perspective of whoever developed uMat.
     KMatrix  expUtilMat  (KBase::ReportingLevel rl, unsigned int numA, unsigned int numP,  KBase::VPModel vpm, const KMatrix & uMat) const;
-                          
-    
-    const EModel<PT>*  eMod = nullptr; // saves a lot of type-casting later
+
+
+    EModel<PT>*  eMod = nullptr; // saves a lot of type-casting later
 
     // TODO: finish equivNdx
     // determine if the i-th position in this state is equivalent to the j-th position
     virtual bool equivNdx(unsigned int i, unsigned int j) const;
 
-  private:
-  };
+private:
+};
 
 
-    // -------------------------------------------------
-  // enumerated positions are just handles that index into the set theta.
-  //
-  template <class PT>
-    class EActor : public Actor {
-  public:
+// -------------------------------------------------
+// enumerated positions are just handles that index into the set theta.
+//
+template <class PT>
+class EActor : public Actor {
+public:
     EActor(EModel<PT>* m, string n, string d);
     virtual ~EActor();
-    
+
     //default voting rule is proportional
     KBase::VotingRule vr = KBase::VotingRule::Proportional;
-    
+
     // simple scalar capability
     double sCap = 0.0;
-    
-    
+
+
     // Vote between positions occupied by two different actors in the same
     // state, just looking up stored information.
     // Note well: it cannot be assumed that the vote between two
@@ -201,16 +198,16 @@ namespace KBase {
     // in stored utilities.
     virtual double vote(unsigned int est,unsigned int p1, unsigned int p2, const State* st) const;
 
-  protected:
+protected:
     const EModel<PT>* eMod = nullptr; // saves a lot of type-casting later
-  
-
-  private:
-
-  };
 
 
-  
+private:
+
+};
+
+
+
 }; // end of namespace
 
 

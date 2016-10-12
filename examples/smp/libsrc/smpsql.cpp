@@ -71,7 +71,7 @@ KTable * SMPModel::createSQL(unsigned int n)  {
 				"Coord		REAL NOT NULL DEFAULT 0"\
 				 ");";
             name = "VectorPosition";
-            grpID = 1;
+            grpID = 4;// JAH 20161010 put in group 4 all by itself
 			break;
 
 		case 1: // salience to each actor of each dimension

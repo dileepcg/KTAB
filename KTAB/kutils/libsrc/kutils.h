@@ -62,7 +62,9 @@ namespace KBase {
 
   enum class ReportingLevel : uint8_t { Silent = 0, Low, Medium, High, Debugging };
 
-  const uint64_t dSeed = 0xD67CC16FE69C185C; // arbitrary default PRNG seed value
+  // arbitrary default PRNG seed value, which just
+  // happens to be one of my favorite integers
+  const uint64_t dSeed = 0xD67CC16FE69C185C;
 
   double sqr(const double& x);  // second power
   double qrtc(const double& x); // fourth power

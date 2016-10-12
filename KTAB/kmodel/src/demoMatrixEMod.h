@@ -34,44 +34,74 @@
 
 
 namespace eModKEM {
-  using std::string;
-  using std::vector;
-  
-  using KBase::EModel;
-  
-  
-// --------------------------------------------
+using std::string;
+using std::vector;
 
-class EKEModel : public EModel<char> {
+using KBase::KMatrix;
+
+using KBase::EActor;
+using KBase::EModel;
+using KBase::EPosition;
+using KBase::EState;
+
+
+// --------------------------------------------
+// The Policy Matrix model uses a pre-specified matrix
+// of actor-vs-policy utilities.
+// The utility matrix provides a (basic) linkage to offline
+// models such as KEM/GAMS.
+// The unsigned int in the template is just the column of a policy.
+class PMatrixModel : public EModel<unsigned int> {
 public:
-    EKEModel (string d = "", uint64_t s=KBase::dSeed, vector<bool> = {});
-    virtual ~EKEModel();
+    PMatrixModel (string d = "", uint64_t s=KBase::dSeed, vector<bool> = {});
+    virtual ~PMatrixModel();
+
+// check the matrix and set as utilities,
+// if valid for [numAct,numOpt] utilities in [0,1] range.
+    void setPMatrix(const KMatrix pm0);
+
+// check the row-matrix and set as weight,
+// if valid for non-negative [numAct,1] weights
+    void setWeights(const KMatrix w0);
+
+protected:
+    KMatrix wghtVect; // column vector of actor weights
+    KMatrix polUtilMat; // if set, the basic util(actor,option) matrix
+
+private:
+
+};
+
+
+class PMatrixPos : public EPosition<unsigned int> {
+public:
+    PMatrixPos(PMatrixModel* pm, int n);
+    virtual ~PMatrixPos();
 
 protected:
 
 private:
 
 };
-  
-  
+
 // --------------------------------------------
 
 
-  const unsigned int numActKEM = 21;
-  const unsigned int numPolKEM = 30;
+const unsigned int numActKEM = 21;
+const unsigned int numPolKEM = 30;
 
-  const vector<char*> thetaKEM = {
+const vector<char*> thetaKEM = {
     "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
     "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
     "20", "21", "22", "23", "24", "25", "26", "27", "28", "29"
-  };
+};
 
 
-  // --------------------------------------------
-  // weights of actors 0-20 
-  // --------------------------------------------
-  // numActKEM rows, 1 column 
-  const double weightArray[] = {
+// --------------------------------------------
+// weights of actors 0-20
+// --------------------------------------------
+// numActKEM rows, 1 column
+const double weightArray[] = {
     85.0 ,
     22.9 ,
     19.8 ,
@@ -93,14 +123,14 @@ private:
     120.5 ,
     1.2 ,
     12.2
-  };
+};
 
 
-  // --------------------------------------------
-  // utility to actors 0-20 of policies 0-29
-  // --------------------------------------------
-  // numActKEM rows, numPolKEM columns
-  const double utilArray[] = {
+// --------------------------------------------
+// utility to actors 0-20 of policies 0-29
+// --------------------------------------------
+// numActKEM rows, numPolKEM columns
+const double utilArray[] = {
     0.1491 , 0.4289 , 0.9973 , 0.2777 , 0.6942 , 0.9797 , 0.5568 , 0.3547 , 0.9138 , 0.3834 , 0.2918 , 0.7854 , 0.9316 , 0.1806 , 0.6769 , 0.9988 , 0.6328 , 0.7812 , 0.5812 , 0.2254 , 0.9768 , 0.6764 , 0.0000 , 0.8259 , 0.3568 , 0.1093 , 0.5615 , 0.9944 , 1.0000 , 0.9221 ,
     0.4643 , 0.9773 , 0.2573 , 0.6052 , 0.5132 , 0.3925 , 0.8403 , 0.2556 , 0.6755 , 0.9646 , 0.6107 , 0.6290 , 0.9995 , 0.9053 , 0.6015 , 0.2167 , 0.9831 , 0.7640 , 0.3831 , 0.9624 , 0.5432 , 0.7773 , 0.9854 , 0.1290 , 0.7219 , 0.0000 , 0.4962 , 1.0000 , 0.9529 , 0.8902 ,
     0.8392 , 0.2911 , 0.5729 , 0.6808 , 1.0000 , 0.0000 , 0.9804 , 0.9309 , 0.8132 , 0.2985 , 0.9959 , 0.7023 , 0.1665 , 0.9820 , 0.9611 , 0.9695 , 0.9940 , 0.7231 , 0.9875 , 0.9847 , 0.9833 , 0.0423 , 0.3779 , 1.0000 , 0.9818 , 0.1319 , 0.7792 , 0.7874 , 0.5504 , 0.8068 ,
@@ -122,11 +152,11 @@ private:
     0.0213 , 0.2836 , 0.9966 , 0.1979 , 0.6196 , 0.9420 , 0.4754 , 0.3649 , 0.8976 , 0.3886 , 0.2267 , 0.7634 , 0.9299 , 0.1215 , 0.5342 , 0.9923 , 0.7039 , 0.7816 , 0.5968 , 0.2213 , 0.9609 , 0.5653 , 0.0000 , 0.7780 , 0.2674 , 0.1451 , 0.4401 , 0.9882 , 1.0000 , 0.8832 ,
     0.4145 , 0.9710 , 0.2212 , 0.6222 , 0.4858 , 0.3801 , 0.8168 , 0.2393 , 0.6393 , 0.9551 , 0.5869 , 0.6251 , 0.9994 , 0.9084 , 0.5953 , 0.1630 , 0.9764 , 0.7508 , 0.4024 , 0.9622 , 0.5413 , 0.7690 , 0.9851 , 0.0695 , 0.6988 , 0.0000 , 0.4487 , 1.0000 , 0.9488 , 0.8803 ,
     0.8521 , 0.2739 , 0.5391 , 0.6821 , 1.0000 , 0.0000 , 0.9734 , 0.9363 , 0.8173 , 0.3000 , 0.9927 , 0.6827 , 0.2013 , 0.9829 , 0.9657 , 0.9614 , 0.9954 , 0.7470 , 0.9806 , 0.9839 , 0.9770 , 0.0910 , 0.3800 , 0.9984 , 0.9739 , 0.1816 , 0.7823 , 0.7906 , 0.5222 , 0.8023
-  };
+};
 
 
-  // --------------------------------------------
-  void demoEKem(uint64_t s);
+// --------------------------------------------
+void demoEKem(uint64_t s);
 
 
 } // end of namespace eModKEM

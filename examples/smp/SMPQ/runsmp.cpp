@@ -175,9 +175,11 @@ void MainWindow::runPushButtonClicked(bool bl)
       auto sTime = KBase::displayProgramStart(DemoSMP::appName, DemoSMP::appVersion);
       uint64_t seed = dSeed;
 
-      // JAH 20160730 vector of SQL logging flags for 4 groups of tables:
-      // 0 = Information Tables, 1 = Position Tables, 2 = EDU Tables, 3 = Bargain Resolution Tables
-      std::vector<bool> sqlFlags = {true,true,true,true};
+      // JAH 20160730 vector of SQL logging flags for 5 groups of tables:
+      // 0 = Information Tables, 1 = Position Tables, 2 = Challenge Tables,
+      // 3 = Bargain Resolution Tables, 4 = VectorPosition table
+      // JAH 20161010 added group 4 for only VectorPos so it can be logged alone
+      std::vector<bool> sqlFlags = {true,true,true,true,true};
 
      
       // Notice that we NEVER use anything but the default seed.

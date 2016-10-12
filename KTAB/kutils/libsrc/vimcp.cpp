@@ -85,8 +85,8 @@ namespace KBase {
       estL = norm(f1 - f0) / norm(x1 - x0);
 
       if (extra) {
-        const KMatrix x1b = P(x0 - gamma * f1);
-        const KMatrix f1b = F(x1b);
+        const auto x1b = P(x0 - gamma * f1);
+        const auto f1b = F(x1b);
 
         x1 = x1b;
         f1 = f1b;

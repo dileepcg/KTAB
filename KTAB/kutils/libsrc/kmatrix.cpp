@@ -40,7 +40,40 @@ namespace KBase {
   using std::endl;
   using std::flush;
 
-  KMatrix trans(const KMatrix & m1) {
+  KMatrix subMatrix(const KMatrix & m1,
+    unsigned int i1, unsigned int i2,
+    unsigned int j1, unsigned int j2) {
+
+    assert(i1 <= i2);
+    assert(i2 < m1.numR());
+    const unsigned int nr = 1 + (i2 - i1);
+
+    assert(j1 <= j2);
+    assert(j2 < m1.numC());
+    const unsigned int nc = 1 + (j2 - j1);
+
+    KMatrix m2 = KMatrix(nr, nc);
+    for (unsigned int i = 0; i < nr; i++) {
+      for (unsigned int j = 0; j < nc; j++) {
+        m2(i, j) = m1(i1 + i, j1 + j);
+      }
+    }
+    return m2;
+  }
+
+  // return row-vector from row number i
+  KMatrix hSlice(const KMatrix & m1, unsigned int i) { 
+    auto m2 = subMatrix(m1, i, i, 0, m1.numC() - 1);
+    return m2;
+  }
+
+  // return column-vector from column j
+  KMatrix vSlice(const KMatrix & m1, unsigned int j) { 
+    auto m2 = subMatrix(m1, 0, m1.numR() - 1, j, j);
+    return m2;
+  }
+
+    KMatrix trans(const KMatrix & m1) {
     unsigned int nr2 = m1.numC();
     unsigned int nc2 = m1.numR();
     auto m2 = KMatrix(nr2, nc2);
@@ -428,7 +461,7 @@ namespace KBase {
     if (okP) {
       const double tol = 1E-10;
       // tolerable round-off error on a [0,1] range
-      const KMatrix im = iMat(nr);
+      const auto im = iMat(nr);
       okP = (norm(m - im) < tol);
     }
     return okP;

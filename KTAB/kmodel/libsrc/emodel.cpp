@@ -47,6 +47,7 @@ void EModel<PT>::setOptions() {
     assert(nullptr != enumOptions);
     assert(0 == theta.size());
     theta = enumOptions();
+    assert (minNumOptions <= theta.size());
     return;
 }
 
@@ -59,10 +60,6 @@ EModel<PT>::~EModel() {
         t = nullptr;
     }
     theta = {};
-    if (nullptr != baseUtils) {
-        delete baseUtils;
-        baseUtils = nullptr;
-    }
 }
 
 
@@ -115,7 +112,8 @@ EPosition<PT>::EPosition(EModel<PT>* m, int n) : Position() {
     assert(nullptr != m);
     eMod = m;
     assert(0 <= n);
-    assert(n < eMod->numOptions());
+    const unsigned int numOpt = eMod->numOptions();
+    assert(n < numOpt);
     ndx = n;
 }
 
@@ -135,7 +133,7 @@ void EPosition<PT>::print(ostream& os) const {
 
 // --------------------------------------------
 template <class PT>
-EState<PT>::EState(EModel<PT>* mod) : State(mod) {
+EState<PT>::EState( EModel<PT>* mod) : State(mod) {
     step = nullptr;
     eMod = (EModel<PT>*) model;
 }
@@ -198,7 +196,6 @@ EState<PT>* EState<PT>::stepSUSN() {
 
 template <class PT>
 EState<PT>* EState<PT>::doSUSN(ReportingLevel rl) const {
-    EState<PT>* s2 = nullptr;
 
     // do something
     const unsigned int numA = eMod->numAct;
@@ -208,7 +205,7 @@ EState<PT>* EState<PT>::doSUSN(ReportingLevel rl) const {
     assert((0 < numU) && (numU <= numA));
     assert(numA == eIndices.size());
 
-    const KMatrix u = aUtil[0]; // all have same beliefs in this demo
+    const auto u = aUtil[0]; // all have same beliefs in this demo
 
     auto vpm = eMod->vpm; // get the 'victory probability model'
     const unsigned int numP = pstns.size();
@@ -248,8 +245,10 @@ EState<PT>* EState<PT>::doSUSN(ReportingLevel rl) const {
     auto uUnique = KMatrix::map(uufn, numA, numU);
 
     // Get expected-utility vector, one entry for each actor, in the current state.
-    const KMatrix eu0 = euMat(uUnique); // 'u' with duplicates, 'uUnique' without duplicates
+    const auto eu0 = euMat(uUnique); // 'u' with duplicates, 'uUnique' without duplicates
 
+     
+    EState<PT>* s2 = new EState<PT>(eMod);
     // do some more
 
     assert(nullptr != s2);
@@ -273,13 +272,13 @@ tuple <KMatrix, VUI> EState<PT>::pDist(int persp) const {
 
     cout << "Number of aUtils: " << aUtil.size() << endl << flush;
 
-    const KMatrix u = aUtil[0]; // all have same beliefs in this demo
+    const auto u = aUtil[0]; // all have same beliefs in this demo
 
     auto uufn = [u, this](unsigned int i, unsigned int j1) {
         return u(i, uIndices[j1]);
     };
 
-    auto uMat = KMatrix::map(uufn, numA, numU);
+    const auto uMat = KMatrix::map(uufn, numA, numU);
     assert(uMat.numR() == numA); // must include all actors
     assert(uMat.numC() == numU);
 
@@ -292,10 +291,21 @@ tuple <KMatrix, VUI> EState<PT>::pDist(int persp) const {
 
     // the following uses exactly the values in the given euMat,
     // which may or may not be square
-    const KMatrix c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
-    const KMatrix pv = Model::vProb(eMod->vpm, c); // square
-    const KMatrix p = Model::probCE(eMod->pcem, pv); // column
-    const KMatrix eu = uMat*p; // column
+    const auto c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
+    const auto ppv = Model::probCE2(eMod->pcem, eMod->vpm, c);
+    const auto p = get<0>(ppv); // column
+    const auto pv = get<1>(ppv); // square
+
+    if (KBase::testProbCE) {
+      cout << "Testing EState::pDist ... " << flush;
+      const auto pv0 = Model::vProb(eMod->vpm, c); // square
+      assert(KBase::norm(pv - pv0) < 1E-6);
+      const auto p0 = Model::probCE(eMod->pcem, pv0); // column
+      assert(KBase::norm(p - p0) < 1E-6);
+      cout << "ok" << endl << flush;
+    }
+
+    const auto eu = uMat*p; // column
 
     assert(numA == eu.numR());
     assert(1 == eu.numC());
@@ -356,13 +366,23 @@ KMatrix EState<PT>::expUtilMat  (KBase::ReportingLevel rl,
         auto v_kij = Model::vote(ak->vr, ak->sCap, uMat(k, i), uMat(k, j));
         return v_kij;
     };
-
+    
     // the following uses exactly the values in the given euMat,
     // which is usually NOT square
-    const KMatrix c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
-    const KMatrix pv = Model::vProb(vpm, c); // square
-    const KMatrix p = Model::probCE(eMod->pcem, pv); // column
-    const KMatrix eu = uMat*p; // column
+    const auto c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
+    const auto ppv = Model::probCE2(eMod->pcem, eMod->vpm, c);
+    const auto p = get<0>(ppv); // column
+    const auto pv = get<1>(ppv); // square
+
+    if (KBase::testProbCE) {
+      cout << "Testing EState::expUtilMat ... " << flush;
+      const auto pv0 = Model::vProb(eMod->vpm, c); // square
+      assert(KBase::norm(pv - pv0) < 1E-6);
+      const auto p0 = Model::probCE(eMod->pcem, pv0); // column
+      assert(KBase::norm(p - p0) < 1E-6);
+      cout << "ok" << endl << flush;
+    }
+    const auto eu = uMat*p; // column
 
     assert(numA == eu.numR());
     assert(1 == eu.numC());

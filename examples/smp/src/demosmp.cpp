@@ -257,9 +257,10 @@ namespace DemoSMP {
     auto vr = VotingRule::Binary;
     cout << "Using voting rule " << vrName(vr) << endl;
 
-    auto vpm = VPModel::Linear;
+    const KBase::VPModel vpm = md0->vpm; 
+    const KBase::PCEModel pcem = md0->pcem;
 
-    KMatrix p = Model::scalarPCE(numA, numA, w, u, vr, vpm, ReportingLevel::Medium);
+    KMatrix p = Model::scalarPCE(numA, numA, w, u, vr, vpm, pcem, ReportingLevel::Medium);
 
     cout << "Expected utility to actors: " << endl;
     (u*p).mPrintf(" %.3f ");
@@ -318,10 +319,7 @@ int main(int ac, char **av) {
   bool randAccP = false;
   bool csvP = false;
   string inputCSV = "";
-
-  // JAH 20160730 vector of SQL logging flags for 4 groups of tables:
-  // 0 = Information Tables, 1 = Position Tables, 2 = EDU Tables, 3 = Bargain Resolution Tables
-  std::vector<bool> sqlFlags = {true,true,true,true};
+  bool logMin = false;
 
   auto showHelp = []() {
     printf("\n");
@@ -330,6 +328,7 @@ int main(int ac, char **av) {
     printf("--euSMP           exp. util. of spatial model of politics\n");
     printf("--ra              randomize the adjustment of ideal points with euSMP \n");
     printf("--csv <f>         read a scenario from CSV\n");
+    printf("--logmin          log only scenario information + position histories\n");
     printf("--seed <n>        set a 64bit seed\n");
     printf("                  0 means truly random\n");
     printf("                  default: %020llu \n", dSeed);
@@ -358,11 +357,26 @@ int main(int ac, char **av) {
       else if (strcmp(av[i], "--help") == 0) {
         run = false;
       }
+      else if (strcmp(av[i], "--logmin") == 0) {
+        logMin = true;
+      }
       else {
         run = false;
         printf("Unrecognized argument %s\n", av[i]);
       }
     }
+  }
+
+  // JAH 20160730 vector of SQL logging flags for 5 groups of tables:
+  // 0 = Information Tables, 1 = Position Tables, 2 = Challenge Tables,
+  // 3 = Bargain Resolution Tables, 4 = VectorPosition table
+  // JAH 20161010 added group 4 for only VectorPos so it can be logged alone
+  std::vector<bool> sqlFlags = {true,true,true,true,true};
+  // JAH 20161010 default is to log all tables, if --logmin is passed, only
+  // enable logging groups 0 & 4
+  if (logMin)
+  {
+    sqlFlags = {true,false,false,false,true};
   }
 
   if (!run) {

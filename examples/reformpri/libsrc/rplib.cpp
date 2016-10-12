@@ -43,12 +43,14 @@ namespace RfrmPri
   using KBase::printVUI;
 
   // -------------------------------------------------
+  const bool testProbPCE = true;
+  // -------------------------------------------------
   // function definitions
 
 
   // return vector of neighboring 1- and 2-permutations
-vector <MtchPstn>  nghbrPerms(const MtchPstn & mp0)
-{
+  vector <MtchPstn>  nghbrPerms(const MtchPstn & mp0)
+  {
     const unsigned int numI = mp0.match.size();
     auto mpVec = vector <MtchPstn>();
     mpVec.push_back(MtchPstn(mp0));
@@ -56,15 +58,15 @@ vector <MtchPstn>  nghbrPerms(const MtchPstn & mp0)
     // one-permutations
     for (unsigned int i = 0; i < numI; i++)
     {
-        for (unsigned int j = i + 1; j < numI; j++)
-        {
-	unsigned int ei = mp0.match[i];
-	unsigned int ej = mp0.match[j];
+      for (unsigned int j = i + 1; j < numI; j++)
+      {
+        unsigned int ei = mp0.match[i];
+        unsigned int ej = mp0.match[j];
 
-	auto mij = MtchPstn(mp0);
-	mij.match[i] = ej;
-	mij.match[j] = ei;
-	mpVec.push_back(mij);
+        auto mij = MtchPstn(mp0);
+        mij.match[i] = ej;
+        mij.match[j] = ei;
+        mpVec.push_back(mij);
       }
     }
 
@@ -72,27 +74,27 @@ vector <MtchPstn>  nghbrPerms(const MtchPstn & mp0)
     // two-permutations
     for (unsigned int i = 0; i < numI; i++)
     {
-        for (unsigned int j = i + 1; j < numI; j++)
+      for (unsigned int j = i + 1; j < numI; j++)
+      {
+        for (unsigned int k = j + 1; k < numI; k++)
         {
-            for (unsigned int k = j + 1; k < numI; k++)
-            {
-	  unsigned int ei = mp0.match[i];
-	  unsigned int ej = mp0.match[j];
-	  unsigned int ek = mp0.match[k];
+          unsigned int ei = mp0.match[i];
+          unsigned int ej = mp0.match[j];
+          unsigned int ek = mp0.match[k];
 
-	  auto mjki = MtchPstn(mp0);
-	  mjki.match[i] = ej;
-	  mjki.match[j] = ek;
-	  mjki.match[k] = ei;
-	  mpVec.push_back(mjki);
+          auto mjki = MtchPstn(mp0);
+          mjki.match[i] = ej;
+          mjki.match[j] = ek;
+          mjki.match[k] = ei;
+          mpVec.push_back(mjki);
 
-	  auto mkij = MtchPstn(mp0);
-	  mkij.match[i] = ek;
-	  mkij.match[j] = ei;
-	  mkij.match[k] = ej;
-	  mpVec.push_back(mkij);
+          auto mkij = MtchPstn(mp0);
+          mkij.match[i] = ek;
+          mkij.match[j] = ei;
+          mkij.match[k] = ej;
+          mpVec.push_back(mkij);
 
-	}
+        }
       }
     }
     //unsigned int mvs = mpVec.size() ;
@@ -103,18 +105,18 @@ vector <MtchPstn>  nghbrPerms(const MtchPstn & mp0)
   // -------------------------------------------------
   // class-method definitions
 
-RPActor::RPActor(string n, string d, const RPModel* rm) : Actor(n, d)
-{
+  RPActor::RPActor(string n, string d, const RPModel* rm) : Actor(n, d)
+  {
     rpMod = rm;
   }
 
-RPActor::~RPActor()
-{
+  RPActor::~RPActor()
+  {
     // nothing yet
   }
 
-double RPActor::vote(unsigned int est, unsigned int p1, unsigned int p2, const State* st) const
-{
+  double RPActor::vote(unsigned int est, unsigned int p1, unsigned int p2, const State* st) const
+  {
     /// vote between the current positions to actors at positions p1 and p2 of this state
     auto rPos1 = ((const MtchPstn*)(st->pstns[p1]));
     auto rPos2 = ((const MtchPstn*)(st->pstns[p2]));
@@ -122,16 +124,16 @@ double RPActor::vote(unsigned int est, unsigned int p1, unsigned int p2, const S
     return v;
   }
 
-double RPActor::vote(const Position* ap1, const Position* ap2) const
-{
+  double RPActor::vote(const Position* ap1, const Position* ap2) const
+  {
     double u1 = posUtil(ap1);
     double u2 = posUtil(ap2);
     const double v12 = Model::vote(vr, sCap, u1, u2);
     return v12;
   }
 
-double RPActor::posUtil(const Position * ap1) const
-{
+  double RPActor::posUtil(const Position * ap1) const
+  {
     auto rp = ((const MtchPstn *)ap1);
     unsigned int ai = rpMod->actrNdx(this);
     double u0 = rpMod->utilActorPos(ai, rp->match);
@@ -140,12 +142,12 @@ double RPActor::posUtil(const Position * ap1) const
 
   // Given the utility matrix, uMat, calculate the expected utility to each actor,
   // as a column-vector. Again, this is from the perspective of whoever developed uMat.
-  KMatrix RPState::expUtilMat  (KBase::ReportingLevel rl,
-				unsigned int numA,
-				unsigned int numP,
-				KBase::VPModel vpm, 
-                              const KMatrix & uMat) const
-{
+  KMatrix RPState::expUtilMat(KBase::ReportingLevel rl,
+    unsigned int numA,
+    unsigned int numP,
+    KBase::VPModel vpm,
+    const KMatrix & uMat) const
+  {
     // BTW, be sure to lambda-bind uMat *after* it is modified.
     assert(uMat.numR() == numA); // must include all actors
     assert(uMat.numC() <= numP); // might have dropped some duplicates
@@ -155,10 +157,10 @@ double RPActor::posUtil(const Position * ap1) const
       // due to round-off error, we must have a tolerance factor
       const double tol = 1E-10;
       const double mij = m(i, j);
-        if ((mij + tol < 0.0) || (1.0 + tol < mij))
-        {
-	printf("%f  %i  %i  \n", mij, i, j);
-	cout << flush;
+      if ((mij + tol < 0.0) || (1.0 + tol < mij))
+      {
+        printf("%f  %i  %i  \n", mij, i, j);
+        cout << flush;
       }
       assert(0.0 <= mij + tol);
       assert(mij <= 1.0 + tol);
@@ -167,11 +169,11 @@ double RPActor::posUtil(const Position * ap1) const
 
     auto uRng = [assertRange, uMat](unsigned int i, unsigned int j)
     {
-        assertRange(uMat, i, j);
-        return;
+      assertRange(uMat, i, j);
+      return;
     };
     KMatrix::mapV(uRng, uMat.numR(), uMat.numC());
-      
+
     auto vkij = [this, uMat](unsigned int k, unsigned int i, unsigned int j)   // vote_k(i:j)
     {
       auto ak = (const RPActor*)(rpMod->actrs[k]);
@@ -182,16 +184,29 @@ double RPActor::posUtil(const Position * ap1) const
     // the following uses exactly the values in the given euMat,
     // which may or may not be square
     const KMatrix c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
-    const KMatrix pv = Model::vProb(vpm, c); // square
-    const KMatrix p = Model::probCE(rpMod->pcem, pv); // column
+    const auto pv2 = Model::probCE2(rpMod->pcem, vpm, c);
+    const auto p = get<0>(pv2); // column
+    const auto pv = get<1>(pv2); //square
+
+    if (KBase::testProbCE) {
+      const KMatrix pv0 = Model::vProb(vpm, c); // square
+      const KMatrix p2 = Model::probCE(rpMod->pcem, pv0); // column
+      double diffP = KBase::norm(p - p2);
+      //printf("Testing probCE vs. probCE2 in expUtilMat: %.3e \n", diffP);
+      //cout << flush;
+      assert(diffP < 1E-6);
+      assert(KBase::norm(pv - pv0) < 1E-6);
+
+    }
+
     const KMatrix eu = uMat*p; // column
 
     assert(numA == eu.numR());
     assert(1 == eu.numC());
     auto euRng = [assertRange, eu](unsigned int i, unsigned int j)
     {
-        assertRange(eu, i, j);
-        return;
+      assertRange(eu, i, j);
+      return;
     };
     KMatrix::mapV(euRng, eu.numR(), eu.numC());
 
@@ -223,21 +238,21 @@ double RPActor::posUtil(const Position * ap1) const
   };
   // end of expUtilMat
 
-  
+
   // --------------------------------------------
   // JAH 20160711 added rng seed
-  RPModel::RPModel(string d, uint64_t s, vector<bool> f) : Model( d, s, f) {
+  RPModel::RPModel(string d, uint64_t s, vector<bool> f) : Model(d, s, f) {
     // nothing yet
   }
 
 
-RPModel::~RPModel()
-{
+  RPModel::~RPModel()
+  {
     // nothing yet
   }
 
-bool RPModel::equivStates(const RPState * rs1, const RPState * rs2)
-{
+  bool RPModel::equivStates(const RPState * rs1, const RPState * rs2)
+  {
     const unsigned int numA = rs1->pstns.size();
     assert(numA == rs2->pstns.size());
     bool rslt = true;
@@ -253,8 +268,8 @@ bool RPModel::equivStates(const RPState * rs1, const RPState * rs2)
   }
 
 
-void RPModel::initScen(unsigned int ns)
-{
+  void RPModel::initScen(unsigned int ns)
+  {
     switch (ns)
     {
     case 0:
@@ -287,8 +302,8 @@ void RPModel::initScen(unsigned int ns)
 
 
 
-void RPModel::initScen0()
-{
+  void RPModel::initScen0()
+  {
     assert(nullptr != rng);
     const unsigned int numA = 40;
     numItm = 7;
@@ -312,8 +327,8 @@ void RPModel::initScen0()
   }
 
 
-void RPModel::readXML(string fileName)
-{
+  void RPModel::readXML(string fileName)
+  {
     using tinyxml2::XMLDocument;
     using tinyxml2::XMLElement;
     using KBase::KException;
@@ -325,26 +340,26 @@ void RPModel::readXML(string fileName)
     {
       d1.LoadFile(fileName.c_str());
       auto eid = d1.ErrorID();
-        if (0 != eid)
-        {
+      if (0 != eid)
+      {
         cout << "ErrorID: " << eid << endl;
         throw KException(d1.GetErrorStr1());
       }
-        else
-        {
+      else
+      {
         // missing data causes the missing XMLElement* to come back as nullptr,
         // so we get a segmentation violation, which is not catchable.
 
         XMLElement* scenEl = d1.FirstChildElement("Scenario");
         XMLElement* scenNameEl = scenEl->FirstChildElement("name");
         assert(nullptr != scenNameEl);
-            try
-            {
+        try
+        {
           const char * sName = scenNameEl->GetText();
           printf("Name of scenario: %s\n", sName);
         }
-            catch (...)
-            {
+        catch (...)
+        {
           throw (KException("Error reading file header"));
         }
 
@@ -386,22 +401,22 @@ void RPModel::readXML(string fileName)
 
         // read all the categories
         unsigned int nc = 0;
-            try
-            {
+        try
+        {
           XMLElement* catsEl = scenEl->FirstChildElement("Categories");
           assert(nullptr != catsEl);
           XMLElement* cEl = catsEl->FirstChildElement("category");
           assert(nullptr != cEl); // has to be at least one
-                while (nullptr != cEl)
-                {
+          while (nullptr != cEl)
+          {
             nc++;
             cEl = cEl->NextSiblingElement("category");
           }
           printf("Found %u categories \n", nc);
           numCat = nc;
         }
-            catch (...)
-            {
+        catch (...)
+        {
           throw (KException("Error reading Categories data"));
         }
 
@@ -410,14 +425,14 @@ void RPModel::readXML(string fileName)
         govCost = KMatrix(1, numCat);
         // read all the items
         unsigned int ni = 0;
-            try
-            {
+        try
+        {
           XMLElement* itemsEl = scenEl->FirstChildElement("Items");
           assert(nullptr != itemsEl);
           XMLElement* iEl = itemsEl->FirstChildElement("Item");
           assert(nullptr != iEl); // has to be at least one
-                while (nullptr != iEl)
-                {
+          while (nullptr != iEl)
+          {
             double gci = 0.0;
             XMLElement* gcEl = iEl->FirstChildElement("cost");
             gcEl->QueryDoubleText(&gci);
@@ -430,8 +445,8 @@ void RPModel::readXML(string fileName)
           assert(ni == nc); // for this problem, number of items and categories are equal
           numItm = ni;
         }
-            catch (...)
-            {
+        catch (...)
+        {
           throw (KException("Error reading Items data"));
         }
 
@@ -441,22 +456,22 @@ void RPModel::readXML(string fileName)
         printf("pDecline factor: %.3f \n", pDecline);
         printf("obFactor: %.3f \n", obFactor);
         // rate of decline has little effect on the results.
-            for (unsigned int j = 0; j < numItm; j++)
-            {
+        for (unsigned int j = 0; j < numItm; j++)
+        {
           prob.push_back(pj);
           pj = pj * pDecline;
         }
 
-        // read all the actors
-        unsigned int na = 0;
-            try
-            {
+        // try to read all the actors
+        try
+        {
+          unsigned int na = 0;
           XMLElement* actorsEl = scenEl->FirstChildElement("Actors");
           assert(nullptr != actorsEl);
           XMLElement* aEl = actorsEl->FirstChildElement("Actor");
           assert(nullptr != aEl); // has to be at least one
-                while (nullptr != aEl)
-                {
+          while (nullptr != aEl)
+          {
             const char* aName = aEl->FirstChildElement("name")->GetText();
             const char* aDesc = aEl->FirstChildElement("description")->GetText();
             double cap = 0.0; // another impossible value
@@ -474,8 +489,8 @@ void RPModel::readXML(string fileName)
             unsigned int numIVS = 0;
             XMLElement* ivEl = ivsEl->FirstChildElement("iVal");
             assert(nullptr != ivEl);
-                    while (nullptr != ivEl)
-                    {
+            while (nullptr != ivEl)
+            {
               numIVS++;
               double iv = -1.0; // impossible value
               ivEl->QueryDoubleText(&iv);
@@ -493,8 +508,8 @@ void RPModel::readXML(string fileName)
           assert(minNumActor <= na);
           assert(na <= maxNumActor);
         }
-            catch (...)
-            {
+        catch (...)
+        {
           throw (KException("Error reading Actors data"));
         }
       }
@@ -511,8 +526,8 @@ void RPModel::readXML(string fileName)
     return;
   }
 
-void RPModel::initScen1()
-{
+  void RPModel::initScen1()
+  {
     // Notionally, we have 15 actors who are negotiating over what the government's
     // priorities will be. There are seven kinds reforms contemplated.
     // Each item has a "cost", so not everything can get done. Each actor values
@@ -544,23 +559,23 @@ void RPModel::initScen1()
     obFactor = 0.10;
 
     const double uArray[] =
-      {
-        65, 60, 40, 25, 10, 100, 40, //  0
-        70, 35, 80, 50, 0, 20, 100, //  1
-        60, 75, 25, 0, 60, 100, 45, //  2
-        55, 25, 60, 80, 30, 50, 30, //  3
-        65, 100, 40, 80, 0, 60, 25, //  4
-        45, 60, 100, 80, 40, 60, 20, //  5
-        35, 100, 50, 90, 0, 80, 100, //  6
-        35, 100, 20, 60, 0, 50, 25, //  7
-        40, 80, 100, 60, 50, 25, 50, //  8
-        60, 80, 100, 25, 40, 60, 35, //  9
-        65, 60, 100, 80, 50, 30, 25, //  10
-        60, 80, 100, 40, 50, 60, 35, //  11
-        50, 50, 60, 0, 20, 100, 25, //  12
-        50, 0, 60, 0, 100, 80, 0, //  13
-        60, 0, 50, 0, 100, 80, 0  //  14
-      };
+    {
+      65, 60, 40, 25, 10, 100, 40, //  0
+      70, 35, 80, 50, 0, 20, 100, //  1
+      60, 75, 25, 0, 60, 100, 45, //  2
+      55, 25, 60, 80, 30, 50, 30, //  3
+      65, 100, 40, 80, 0, 60, 25, //  4
+      45, 60, 100, 80, 40, 60, 20, //  5
+      35, 100, 50, 90, 0, 80, 100, //  6
+      35, 100, 20, 60, 0, 50, 25, //  7
+      40, 80, 100, 60, 50, 25, 50, //  8
+      60, 80, 100, 25, 40, 60, 35, //  9
+      65, 60, 100, 80, 50, 30, 25, //  10
+      60, 80, 100, 40, 50, 60, 35, //  11
+      50, 50, 60, 0, 20, 100, 25, //  12
+      50, 0, 60, 0, 100, 80, 0, //  13
+      60, 0, 50, 0, 100, 80, 0  //  14
+    };
     // rows are actors, columns are reform items
 
     const KMatrix utils = KMatrix::arrayInit(uArray, numA, numItm);
@@ -590,15 +605,15 @@ void RPModel::initScen1()
     return;
   }
 
-void RPModel::configScen(unsigned int numA, const double aCap[], const KMatrix & utils)
-{
+  void RPModel::configScen(unsigned int numA, const double aCap[], const KMatrix & utils)
+  {
 
     auto makeActrName = [](unsigned int i)
     {
       const unsigned int nbSize = 15;
       char * nameBuff = new char[nbSize];
-        for (unsigned int j = 0; j < nbSize; j++)
-        {
+      for (unsigned int j = 0; j < nbSize; j++)
+      {
         nameBuff[j] = (char)0;
       }
       sprintf(nameBuff, "RPActor-%02i", i);
@@ -613,8 +628,8 @@ void RPModel::configScen(unsigned int numA, const double aCap[], const KMatrix &
       ri->idNum = i;
       ri->vr = KBase::VotingRule::Proportional;
       ri->pMod = RfrmPri::RPActor::PropModel::ExpUtil;
-        for (unsigned int j = 0; j < numItm; j++)
-        {
+      for (unsigned int j = 0; j < numItm; j++)
+      {
         ri->riVals.push_back(utils(i, j));
       }
       //cout << "Adding actor " << i << endl << flush;
@@ -636,16 +651,16 @@ void RPModel::configScen(unsigned int numA, const double aCap[], const KMatrix &
       prob.push_back(pj);
       pj = pj * pDecline;
     }
-    
+
     //cout << "Value to actors (rows) of individual reform items (columns): " << endl;
     //utils.mPrintf(" %6.2f ");
     //cout << endl << flush;
-    
+
     return;
   }
 
-double RPModel::utilActorPos(unsigned int ai, const VUI &pstn) const
-{
+  double RPModel::utilActorPos(unsigned int ai, const VUI &pstn) const
+  {
     assert(ai < numAct);
     assert(numAct == actrs.size());
     auto rai = ((const RPActor*)(actrs[ai]));
@@ -654,17 +669,17 @@ double RPModel::utilActorPos(unsigned int ai, const VUI &pstn) const
     assert(nullptr != rai);
     double costSoFar = 0;
     double uip = 0.0;
-    assert (0 < govBudget);
+    assert(0 < govBudget);
     //cout << "govBudget: " << govBudget << endl;
 
-    
+
     for (unsigned int j = 0; j < pstn.size(); j++)
     {
       unsigned int rj = pstn[j];
       double cj = govCost(0, rj);
       double uij = prob[j] * rai->riVals[rj];
-        if (govBudget < costSoFar + cj)
-        {
+      if (govBudget < costSoFar + cj)
+      {
         uij = uij * obFactor;
       }
       uip = uip + uij;
@@ -685,8 +700,8 @@ double RPModel::utilActorPos(unsigned int ai, const VUI &pstn) const
   }
 
 
-void RPModel::showHist() const
-{
+  void RPModel::showHist() const
+  {
     for (unsigned int i = 0; i < history.size(); i++)
     {
       auto si = ((const RPState *)(history[i]));
@@ -701,19 +716,19 @@ void RPModel::showHist() const
 
   // --------------------------------------------
 
-RPState::RPState(Model* mod) : State(mod)
-{
+  RPState::RPState(Model* mod) : State(mod)
+  {
     step = nullptr;
     rpMod = ((const RPModel *)mod);
   }
 
-RPState::~RPState()
-{
+  RPState::~RPState()
+  {
     // nothing yet
   }
 
-bool RPState::equivNdx(unsigned int i, unsigned int j) const
-{
+  bool RPState::equivNdx(unsigned int i, unsigned int j) const
+  {
     /// Compare two actual positions in the current state
     auto mpi = ((const MtchPstn *)(pstns[i]));
     auto mpj = ((const MtchPstn *)(pstns[j]));
@@ -724,8 +739,8 @@ bool RPState::equivNdx(unsigned int i, unsigned int j) const
   }
 
 
-tuple <KMatrix, VUI> RPState::pDist(int persp) const
-{
+  tuple <KMatrix, VUI> RPState::pDist(int persp) const
+  {
     /// Calculate the probability distribution over states from this perspective
 
     // TODO: convert this to a single, commonly used setup function
@@ -763,10 +778,22 @@ tuple <KMatrix, VUI> RPState::pDist(int persp) const
 
     // the following uses exactly the values in the given euMat,
     // which may or may not be square
-    const KMatrix c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
-    const KMatrix pv = Model::vProb(model->vpm, c); // square
-    const KMatrix p = Model::probCE(model->pcem, pv); // column
-    const KMatrix eu = uMat*p; // column
+    const auto c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
+    const auto pv2 = Model::probCE2(model->pcem, model->vpm, c);
+    const auto p = get<0>(pv2); // column
+    const auto pv = get<1>(pv2); // square
+
+    if (KBase::testProbCE) { 
+      const auto pv0 = Model::vProb(model->vpm, c); // square
+      const auto p2 = Model::probCE(model->pcem, pv0); // column
+      double diffP = KBase::norm(p - p2);
+      //printf("Testing probCE vs. probCE2 in pDist: %.3e \n", diffP);
+      //cout << flush;
+      assert(diffP < 1E-6);
+
+      assert(KBase::norm(pv - pv0) < 1E-6);
+    }
+    const auto eu = uMat*p; // column
 
     assert(numA == eu.numR());
     assert(1 == eu.numC());
@@ -776,8 +803,8 @@ tuple <KMatrix, VUI> RPState::pDist(int persp) const
 
 
 
-RPState* RPState::stepSUSN()
-{
+  RPState* RPState::stepSUSN()
+  {
     cout << endl << flush;
     cout << "State number " << model->history.size() - 1 << endl << flush;
     if ((0 == uIndices.size()) || (0 == eIndices.size()))
@@ -797,8 +824,8 @@ RPState* RPState::stepSUSN()
   }
 
 
-RPState* RPState::doSUSN(ReportingLevel rl) const
-{
+  RPState* RPState::doSUSN(ReportingLevel rl) const
+  {
     RPState* s2 = nullptr;
     const unsigned int numA = model->numAct;
     assert(numA == rpMod->actrs.size());
@@ -809,13 +836,13 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
 
     const KMatrix u = aUtil[0]; // all have same beliefs in this demo
 
-    auto vpm = model->vpm; 
+    auto vpm = model->vpm;
     const unsigned int numP = pstns.size();
-   
-    
+
+
     auto euMat = [rl, numA, numP, vpm, this](const KMatrix & uMat)
     {
-        return expUtilMat(rl, numA, numP, vpm, uMat);
+      return expUtilMat(rl, numA, numP, vpm, uMat);
     };
     auto euState = euMat(u);
     cout << "Actor expected utilities: ";
@@ -826,15 +853,15 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
     {
       printf("--------------------------------------- \n");
       printf("Assessing utility of actual state to all actors \n");
-        for (unsigned int h = 0; h < numA; h++)
-        {
+      for (unsigned int h = 0; h < numA; h++)
+      {
         cout << "not available" << endl;
       }
       cout << endl << flush;
       printf("Out of %u positions, %u were unique: ", numA, numU);
       cout << flush;
-        for (auto i : uIndices)
-        {
+      for (auto i : uIndices)
+      {
         printf("%2i ", i);
       }
       cout << endl;
@@ -844,7 +871,7 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
 
     auto uufn = [u, this](unsigned int i, unsigned int j1)
     {
-        return u(i, uIndices[j1]);
+      return u(i, uIndices[j1]);
     };
     auto uUnique = KMatrix::map(uufn, numA, numU);
 
@@ -880,24 +907,24 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
       // and everyone else's actual position. Finally, compute the expected utility to
       // each actor, given that distribution, and pick out the value for h's expected utility.
       // That is the expected value to h of adopting the position.
-        auto efn = [this, euMat, rl, u, h](const MtchPstn & mph)
-        {
+      auto efn = [this, euMat, rl, u, h](const MtchPstn & mph)
+      {
         // This correctly handles duplicated/unique options
         // We modify the given euMat so that the h-column
         // corresponds to the given mph, but we need to prune duplicates as well.
         // This entails some type-juggling.
         const KMatrix uh0 = aUtil[h];
         assert(KBase::maxAbs(u - uh0) < 1E-10); // all have same beliefs in this demo
-            if (mph.match.size() != rpMod->numItm)
-            {
+        if (mph.match.size() != rpMod->numItm)
+        {
           cout << mph.match.size() << endl << flush;
           cout << rpMod->numItm << endl << flush;
           cout << flush << flush;
         }
         assert(mph.match.size() == rpMod->numItm);
         auto uh = uh0;
-            for (unsigned int i = 0; i < rpMod->numAct; i++)
-            {
+        for (unsigned int i = 0; i < rpMod->numAct; i++)
+        {
           auto ai = (RPActor*)(rpMod->actrs[i]);
           double uih = ai->posUtil(&mph);
           uh(i, h) = uih; // utility to actor i of this hypothetical position by h
@@ -908,8 +935,8 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
         // This entails juggling back and forth between the all current positions
         // and the one hypothetical position (mph at h).
         // Thus, the next call to euMat will consider only unique options.
-            auto equivHNdx = [this, h, mph](const unsigned int i, const unsigned int j)
-            {
+        auto equivHNdx = [this, h, mph](const unsigned int i, const unsigned int j)
+        {
           // this little function takes care of the different types needed to compare
           // dynamic pointers to positions (all but h) with a constant position (h itself).
           // In other words, the comparisons for index 'h' use the hypothetical mph, not pstns[h]
@@ -918,20 +945,20 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
           auto mpj = ((const MtchPstn *)(pstns[j]));
           assert(mpi != nullptr);
           assert(mpj != nullptr);
-                if (i == j)
-                {
+          if (i == j)
+          {
             rslt = true; // Pi == Pj, always
           }
-                else if (h == i)
-                {
+          else if (h == i)
+          {
             rslt = (mph == (*mpj));
           }
-                else if (h == j)
-                {
+          else if (h == j)
+          {
             rslt = ((*mpi) == mph);
           }
-                else
-                {
+          else
+          {
             rslt = ((*mpi) == (*mpj));
           }
           return rslt;
@@ -943,25 +970,25 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
         auto hypUtil = KMatrix(rpMod->numAct, numU);
         // we need now to go through 'uh', copying column J the first time
         // the J-th position is determined to be equivalent to something in the unique list
-            for (unsigned int i = 0; i < rpMod->numAct; i++)
-            {
-                for (unsigned int j1 = 0; j1 < numU; j1++)
-                {
+        for (unsigned int i = 0; i < rpMod->numAct; i++)
+        {
+          for (unsigned int j1 = 0; j1 < numU; j1++)
+          {
             unsigned int j2 = uNdx[j1];
             hypUtil(i, j1) = uh(i, j2); // hypothetical utility in column h
           }
         }
 
-            if (false)
-            {
+        if (false)
+        {
           cout << "constructed hypUtil matrix:" << endl << flush;
           hypUtil.mPrintf(" %8.2f ");
           cout << endl << flush;
         }
 
 
-            if (ReportingLevel::Low < rl)
-            {
+        if (ReportingLevel::Low < rl)
+        {
           printf("--------------------------------------- \n");
           printf("Assessing utility to %2i of hypo-pos: ", h);
           printVUI(mph.match);
@@ -986,11 +1013,11 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
       }; // end of efn
 
       // show some representation of this position on cout
-        auto sfn = [](const MtchPstn & mp0)
-        {
-            printVUI(mp0.match);
-            return;
-        };
+      auto sfn = [](const MtchPstn & mp0)
+      {
+        printVUI(mp0.match);
+        return;
+      };
 
       auto ghc = new KBase::GHCSearch<MtchPstn>();
       ghc->eval = efn;
@@ -998,12 +1025,12 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
       ghc->show = sfn;
 
       auto rslt = ghc->run(*ph, // start from h's current positions
-			   ReportingLevel::Silent,
-			   100, // iter max
-			   3, 0.001); // stable-max, stable-tol
+        ReportingLevel::Silent,
+        100, // iter max
+        3, 0.001); // stable-max, stable-tol
 
-        if (ReportingLevel::Low < rl)
-        {
+      if (ReportingLevel::Low < rl)
+      {
         printf("---------------------------------------- \n");
         printf("Search for best next-position of actor %2i \n", h);
         //printf("Search for best next-position of actor %2i starting from ", h);
@@ -1018,8 +1045,8 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
 
       delete ghc;
       ghc = nullptr;
-        if (ReportingLevel::Medium < rl)
-        {
+      if (ReportingLevel::Medium < rl)
+      {
         printf("Iter: %u  Stable: %u \n", iterN, stblN);
         printf("Best value for %2i: %+.6f \n", h, vBest);
         cout << "Best position:    " << endl;
@@ -1035,8 +1062,8 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
       // and each h is different.
 
       double du = vBest - eu0(h, 0); // (hypothetical, future) - (actual, current)
-        if (ReportingLevel::Low < rl)
-        {
+      if (ReportingLevel::Low < rl)
+      {
         printf("EU improvement for %2i of %+.4E \n", h, du);
       }
       //printf("  vBest = %+.6f \n", vBest);
@@ -1056,24 +1083,24 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
     // Each actor, h, finds the position which maximizes their EU in this situation.
     for (unsigned int h = 0; h < numA; h++)
     {
-        if (parP)   // launch all, concurrent
+      if (parP)   // launch all, concurrent
+      {
+        ts.push_back(thread([newPosFn, h]()
         {
-            ts.push_back(thread([newPosFn, h]()
-            {
-	      newPosFn(h);
-	      return;
-	    }));
+          newPosFn(h);
+          return;
+        }));
       }
-        else   // do each, sequential
-        {
+      else   // do each, sequential
+      {
         newPosFn(h);
       }
     }
 
     if (parP)   // now join them all before continuing
     {
-        for (auto& t : ts)
-        {
+      for (auto& t : ts)
+      {
         t.join();
       }
     }
@@ -1090,8 +1117,8 @@ RPState* RPState::doSUSN(ReportingLevel rl) const
   }
   // end of doSUSN
 
-void RPState::setAllAUtil(ReportingLevel rl)
-{
+  void RPState::setAllAUtil(ReportingLevel rl)
+  {
     const unsigned int na = model->numAct;
 
     // make sure prerequisities are at least somewhat setup
@@ -1110,8 +1137,8 @@ void RPState::setAllAUtil(ReportingLevel rl)
       auto pi = pstns[j];
       auto rp = ((const MtchPstn *)pi);
       double uij = ai->posUtil(pstns[j]);
-        if (!(0.0 <= uij))
-        {
+      if (!(0.0 <= uij))
+      {
         cout << i << " " << j << "  " << uij << endl << flush;
         printVUI(rp->match);
         cout << endl << flush;
@@ -1150,8 +1177,8 @@ void RPState::setAllAUtil(ReportingLevel rl)
 
 
 
-void RPState::setOneAUtil(unsigned int perspH, ReportingLevel rl)
-{
+  void RPState::setOneAUtil(unsigned int perspH, ReportingLevel rl)
+  {
     //cout << "RPState::setOneAUtil - not yet implemented"<<endl<<flush;
     const unsigned int numAct = model->numAct;
     const unsigned int numUnq = uIndices.size();
@@ -1169,8 +1196,8 @@ void RPState::setOneAUtil(unsigned int perspH, ReportingLevel rl)
     return;
   }
 
-void RPState::show() const
-{
+  void RPState::show() const
+  {
     const unsigned int numA = model->numAct;
     for (unsigned int i = 0; i < numA; i++)
     {

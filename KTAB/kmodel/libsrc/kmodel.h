@@ -60,6 +60,8 @@ class State;
 class Actor;
 class KTable;
 
+const bool testProbCE = true;
+
 // How much influence to exert (vote) given a difference in [0,1] utility.
 // NOTE WELL: ASymProsp is asymmetric in the sense that v(i:k) + v(k:i) != 0.
 // The response to positive delta-Util is only 2/3 of the response to negative,
@@ -80,9 +82,9 @@ string stmName(const StateTransMode& stm);
 ostream& operator<< (ostream& os, const StateTransMode& stm);
 
 // At this point, the LISP keyword 'defmacro' should leap to mind.
-// Will this PCE be Markov or Conditional or ...
+// Will this PCE be Conditional or Markov-Incentive or Markov-Uniform or  ...
 enum class PCEModel {
-    MarkovPCM, ConditionalPCM
+  ConditionalPCM, MarkovIPCM, MarkovUPCM
 };
 string pcmName(const PCEModel& pcm);
 ostream& operator<< (ostream& os, const PCEModel& pcm);
@@ -98,6 +100,8 @@ enum class VPModel {
     //            and that 11:10 advantage gives 54.8%
     // Quartic law says 2:1 advantage gives pv = 16/17, and 3:1 gives 81/82
     //            and that 11:10 advantage gives 59.4%
+    // Octic law says 2:1 advantage gives pv = 256/257 (99.6%), 3:1 gives 6561/6562 (99.985%)
+    //            and that 11:10 advantage gives 68.2%
     // Binary law says that any percentage difference over a small threshold gives
     //            guaranteed success (or loss), with linear interpolation between
     //            to avoid weird round-off effects.
@@ -105,7 +109,8 @@ enum class VPModel {
     Linear,  // first power
     Square,  // second power
     Quartic, // fourth power
-    Binary
+    Octic,   // eighth power
+    Binary   // threshold, limit of N-th power
 };
 string vpmName(const VPModel& vpm);
 ostream& operator<< (ostream& os, const VPModel& vpm);
@@ -246,6 +251,9 @@ public:
     // default 'probabilistic Condorcet election' model is Conditional
     PCEModel pcem = PCEModel::ConditionalPCM;
 
+    // default state transition mode is deterministic, not stochastic
+    StateTransMode stm = StateTransMode::DeterminsticSTM;
+
     // In the abstract, you run a model by stepping it until it is time to stop.
     // In detail, each step is likely to record copious information to
     // a database for analysis, and the stopping criterion is likely to
@@ -253,6 +261,7 @@ public:
     // significant is likely to happen if the run were to continue.
     void run();
 
+    // the Nash Product for bargaining
     static double nProd(double x, double y);
 
     // simple voting based on the difference in utility.
@@ -268,17 +277,30 @@ public:
                               unsigned int numAct, unsigned int numOpt);
 
     // calculate pv[i>j] from coalitions
+    // c[i,j] is the strength of coalition supporting OptI over OptJ
     static KMatrix vProb(VPModel vpm, const KMatrix & c);
 
     // assumes simple voting over those options with that utility matrix,
-    // builds coalitions, and return pv[i>j]
+    // builds coalitions, and returns a square matrix of prob(OptI > OptJ)
+    // these are assumed to be unique options.
+    // w is a [1,actor] row-vector of actor strengths, u is [act,option] utilities.
     static KMatrix vProb(VotingRule vr, VPModel vpm, const KMatrix & w, const KMatrix & u);
 
     // calculate column vector P[i] from square matrix pv[i>j]
     static KMatrix probCE(PCEModel pcm, const KMatrix & pv);
 
+    // from square matrix coalition[i:j], return two matrices:
+    // column vector P[i] of outcome probabilities
+    // square matrix of P[ i > j] victory probabilities
+    static tuple<KMatrix, KMatrix> probCE2(PCEModel pcm, VPModel vpm, const KMatrix & cltnStrngth);
+
+    // calculate the [option,1] column vector of option-probabilities.
+    // w is a [1,actor] row-vector of actor strengths, u is [act,option] utilities.
     static KMatrix scalarPCE(unsigned int numAct, unsigned int numOpt, const KMatrix & w,
-                             const KMatrix & u, VotingRule vr, VPModel vpm, ReportingLevel rl);
+                             const KMatrix & u, VotingRule vr, VPModel vpm, PCEModel pcem, ReportingLevel rl);
+
+
+    static KMatrix markovIncentivePCE(const KMatrix & coalitions, VPModel vpm);
 
     virtual unsigned int addActor(Actor* a); // returns new number of actors, always at least 1
     int actrNdx(const Actor* a) const;
@@ -321,10 +343,7 @@ public:
     // returns h's estimate of i's risk attitude, using the risk-adjustment-rule
     static double estNRA(double rh, double  ri, BigRAdjust ra) ;
 
-    // string getScenarioName() const { return scenName; };
-    string getScenarioID() const {
-        return scenId;
-    };
+    string getScenarioID() const { return scenId; };
 
     static KTable * createSQL(unsigned int n);
 protected:
@@ -343,11 +362,12 @@ protected:
     // this is the basic model of victory dependent on strength-ratio
     static tuple<double, double> vProb(VPModel vpm, const double s1, const double s2);
 
-    static KMatrix markovPCE(const KMatrix & pv);
-    static KMatrix condPCE(const KMatrix & pv);
 
 
 private:
+  static KMatrix markovUniformPCE(const KMatrix & pv);
+  //static KMatrix markovIncentivePCE(const KMatrix & pv);
+  static KMatrix condPCE(const KMatrix & pv);
 };
 
 
@@ -380,10 +400,10 @@ public:
     void setAUtil(int perspH = -1, ReportingLevel rl = ReportingLevel::Silent);
 
     void setUENdx();
-    
+
     // determine if the i-th position in this state is equivalent to the j-th position
     virtual bool equivNdx(unsigned int i, unsigned int j) const = 0;
-    
+
     double posProb(unsigned int i, const VUI & unq, const KMatrix & pdt) const;
 
     // return the turn-number of this state.

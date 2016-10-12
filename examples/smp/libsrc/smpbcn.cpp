@@ -337,11 +337,13 @@ SMPState* SMPState::doBCN() const {
     cout << "w:" << endl;
     w.mPrintf(" %6.2f ");
 
+    const KBase::VPModel vpm = model->vpm; 
+    const KBase::PCEModel pcem = model->pcem;
+    const KBase::StateTransMode stm = model->stm;
+    
     // of course, you can change these parameters.
-    // ideally, they should be read from the scenario object.
+    // ideally, they should be read from the surrounding Model object.
     auto vr = VotingRule::Proportional;
-    auto vpm = VPModel::Linear;
-    auto stm = StateTransMode::DeterminsticSTM;
 
     auto ndxMaxProb = [](const KMatrix & cv) {
         const double pTol = 1E-8;
@@ -424,8 +426,8 @@ SMPState* SMPState::doBCN() const {
 	    cout << "u_im: " << endl;
         u_im.mPrintf(" %.5f ");
 
-        cout << "Doing probCE for the " << nb << " bargains of actor " << k << " ... " << flush;
-        auto p = Model::scalarPCE(na, nb, w, u_im, vr, vpm, ReportingLevel::Medium);
+        cout << "Doing scalarPCE for the " << nb << " bargains of actor " << k << " ... " << flush;
+        auto p = Model::scalarPCE(na, nb, w, u_im, vr, vpm, pcem, ReportingLevel::Medium);
         assert(nb == p.numR());
         assert(1 == p.numC());
 		actorBargains.insert(map<unsigned int, KBase::KMatrix>::value_type(k, p));

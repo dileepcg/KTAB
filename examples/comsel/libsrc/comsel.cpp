@@ -185,10 +185,20 @@ namespace ComSelLib {
       return v;
     };
 
-    const KMatrix c = Model::coalitions(vkij, numAct, numAct); // coalitions for/against
-    const KMatrix pv = Model::vProb(vpm, c); // prob of victory, square
-    const KMatrix p = Model::probCE(pcem, pv); // prob of outcomes, column
-    const KMatrix eu = (*actorSpPstnUtil) * p; // column of expected utilities to each actor
+    const auto c = Model::coalitions(vkij, numAct, numAct); // coalitions for/against
+    const auto ppv = Model::probCE2(pcem, vpm, c);
+    const KMatrix p = get<0>(ppv); // prob of outcomes, column
+    const KMatrix pv = get<1>(ppv); // prob of victory, square
+
+    if (KBase::testProbCE) { 
+      //cout << "Testing probCE in oneCSPstnUtil" << endl << flush;
+      const auto pv0 = Model::vProb(vpm, c); // prob of victory, square
+      assert(KBase::norm(pv - pv0) < 1E-6);
+      const auto p0 = Model::probCE(pcem, pv0); // prob of outcomes, column
+      assert(KBase::norm(p - p0) < 1E-6);
+    }
+
+    const auto eu = (*actorSpPstnUtil) * p; // column of expected utilities to each actor
     return eu;
   }
 
@@ -281,10 +291,20 @@ namespace ComSelLib {
 
     // the following uses exactly the values in the given euMat,
     // which may or may not be square
-    const KMatrix c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
-    const KMatrix pv = Model::vProb(model->vpm, c); // square
-    const KMatrix p = Model::probCE(model->pcem, pv); // column
-    const KMatrix eu = uMat*p; // column
+    const auto c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
+    const auto ppv = Model::probCE2(model->pcem, model->vpm, c);
+    const auto p = get<0>(ppv); // column
+    const auto pv = get<1>(ppv); // square
+
+    if (KBase::testProbCE) {
+      //cout << "Testing probCE in pDist" << endl << flush;
+      const auto pv0 = Model::vProb(model->vpm, c); // square
+      assert(KBase::norm(pv - pv0) < 1E-6);
+      const auto p0 = Model::probCE(model->pcem, pv0); // column
+      assert(KBase::norm(p - p0) < 1E-6);
+    }
+
+    const auto eu = uMat*p; // column
 
     assert(numA == eu.numR());
     assert(1 == eu.numC());
@@ -324,10 +344,20 @@ namespace ComSelLib {
 
     // the following uses exactly the values in the given euMat,
     // which may or may not be square
-    const KMatrix c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
-    const KMatrix pv = Model::vProb(model->vpm, c); // square
-    const KMatrix p = Model::probCE(model->pcem, pv); // column
-    const KMatrix eu = uMat*p; // column
+    const auto c = Model::coalitions(vkij, uMat.numR(), uMat.numC());
+    const auto ppv = Model::probCE2(model->pcem, model->vpm, c);
+    const auto p = get<0>(ppv); // column
+    const auto pv = get<1>(ppv); // square
+
+    if (KBase::testProbCE) {
+      //cout << "Testing probCE in expUtilMat" << endl << flush;
+      const auto pv0 = Model::vProb(model->vpm, c); // square
+      assert(KBase::norm(pv - pv0) < 1E-6);
+      const auto p0 = Model::probCE(model->pcem, pv0); // column
+      assert(KBase::norm(p - p0) < 1E-6);
+    }
+
+    const auto eu = uMat*p; // column
 
     assert(numA == eu.numR());
     assert(1 == eu.numC());

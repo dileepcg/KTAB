@@ -47,32 +47,32 @@ namespace KBase {
   // The constant e, left-shifted up to 62 bits.
   // 2718281828459045235 == 0x25B946EBC0B36173
   // Shifting one more decimal would be 65 bits.
-  const W64 Q64A = 0x25B9'46EB'C0B3'6173; // C++14 digit separators
+  const W64 Q64A = 0x25B946EBC0B36173; // C++14 digit separators
 
   // The constant pi, left shifted up to 62 bits (+1)
   // 3141592653589793238 + 1 == 0x2B992DDFA23249D7
   // Shifting one more decimal would be 65 bits.
-  const W64 Q64B = 0x2B99'2DDF'A232'49D7;
+  const W64 Q64B = 0x2B992DDFA23249D7;
 
   // Large odd constant to avoid fixed-points in qTrans
   // phi = 1.618.. = (1+sqrt(5))/2
   // 16180339887498948482 + 1 -- 64 bits
   // We right-shifted the decimals and added 1 to make it odd, 64 bits
-  const W64 Q64C = 0xE08C'1D66'8B75'6F83;
+  const W64 Q64C = 0xE08C1D668B756F83;
 
   W64 qTrans(W64 s);
   W64 rotl(const W64 x, unsigned int n);
   W64 rotr(const W64 x, unsigned int n);
 
   class PRNG {
-  public:
-    PRNG();
+  public: 
+    explicit PRNG(uint64_t sd = KBase::dSeed);
     virtual ~PRNG();
     uint64_t uniform();
     double uniform(double a, double b);
     unsigned int probSel(const KMatrix & cv);
     VBool bits(unsigned int nb);
-    uint64_t setSeed(uint64_t);
+    uint64_t setSeed(uint64_t sd);
   protected:
     mt19937_64 mt = mt19937_64();
   };

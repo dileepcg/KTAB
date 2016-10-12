@@ -195,6 +195,7 @@ namespace DemoMtch {
  
   tuple <KMatrix, VUI> MtchState::pDist(int persp) const {
     auto na = model->numAct;
+    auto pcem = model->pcem;
     auto w = actrCaps();
     auto vr = VotingRule::Proportional;
     auto rl = KBase::ReportingLevel::Silent;
@@ -216,7 +217,7 @@ namespace DemoMtch {
       cout << "SMPState::pDist: unrecognized perspective, " << persp << endl << flush;
       assert(false);
     }
-    auto pd = Model::scalarPCE(na, na, w, uij, vr, vpm, rl);
+    auto pd = Model::scalarPCE(na, na, w, uij, vr, vpm, pcem, rl);
     
     // TODO: test whether all positions are unique or not, see RPState::pDist for an example
     auto uNdx = VUI();
@@ -373,16 +374,26 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
     cout << endl << flush;
 
     auto vpm = VPModel::Linear;
+    auto pcem = PCEModel::ConditionalPCM;
 
-    auto pv = Model::vProb(vpm, c);
+    const auto ppv = Model::probCE2(pcem, vpm, c);
+    auto p = get<0>(ppv);
+    auto pv = get<1>(ppv);
 
     cout << "Probability Opt_i > Opt_j" << endl;
     pv.mPrintf(" %.4f ");
     cout << endl;
-
-    auto p = Model::probCE(PCEModel::ConditionalPCM, pv);
     cout << "Probability Opt_i" << endl;
     p.mPrintf(" %.4f ");
+
+    if (KBase::testProbCE) {
+      //cout << "Testing probCE in demoDivideSweets ... " << flush;
+      auto pv0 = Model::vProb(vpm, c);
+      assert(KBase::norm(pv - pv0) < 1E-6);
+      auto p0 = Model::probCE(pcem, pv0);
+      assert(KBase::norm(p - p0) < 1E-6);
+      //cout << "ok" << endl << flush;
+    }
 
     cout << "Expected utility to actors: " << endl;
     (u*p).mPrintf(" %+8.3f ");
@@ -830,14 +841,17 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
 
 
   tuple<double, MtchPstn> MtchActor::maxProbEUPstn(PropModel pm, const MtchState * mst) const {
-    // Note that this assumes & requires that aUtil be already setup
+    // Note that this requires & assumes that aUtil be already setup
 
     using KBase::ReportingLevel;
+ 
+    const VPModel vpm = mst->model->vpm;
+    const PCEModel pcem = mst->model->pcem;
 
     const unsigned int numA = mst->model->numAct;
     unsigned int ih = mst->model->actrNdx(this);
-    const KMatrix uh = mst->aUtil[ih];
-    const KMatrix w = mst->actrCaps();
+    const auto uh = mst->aUtil[ih];
+    const auto w = mst->actrCaps();
 
     //auto wFn = [st](unsigned int i, unsigned int j) {
     //  auto aj = ((MtchActor*)(st->model->actrs[j]));
@@ -856,14 +870,12 @@ bool MtchState::equivNdx(unsigned int i, unsigned int j) const {
     };
 
 
-    auto vpm = VPModel::Linear;
-
     // Note that, for demo purposes, each actor assess the expected utility or the
     // probability-of-adoptions of their proposal under the assumption that everyone
     // uses the same voting rule as do they.
-    auto assessProbEU = [numA, utilH, w, ih, pm, vpm, this](const MtchPstn  ph) {
+    auto assessProbEU = [numA, utilH, w, ih, pm, vpm, pcem, this](const MtchPstn  ph) { 
       auto u = utilH(&ph);
-      auto p = Model::scalarPCE(numA, numA, w, u, vr, vpm, ReportingLevel::Silent);
+      auto p = Model::scalarPCE(numA, numA, w, u, vr, vpm, pcem, ReportingLevel::Silent);
       auto eu = u*p;
       double peu = 0;
       double noAgreementPenalty = 0.333;

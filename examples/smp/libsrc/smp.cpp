@@ -375,9 +375,25 @@ namespace SMPLib {
         rnUtil_ij.mPrintf(" %+.3f ");
         cout << endl << flush;
       }
+     
+    auto pv_ij = Model::vProb(vr, vpm, w_j, rnUtil_ij); // square
+    auto p_i = Model::probCE(model->pcem, pv_ij); // column
 
-    auto pv_ij = Model::vProb(vr, vpm, w_j, rnUtil_ij);
-    auto p_i = Model::probCE(PCEModel::ConditionalPCM, pv_ij);
+    if (KBase::testProbCE) {
+      auto vfn = [vr, &w_j, &rnUtil_ij](unsigned int k, unsigned int i, unsigned int j) {
+        double vkij = Model::vote(vr, w_j(0, k), rnUtil_ij(k, i), rnUtil_ij(k, j));
+        return vkij;
+      };
+      const auto c = Model::coalitions(vfn, na, na); // c(i,j) = strength of coaltion for i against j
+      const auto pv2 = Model::probCE2(model->pcem, vpm, c);
+      const auto p = get<0>(pv2); // column
+      const auto pv = get<1>(pv2); // square
+
+      assert(KBase::norm(p - p_i) < 1E-6);
+      assert(KBase::norm(pv - pv_ij) < 1E-6);
+    }
+
+
     nra = Model::bigRfromProb(p_i, rr);
 
 
@@ -743,7 +759,7 @@ namespace SMPLib {
         return uij(i, uIndices[j]);
       };
     auto uUij = KMatrix::map(uufn, na, uIndices.size());
-    auto upd = Model::scalarPCE(na, uIndices.size(), w, uUij, vr, model->vpm, rl);
+    auto upd = Model::scalarPCE(na, uIndices.size(), w, uUij, vr, model->vpm, model->pcem, rl);
 
     return tuple< KMatrix, VUI>(upd, uIndices);
   }

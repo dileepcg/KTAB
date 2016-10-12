@@ -123,9 +123,8 @@ W64 rotl(const W64 x, unsigned int n) {
   }
 
 
-  PRNG::PRNG() {
-    uint64_t seed_val = KBase::dSeed; // one of my favorite integers
-    mt.seed(seed_val);
+  PRNG::PRNG(uint64_t sd) { 
+    setSeed(sd);
   }
 
 
