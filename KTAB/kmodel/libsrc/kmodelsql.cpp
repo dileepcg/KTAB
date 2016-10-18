@@ -684,7 +684,7 @@ void Model::sqlBargainUtil(unsigned int t, vector<uint64_t> bargnIds,  KBase::KM
 
 	// start for the transaction
 	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
-	uint64_t Bargn_i;
+	uint64_t Bargn_i = 0;
     for (unsigned int i = 0; i < Util_mat_row; i++)
     {
 		for (unsigned int j = 0; j < Util_mat_col; j++)
@@ -811,7 +811,7 @@ void Model::LogInfoTables()
     return;
 }
 
-void Model::sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMatrix Util_mat,unsigned int act_k)
+void Model::sqlBargainVote(unsigned int t,  vector<uint64_t> bargnIdsI, vector<uint64_t> bargnIdsJ, KBase::KMatrix Vote_mat,unsigned int act_k)
 {
 	// initiate the database
 	sqlite3 * db = smpDB;
@@ -820,8 +820,8 @@ void Model::sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMat
 	char* zErrMsg = nullptr;
 	auto sqlBuff = newChars(200);
 
-	int Util_mat_row = Util_mat.numR();
-	int Util_mat_col = Util_mat.numC();
+	int Util_mat_row = Vote_mat.numR();
+	int Util_mat_col = Vote_mat.numC();
 
 	// prepare the sql statement to insert
 	sprintf(sqlBuff,
@@ -838,8 +838,11 @@ void Model::sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMat
 
     for (unsigned int i = 0; i < Util_mat_col; i++)
     {
+		uint64_t Bargn_i = bargnIdsI[i];
+		
 		for (unsigned int j = 0; j < Util_mat_row; j++)
 		{
+			uint64_t Bargn_j = bargnIdsJ[j];
 			int rslt = 0;
 			// Turn_t
 			rslt = sqlite3_bind_int(insStmt, 1, t);
@@ -854,7 +857,7 @@ void Model::sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMat
 			rslt = sqlite3_bind_int(insStmt, 4, act_k);
 			assert(SQLITE_OK == rslt);
 			//Util
-			rslt = sqlite3_bind_double(insStmt, 5, Util_mat(j, i));
+			rslt = sqlite3_bind_double(insStmt, 5, Vote_mat(i, j));
 			assert(SQLITE_OK == rslt);
 			// finish  
 			assert(SQLITE_OK == rslt);

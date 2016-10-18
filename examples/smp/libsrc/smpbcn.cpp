@@ -125,7 +125,8 @@ SMPState* SMPState::doBCN() const {
     }
     const int t = myTurn();
     assert(0 <= t); // need to be in the model's history list
-
+	vector<uint64_t> bargnIdsRowsI = {};
+	vector<uint64_t> bargnIdsRowsJ = {};
     auto ivb = SMPActor::InterVecBrgn::S2P2;
     //sqlite3_stmt* stmt = NULL; // never used
     // int rowtoupdate = 0; // never used
@@ -138,6 +139,7 @@ SMPState* SMPState::doBCN() const {
 
 		auto sqBrgnI = new BargainSMP(ai, ai, *posI, *posI);
 		brgns[i].push_back(sqBrgnI);
+		//.push_back(sqBrgnI->getID());
 
 		if (model->sqlFlags[3])
 		{
@@ -146,6 +148,7 @@ SMPState* SMPState::doBCN() const {
 		
 		auto chlgI = bestChallenge(i, recordBargainingP);
         const double bestEU = get<2>(chlgI);
+
         if (0 < bestEU) {
             const int bestJ = get<0>(chlgI); //
             const double piiJ = get<1>(chlgI); // i's estimate of probability i defeats j
@@ -193,6 +196,8 @@ SMPState* SMPState::doBCN() const {
             BargainSMP* brgnIIJ = SMPActor::interpolateBrgn(ai, aj, posI, posJ, piiJ, 1 - piiJ, ivb);
             const int nai = model->actrNdx(brgnIIJ->actInit);
             const int naj = model->actrNdx(brgnIIJ->actRcvr);
+			
+			
             // verify that identities match up as expected
             assert(nai == i);
             assert(naj == j);
@@ -201,6 +206,7 @@ SMPState* SMPState::doBCN() const {
             auto Vjij = probEduChlg(j, i, i, j, recordBargainingP);
             double pjiJ = get<1>(Vjij); // j's estimate of the probability that i defeats j
             BargainSMP* brgnJIJ = SMPActor::interpolateBrgn(ai, aj, posI, posJ, pjiJ, 1 - pjiJ, ivb);
+			//bargnIdsRowsJ.push_back(brgnJIJ->getID());
             // calcluate weights as capability times salience
             double sci = brgnIIJ->actInit->sCap;
             double svi = sum(brgnIIJ->actInit->vSal);
@@ -208,11 +214,16 @@ SMPState* SMPState::doBCN() const {
             double scj = brgnJIJ->actInit->sCap;
             double svj = sum(brgnIIJ->actRcvr->vSal);
             double wj = scj*svj;
+			
+
+
+
 
             // create a new bargain whose positions are the weighted averages
             auto bpi = VctrPstn((wi*brgnIIJ->posInit + wj*brgnJIJ->posInit) / (wi + wj));
             auto bpj = VctrPstn((wi*brgnIIJ->posRcvr + wj*brgnJIJ->posRcvr) / (wi + wj));
             BargainSMP *brgnIJ = new  BargainSMP(brgnIIJ->actInit, brgnIIJ->actRcvr, bpi, bpj);
+
 
             printf("\n");
             printf("Bargain ");
@@ -265,6 +276,8 @@ SMPState* SMPState::doBCN() const {
 			}
 
             cout << "Using "<<bMod<<" to form proposed bargains" << endl;
+			bargnIdsRowsI.push_back(brgnIIJ->getID());
+			bargnIdsRowsJ.push_back(brgnJIJ->getID());
             switch (bMod) {
             case SMPBargnModel::InitOnlyInterpSMPBM:
                 // record the only one used into SQLite JAH 20160802 use the flag
@@ -322,10 +335,15 @@ SMPState* SMPState::doBCN() const {
                 assert(false);
             }
 
+
+
         }
         else {
             printf("Actor %u has no advantageous targets \n", i);
+			bargnIdsRowsI.push_back(sqBrgnI->getID());
+			bargnIdsRowsJ.push_back(sqBrgnI->getID());
         }
+
     }
 
     // PRNG* rng = model->rng; // was never used
@@ -411,8 +429,7 @@ SMPState* SMPState::doBCN() const {
 
 	map<unsigned int, KBase::KMatrix> actorBargains;
 	map<unsigned int, unsigned int> actorMaxBrgNdx;
-	vector<vector<uint64_t>> bargnIds;// = vector<vector<uint64_t>>();
-	
+		
 	// (This loop would be a good place for high-level parallelism)
 	for (unsigned int k = 0; k < na; k++) {
 		unsigned int nb = brgns[k].size();
@@ -456,13 +473,13 @@ SMPState* SMPState::doBCN() const {
 		if (model->sqlFlags[3])
 		{
 			uint64_t BargainId = brgns[k][0]->getID();
-			vector<uint64_t> bargnIdsRows;// = vector<vector<uint64_t>>();
-
+			vector<uint64_t> bargnIdsRows = {};
+			auto pv_ij = Model::vProb(vr, vpm, w, aUtil[k]);
 			for (int j = 0; j < nb; j++)
 			{
 				bargnIdsRows.push_back(brgns[k][j]->getID());
 			}
-            model->sqlBargainVote(t, BargainId, BargainId, u_im,k);
+            model->sqlBargainVote(t, bargnIdsRowsI, bargnIdsRowsJ,pv_ij,k);
             model->sqlBargainUtil(t, bargnIdsRows, u_im);
         }
 
@@ -784,7 +801,8 @@ tuple<double, double> SMPState::probEduChlg(unsigned int h, unsigned int k, unsi
     contrib_j_ij = chji;
 
 
-    const unsigned int na = model->numAct;
+    
+	const unsigned int na = model->numAct;
 
     // we assess the overall coalition strengths by adding up the contribution of
     // individual actors (including i and j, above). We assess the contribution of third

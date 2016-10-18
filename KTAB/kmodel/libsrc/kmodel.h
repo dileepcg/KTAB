@@ -332,7 +332,7 @@ public:
 	void sqlBargainUtil(unsigned int t, vector<uint64_t> bargnIds, KBase::KMatrix Util_mat);
 	
 
-    void sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMatrix Util_mat, unsigned int act_i);
+	void sqlBargainVote(unsigned int t, vector<uint64_t> bargnIdsI, vector<uint64_t> bargnIdsJ, KBase::KMatrix Vote_mat, unsigned int act_k);
 
     void LogInfoTables(); // JAH 20160731
 
