@@ -340,9 +340,7 @@ SMPState* SMPState::doBCN() const {
         }
         else {
             printf("Actor %u has no advantageous targets \n", i);
-			bargnIdsRowsI.push_back(sqBrgnI->getID());
-			bargnIdsRowsJ.push_back(sqBrgnI->getID());
-        }
+		}
 
     }
 
