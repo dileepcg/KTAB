@@ -268,6 +268,7 @@ namespace SMPLib {
     static double bvUtil(const KMatrix & vd, const  KMatrix & vs, double R);
 
     static SMPModel * readCSV(string fName, uint64_t s, vector<bool> f); // JAH 20160711 added rng seed
+    static SMPModel * readCSVStream(string fName, uint64_t s, vector<bool> f); 
     static SMPModel * readXML(string fName, uint64_t s, vector<bool> f);  
 
     static  SMPModel * initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,

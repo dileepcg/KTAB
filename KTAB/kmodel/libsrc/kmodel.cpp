@@ -897,8 +897,8 @@ namespace KBase {
       const auto p = get<0>(pv2); //column
       const auto pv = get<1>(pv2); // square
       
-      if (testProbCE) {
-        //cout << "Testing probCE in Model::scalarPCE ... " << flush;
+      if (testProbCE && (pcem != PCEModel::MarkovIPCM)) {
+        cout << "Testing probCE in Model::scalarPCE ... " << flush;
         const auto pv0 = vProb(vpm, c); //square
         const auto p0 = probCE(pcem, pv0); // column
         assert (KBase::norm(pv0 - pv) < 1E-6);

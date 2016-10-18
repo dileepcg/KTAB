@@ -77,6 +77,7 @@ void MainWindow::initializeLineGraphDock()
   layout->addWidget(lineGraphRadioButton);
   layout->addWidget(sankeyGraphRadioButton);
   lineControlsVerticalLayout->addLayout(layout);
+  sankeyGraphRadioButton->setHidden(true);
 
   QLabel * lineGraphDimensionsLabel = new QLabel("Dimensions");
   lineGraphDimensionsLabel->setAlignment(Qt::AlignHCenter);

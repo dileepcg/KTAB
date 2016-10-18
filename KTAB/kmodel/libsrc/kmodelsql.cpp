@@ -177,10 +177,10 @@ bool testMultiThreadSQLite (bool tryReset, KBase::ReportingLevel rl) {
     }
 
     if (parP)  {
-        cout << "Can continue multi-threaded"<< endl << flush;
+        cout << "Possible to continue multi-threaded"<< endl << flush;
     }
     else {
-        cout << "Must continue single-threaded"<< endl << flush;
+        cout << "Necessary to continue single-threaded"<< endl << flush;
     }
     return parP;
 }

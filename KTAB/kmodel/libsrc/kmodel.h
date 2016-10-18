@@ -158,7 +158,10 @@ private:
 
 ostream& operator<< (ostream& os, const Position& p);
 
+// test if this SQLite library was compiled multithreaded.
+// If desired, try to reconfigure it
 bool testMultiThreadSQLite (bool tryReset, KBase::ReportingLevel rl);
+
 // -------------------------------------------------
 // Basic vector position: just a column-vector of numbers.
 // They could be interpretted in many ways, as policies
@@ -273,6 +276,8 @@ public:
     // The actors can do simple or complex voting.
 
     // calculate strength of coalitions for general actors and options.
+    // given a 'voting function'. Returns C(i,j) as the non-negative strength
+    // of supporting i over j
     static KMatrix coalitions(function<double(unsigned int ak, unsigned int pi, unsigned int pj)> vfn,
                               unsigned int numAct, unsigned int numOpt);
 
@@ -359,6 +364,7 @@ protected:
     string scenName = "Scen"; // default is set from UTC time
     string scenId = "none";
     uint64_t rngSeed = 0; // JAH 20160711 rng seed
+    
     // this is the basic model of victory dependent on strength-ratio
     static tuple<double, double> vProb(VPModel vpm, const double s1, const double s2);
 

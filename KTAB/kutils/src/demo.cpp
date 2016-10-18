@@ -49,21 +49,21 @@ using  std::flush;
 
 // -------------------------------------------------
 namespace UDemo {
-  using std::function;
-  using std::get;
-  using std::string;
-  using std::mutex;
-  using std::thread;
+using std::function;
+using std::get;
+using std::string;
+using std::mutex;
+using std::thread;
 
-  using KBase::ReportingLevel;
-  using KBase::VUI;
+using KBase::ReportingLevel;
+using KBase::VUI;
 
-  void demoUIndices() {
+void demoUIndices() {
     auto showIS = [](KBase::VUI is) {
-      for (unsigned int i = 0; i < is.size(); i++) {
-        printf("%2u: %2i \n", i, is[i]);
-      }
-      return;
+        for (unsigned int i = 0; i < is.size(); i++) {
+            printf("%2u: %2i \n", i, is[i]);
+        }
+        return;
     };
     auto is1 = KBase::uiSeq(10, 19);
     cout << "Space by 1:" << endl;
@@ -74,7 +74,7 @@ namespace UDemo {
 
     VUI xs = { 10, 11, 20, 12, 30,  9, 23, 29, 40, 22, 43 };
     auto eFn = [](const int &a, const int &b) {
-      return (abs(a - b) <= 3); // so 10 is equivalent to anything in [7 ... 13]
+        return (abs(a - b) <= 3); // so 10 is equivalent to anything in [7 ... 13]
     };
 
     auto uePair = KBase::ueIndices<unsigned int>(xs, eFn);
@@ -88,141 +88,141 @@ namespace UDemo {
     cout << "Indices of equivalent items:" << endl; // should be [0,2,4,8]
     showIS(ens);
     return;
-  }
+}
 
-  void show(string str, const KMatrix & m, string fs) {
+void show(string str, const KMatrix & m, string fs) {
     cout << str << endl;
     m.mPrintf(fs.c_str());
     cout << endl << flush;
     return;
-  }
+}
 
-  double nProd(double x, double y) {
+double nProd(double x, double y) {
     // same as Model::NashProduct, but we do not want to depend on anything but kutils
     if ((0.0 < x) && (0.0 < y)) {
-      return (x * y);
+        return (x * y);
     }
     if ((x < 0.0) && (y < 0.0)) {
-      return (x + y);
+        return (x + y);
     }
     return ((x < y) ? x : y);
-  }
+}
 
-  double bsu(double d, double R) {
+double bsu(double d, double R) {
     // same as Model::basicScalarUtil but we do not want to depend on anything but kutils
     double u = 0;
     assert(0 <= d);
     if (d <= 1) {
-      u = (1 - d)*(1 + d*R);  //  (0 <= u) && (u <= 1)
+        u = (1 - d)*(1 + d*R);  //  (0 <= u) && (u <= 1)
     }
     else { // linearly interpolate with last u-slope at d=1
-      double us = -(R + 1);
-      u = us*(d - 1); // u < 0;
+        double us = -(R + 1);
+        u = us*(d - 1); // u < 0;
     }
     return u;
-  }
+}
 
-  double bvu(const KBase::KMatrix & d, const KBase::KMatrix & s, double R) {
+double bvu(const KBase::KMatrix & d, const KBase::KMatrix & s, double R) {
     // same as Model::basicVectorUtil but we do not want to depend on anything but kutils
     assert(KBase::sameShape(d, s));
     double dsSqr = 0;
     double ssSqr = 0;
     for (unsigned int i = 0; i < d.numR(); i++) {
-      for (unsigned int j = 0; j < d.numC(); j++) {
-        double dij = d(i, j);
-        double sij = s(i, j);
-        assert(0 <= sij);
-        double ds = dij * sij;
-        double ss = sij * sij;
-        dsSqr = dsSqr + (ds*ds);
-        ssSqr = ssSqr + ss;
-      }
+        for (unsigned int j = 0; j < d.numC(); j++) {
+            double dij = d(i, j);
+            double sij = s(i, j);
+            assert(0 <= sij);
+            double ds = dij * sij;
+            double ss = sij * sij;
+            dsSqr = dsSqr + (ds*ds);
+            ssSqr = ssSqr + ss;
+        }
     }
     assert(0 < ssSqr);
     double sd = sqrt(dsSqr / ssSqr);
     double u = bsu(sd, R);
     return u;
-  };
+};
 
-  // -------------------------------------------------
-  void demoThreadLambda(unsigned int n) {
+// -------------------------------------------------
+void demoThreadLambda(unsigned int n) {
     // Interestingly, this starts all CPU's right away,
     // unlike parallelMatrixMult.
     auto ts = vector<thread>();
     auto ifn = [](const unsigned int s, const unsigned int m) {
-      unsigned int k = s + 114367;
-      for (unsigned int i = 0; i < m; i++) {
-        k = (k + 1)*(2 * k + 1);
-      }
-      if (0 == k) {
-        k = 117;
-      }
-      return k;
+        unsigned int k = s + 114367;
+        for (unsigned int i = 0; i < m; i++) {
+            k = (k + 1)*(2 * k + 1);
+        }
+        if (0 == k) {
+            k = 117;
+        }
+        return k;
     };
 
     assert(0 < ifn(7, 10));
 
     for (int i = 0; i < n; ++i) {
-      ts.push_back(std::thread([i, ifn]() {
-        cout << "Hello ";
-        assert(0 < ifn(i, 500000000));
-        cout << "from ";
-        assert(0 < ifn(i, 500000000));
-        cout << "thread ";
-        assert(0 < ifn(i, 500000000));
-        cout << i << endl;
-        assert(0 < ifn(i, 500000000));
-        return;
-      }));
+        ts.push_back(std::thread([i, ifn]() {
+            cout << "Hello ";
+            assert(0 < ifn(i, 500000000));
+            cout << "from ";
+            assert(0 < ifn(i, 500000000));
+            cout << "thread ";
+            assert(0 < ifn(i, 500000000));
+            cout << i << endl;
+            assert(0 < ifn(i, 500000000));
+            return;
+        }));
     }
 
     for (auto& t : ts) {
-      t.join();
+        t.join();
     }
     return;
-  }
+}
 
-  void demoThreadSynch(unsigned int n) {
+void demoThreadSynch(unsigned int n) {
     // define a local object
     struct Counter {
-      int value;
+        int value;
 
-      Counter() : value(0) {}
+        Counter() : value(0) {}
 
-      void increment() {
-        value = value + 1;
-        return;
-      }
-
-      void decrement() {
-        if (value <= 0) {
-          throw "Counter::decrement value cannot be non-positive";
+        void increment() {
+            value = value + 1;
+            return;
         }
-        value = value - 1;
-        return;
-      }
+
+        void decrement() {
+            if (value <= 0) {
+                throw "Counter::decrement value cannot be non-positive";
+            }
+            value = value - 1;
+            return;
+        }
     };
 
     struct CCounter {
-      Counter* c = nullptr;
-      mutex m; // one mutex per concurrent-counter object
+        Counter* c = nullptr;
+        mutex m; // one mutex per concurrent-counter object
 
-      explicit CCounter(Counter* c0) {
-        assert(nullptr != c0);
-        c = c0;
-      };
+        explicit CCounter(Counter* c0) {
+            assert(nullptr != c0);
+            c = c0;
+        };
 
-      void increment() {
-        std::lock_guard<mutex> guard(m); // lock at creation, unlock at deconstruction
-        c->increment();
-        return;
-      }
+        void increment() {
+            std::lock_guard<mutex> guard(m); // lock at creation, unlock at deconstruction
+            c->increment();
+            return;
+        }
 
-      void decrement() {
-        std::lock_guard<mutex> guard(m);
-        c->decrement();
-        return;
-      }
+        void decrement() {
+            std::lock_guard<mutex> guard(m);
+            c->decrement();
+            return;
+        }
     };
 
     auto counter = new Counter();  // one shared Counter
@@ -230,15 +230,15 @@ namespace UDemo {
 
     vector<thread> ts;
     for (int i = 0; i < n; ++i) {
-      ts.push_back(thread([&cc]() {
-        for (int i = 0; i < 100; ++i) {
-          cc.increment();
-        }
-      }));
+        ts.push_back(thread([&cc]() {
+            for (int i = 0; i < 100; ++i) {
+                cc.increment();
+            }
+        }));
     }
 
     for (auto& t : ts) {
-      t.join();
+        t.join();
     }
 
     cout << counter->value << endl;
@@ -247,10 +247,10 @@ namespace UDemo {
     counter = nullptr;
 
     return;
-  }
+}
 
-  // -------------------------------------------------
-  void demoMatrix(PRNG* rng) {
+// -------------------------------------------------
+void demoMatrix(PRNG* rng) {
 
     using KBase::KMatrix;
     using KBase::iMat;
@@ -320,11 +320,11 @@ namespace UDemo {
     cout << endl << flush;
 
     auto qtDemo = [](uint64_t s0) {
-      uint64_t s1 = KBase::qTrans(s0);
-      printf("s0: 0x%016llX  \n", s0);
-      printf("s1: 0x%016llX  \n", s1);
-      cout << endl << flush;
-      return;
+        uint64_t s1 = KBase::qTrans(s0);
+        printf("s0: 0x%016llX  \n", s0);
+        printf("s1: 0x%016llX  \n", s1);
+        cout << endl << flush;
+        return;
     };
 
     cout << "qTrans: " << endl;
@@ -346,39 +346,39 @@ namespace UDemo {
 
     cout << "Test matrix transpose, subtract, multiply" << endl;
     for (unsigned int iter = 0; iter < 10; iter++) {
-      double errTol = 1E-10;
-      unsigned int n1 = 5 + (rng->uniform() % 21);
-      unsigned int n2 = 5 + (rng->uniform() % 21);;
-      unsigned int n3 = 5 + (rng->uniform() % 21);
-      auto a = KMatrix::uniform(rng, n1, n2, -10, +20);
-      auto b = KMatrix::uniform(rng, n1, n2, -10, +20);
-      auto c = KMatrix::uniform(rng, n3, n2, -10, +20);
-      auto lhs = trans((a - b)*trans(c));
-      auto rhs = c * (trans(a) - trans(b));
-      double err = norm(lhs - rhs);
-      printf("Norm of diff T((a-b)*T(c)) - c*(T(a)-T(b)) is %.3E ... ", err);
-      assert(err < errTol);
-      printf("ok\n");
+        double errTol = 1E-10;
+        unsigned int n1 = 5 + (rng->uniform() % 21);
+        unsigned int n2 = 5 + (rng->uniform() % 21);;
+        unsigned int n3 = 5 + (rng->uniform() % 21);
+        auto a = KMatrix::uniform(rng, n1, n2, -10, +20);
+        auto b = KMatrix::uniform(rng, n1, n2, -10, +20);
+        auto c = KMatrix::uniform(rng, n3, n2, -10, +20);
+        auto lhs = trans((a - b)*trans(c));
+        auto rhs = c * (trans(a) - trans(b));
+        double err = norm(lhs - rhs);
+        printf("Norm of diff T((a-b)*T(c)) - c*(T(a)-T(b)) is %.3E ... ", err);
+        assert(err < errTol);
+        printf("ok\n");
     }
 
     cout << endl << "Test matrix inversion" << endl;
     for (unsigned int iter = 0; iter < 10; iter++) {
-      double errTol = 1E-10;
-      unsigned int n = 5;
-      auto a = KMatrix::uniform(rng, n, n, -10, 20);
-      if (0 == iter % 3) {
-        a = a / 1000; // test inversion with smaller elements
-      }
-      printf("RMS(a)=%.4f \n", norm(a) / n);
-      auto b = inv(a);
-      double diff = norm(iMat(n) - (a*b));
-      printf("Norm of diff I-a*inv(a) is %.3E ... ", diff);
-      assert(diff < errTol);
-      printf("ok\n");
-      diff = norm(iMat(n) - (b*a));
-      printf("Norm of diff I-inv(a)*a is %.3E ... ", diff);
-      assert(diff < errTol);
-      printf("ok\n\n");
+        double errTol = 1E-10;
+        unsigned int n = 5;
+        auto a = KMatrix::uniform(rng, n, n, -10, 20);
+        if (0 == iter % 3) {
+            a = a / 1000; // test inversion with smaller elements
+        }
+        printf("RMS(a)=%.4f \n", norm(a) / n);
+        auto b = inv(a);
+        double diff = norm(iMat(n) - (a*b));
+        printf("Norm of diff I-a*inv(a) is %.3E ... ", diff);
+        assert(diff < errTol);
+        printf("ok\n");
+        diff = norm(iMat(n) - (b*a));
+        printf("Norm of diff I-inv(a)*a is %.3E ... ", diff);
+        assert(diff < errTol);
+        printf("ok\n\n");
     }
 
     // JAH 20160809 added test for the new vector init
@@ -405,9 +405,9 @@ namespace UDemo {
     auto row2 = mat2.getRow(1);
     row2.mPrintf(" %2.0f ");
     return;
-  }
+}
 
-  void demoABG00(PRNG* rng) {
+void demoABG00(PRNG* rng) {
     // min E=|Ax-b|^2 where li <= xi <= ui
     // F(x) = [dE/dxi] = 2 * trans(A) * (Ax-b)
     unsigned int dx = 6;
@@ -427,19 +427,19 @@ namespace UDemo {
 
     // box constrained VI, aka MCP
     auto P = [l, u](const KMatrix & x1) {
-      KMatrix x2 = x1;
-      for (unsigned int i = 0; i < x1.numR(); i++) {
-        double xi = x1(i, 0);
-        double li = l(i, 0);
-        double ui = u(i, 0);
-        xi = (xi < li) ? li : xi;
-        xi = (ui < xi) ? ui : xi;
-        x2(i, 0) = xi;
-      }
-      return x2;
+        KMatrix x2 = x1;
+        for (unsigned int i = 0; i < x1.numR(); i++) {
+            double xi = x1(i, 0);
+            double li = l(i, 0);
+            double ui = u(i, 0);
+            xi = (xi < li) ? li : xi;
+            xi = (ui < xi) ? ui : xi;
+            x2(i, 0) = xi;
+        }
+        return x2;
     };
     auto F = [A, b](const KMatrix & x) {
-      return 2 * trans(A)*(A*x - b);
+        return 2 * trans(A)*(A*x - b);
     };
 
     bool extra = false;
@@ -464,51 +464,51 @@ namespace UDemo {
     e.mPrintf(" %+.2E ");
 
     return;
-  }
+}
 
-  // weighted Euclidean distance so that eNorm(a,x)>1 is outside the ellipsoid,
-  // eNorm==1 is exactly on the surface, and eNorm<1 is inside.
-  double eNorm(const KMatrix & a, const KMatrix &  x) {
+// weighted Euclidean distance so that eNorm(a,x)>1 is outside the ellipsoid,
+// eNorm==1 is exactly on the surface, and eNorm<1 is inside.
+double eNorm(const KMatrix & a, const KMatrix &  x) {
     double sum = 0.0;
     for (unsigned int i = 0; i < a.numR(); i++) {
-      double r = x(i, 0) / a(i, 0);
-      sum = sum + (r*r);
+        double r = x(i, 0) / a(i, 0);
+        sum = sum + (r*r);
     }
     return sqrt(sum);
-  };
+};
 
-  // Rescale so that eNorm is 1.0
-  // Geometrically, draw line from x to the origin, and return
-  // the point where it intersects the ellipsoid surface.
-  // Hence eUnitize(a, x) == x if and only if x is on the surface,
-  // so |x-eUnitize(a, x)| is a useful error measure between x and its projection.
-  KMatrix eUnitize(const KMatrix & a, const KMatrix & x) {
+// Rescale so that eNorm is 1.0
+// Geometrically, draw line from x to the origin, and return
+// the point where it intersects the ellipsoid surface.
+// Hence eUnitize(a, x) == x if and only if x is on the surface,
+// so |x-eUnitize(a, x)| is a useful error measure between x and its projection.
+KMatrix eUnitize(const KMatrix & a, const KMatrix & x) {
     return (x / eNorm(a, x));
-  }
+}
 
-  // Project w onto the ellipsoid, i.e. find the point in/on the ellipsoid closest to w.
-  //
-  // My algorithm uses the Lagrangian formulation to reduce it to a one-dimensional
-  // search, with known bounds. Because the initial bounds are quite generous, it
-  // usually takes 20-30 iterations, regardless of dimensionality, because
-  // I've reduced every problem to 1-dim within known bounds.
-  //
-  KMatrix projEllipse(const KMatrix & a, const KMatrix & w) {
+// Project w onto the ellipsoid, i.e. find the point in/on the ellipsoid closest to w.
+//
+// My algorithm uses the Lagrangian formulation to reduce it to a one-dimensional
+// search, with known bounds. Because the initial bounds are quite generous, it
+// usually takes 20-30 iterations, regardless of dimensionality, because
+// I've reduced every problem to 1-dim within known bounds.
+//
+KMatrix projEllipse(const KMatrix & a, const KMatrix & w) {
     unsigned int n = a.numR();
     assert(1 == a.numC());
     assert(sameShape(a, w));
 
     if (eNorm(a, w) <= 1) {
-      return w;    // on or inside?
+        return w;    // on or inside?
     }
 
     double minF = 0.0;
     double maxF = 0.0;
     for (unsigned int i = 0; i < n; i++) {
-      double ai = a(i, 0);
-      assert(0 < ai);
-      double wi = w(i, 0);
-      maxF = maxF + (ai*wi)*(ai*wi);
+        double ai = a(i, 0);
+        assert(0 < ai);
+        double wi = w(i, 0);
+        maxF = maxF + (ai*wi)*(ai*wi);
     }
     maxF = sqrt(maxF);
 
@@ -521,14 +521,14 @@ namespace UDemo {
     // f is the Lagrange multiplier, and we seek an f-value
     // such that 1 = eNorm(a, adjust(w,f))
     auto adjust = [n, a](const KMatrix & w, double f) {
-      KMatrix x = w;
-      for (unsigned int i = 0; i < n; i++) {
-        double wi = w(i, 0);
-        double ai = a(i, 0);
-        double xi = wi / (1 + (f / (ai*ai)));
-        x(i, 0) = xi;
-      }
-      return x;
+        KMatrix x = w;
+        for (unsigned int i = 0; i < n; i++) {
+            double wi = w(i, 0);
+            double ai = a(i, 0);
+            double xi = wi / (1 + (f / (ai*ai)));
+            x(i, 0) = xi;
+        }
+        return x;
     };
 
     double normMax = eNorm(a, adjust(w, minF));
@@ -557,53 +557,53 @@ namespace UDemo {
     unsigned int iter = 0;
 
     while (err > eps) {
-      if (ReportingLevel::Silent < rl) {
-        if ((ReportingLevel::Low < rl) || (0 == iter)) {
-          printf("iter %u \n", iter);
-          printf("%.4f  %.4e/%.4e  [%.8e, %.8e] \n", en, err, eps, f0, f1);
-          show("x", trans(x), "%+.6f  ");
-          cout << flush;
-          cout << endl << flush;
+        if (ReportingLevel::Silent < rl) {
+            if ((ReportingLevel::Low < rl) || (0 == iter)) {
+                printf("iter %u \n", iter);
+                printf("%.4f  %.4e/%.4e  [%.8e, %.8e] \n", en, err, eps, f0, f1);
+                show("x", trans(x), "%+.6f  ");
+                cout << flush;
+                cout << endl << flush;
+            }
         }
-      }
 
-      // we know Y is declining in f, so it would be useful to check in debugging
-      // y0 = eNorm(a, adjust(w, f0));
-      //double y1 = eNorm(a, adjust(w, f1));
-      double fEst = (f0 + f1) / 2;
-      x = adjust(w, fEst);
-      double yEst = eNorm(a, x);
-      err = norm(x - eUnitize(a, x));
-      en = eNorm(a, x);
-      if (yEst < 1.0) {
-        f1 = fEst;
-      }
-      if (1.0 < yEst) {
-        f0 = fEst;
-      }
-      iter++;
+        // we know Y is declining in f, so it would be useful to check in debugging
+        // y0 = eNorm(a, adjust(w, f0));
+        //double y1 = eNorm(a, adjust(w, f1));
+        double fEst = (f0 + f1) / 2;
+        x = adjust(w, fEst);
+        double yEst = eNorm(a, x);
+        err = norm(x - eUnitize(a, x));
+        en = eNorm(a, x);
+        if (yEst < 1.0) {
+            f1 = fEst;
+        }
+        if (1.0 < yEst) {
+            f0 = fEst;
+        }
+        iter++;
     }
     if (ReportingLevel::Silent < rl) {
-      printf("iter %u \n", iter);
-      printf("%.4e/%.4e  [%.8e, %.8e] \n", err, eps, f0, f1);
-      show("x", trans(x), "%+.6f  ");
-      cout << flush;
-      cout << endl << flush;
+        printf("iter %u \n", iter);
+        printf("%.4e/%.4e  [%.8e, %.8e] \n", err, eps, f0, f1);
+        show("x", trans(x), "%+.6f  ");
+        cout << flush;
+        cout << endl << flush;
     }
     return x;
-  }
+}
 
-  // define and solve an LVI with ellipsoidal constraint set.
-  //
-  // define E = {x | n(x) = 1 = sum_i (xi/ei)^2 } as the ellipsoid we must be on or inside.
-  // Tx = tangent plane to E at x
-  // = { z | beta * (z-x) = 0 } where beta_i = x_i / (e_i ^ 2) is the outward pointing surface normal.
-  // Hence, the LVI F(x) * (y-x) >= 0 , where x,y in E has
-  // F(x) = Mx+q as the inward-pointing surface normal, i.e. -beta.
-  // For arbitrary PSD M (e.g. A^T * A), define q = -(Mx + beta)
-  //
-  // Generally, ABG performs much better on this problem than does BSHe96.
-  void demoEllipseLVI(PRNG* rng, unsigned int n) {
+// define and solve an LVI with ellipsoidal constraint set.
+//
+// define E = {x | n(x) = 1 = sum_i (xi/ei)^2 } as the ellipsoid we must be on or inside.
+// Tx = tangent plane to E at x
+// = { z | beta * (z-x) = 0 } where beta_i = x_i / (e_i ^ 2) is the outward pointing surface normal.
+// Hence, the LVI F(x) * (y-x) >= 0 , where x,y in E has
+// F(x) = Mx+q as the inward-pointing surface normal, i.e. -beta.
+// For arbitrary PSD M (e.g. A^T * A), define q = -(Mx + beta)
+//
+// Generally, ABG performs much better on this problem than does BSHe96.
+void demoEllipseLVI(PRNG* rng, unsigned int n) {
     cout << endl;
     cout << "Construct and solve LVI with ellipsoidal K in " << n << " dimensions" << endl;
     KMatrix a = KMatrix::uniform(rng, n, 1, +5.0, +15.0);
@@ -612,8 +612,8 @@ namespace UDemo {
     KMatrix xStar = eUnitize(a, KMatrix::uniform(rng, n, 1, -1.0, +1.0)); // a random point on the ellipse
 
     auto bfn = [xStar, a](unsigned int i, unsigned int j) {
-      double ai = a(i, 0);
-      return xStar(i, j) / (ai*ai);
+        double ai = a(i, 0);
+        return xStar(i, j) / (ai*ai);
     };
     KMatrix  beta = KMatrix::map(bfn, xStar.numR(), xStar.numC());
 
@@ -639,34 +639,34 @@ namespace UDemo {
     show("initial x0:", trans(x0), "%+8.4f  ");
 
     auto projE = [a](KMatrix x0) {
-      return projEllipse(a, x0);
+        return projEllipse(a, x0);
     };
     unsigned int iterLim = 250 * 1000;
     double eps = 1e-6; // relative error in result inside the solution algorithm
     double tol = 1e3*eps; // relative error tolerance comparing result to known answer: 1e-2 is 1% error
     auto sfe = [](const KMatrix & x, const KMatrix & y) {
-      return (2 * norm(x - y)) / (norm(x) + norm(y));
+        return (2 * norm(x - y)) / (norm(x) + norm(y));
     };
     auto F = [M, q](const KMatrix & x) {
-      return (M*x + q);
+        return (M*x + q);
     };
 
     auto processRslt = [sfe, M, q, xStar, tol](tuple<KMatrix, unsigned int, KMatrix> r) {
-      KMatrix u = get<0>(r);
-      unsigned int iter = get<1>(r);
-      KMatrix res = get<2>(r);
-      printf("After %u iterations  \n", iter);
-      cout << "  solution u:  ";
-      trans(u).mPrintf(" %+.3f ");
-      cout << "  residual r:  ";
-      trans(res).mPrintf(" %+.3f ");
-      KMatrix v = M*u + q;
-      double e1 = sfe(u, xStar);
-      double e2 = sfe(v, M*xStar + q);
-      printf("SFE of u is %.3E,  SFE of v is %.3E \n", e1, e2);
-      assert(e1 < tol); // inaccurate U
-      assert(e2 < tol); // inaccurate V
-      return;
+        KMatrix u = get<0>(r);
+        unsigned int iter = get<1>(r);
+        KMatrix res = get<2>(r);
+        printf("After %u iterations  \n", iter);
+        cout << "  solution u:  ";
+        trans(u).mPrintf(" %+.3f ");
+        cout << "  residual r:  ";
+        trans(res).mPrintf(" %+.3f ");
+        KMatrix v = M*u + q;
+        double e1 = sfe(u, xStar);
+        double e2 = sfe(v, M*xStar + q);
+        printf("SFE of u is %.3E,  SFE of v is %.3E \n", e1, e2);
+        assert(e1 < tol); // inaccurate U
+        assert(e2 < tol); // inaccurate V
+        return;
     };
 
     cout << endl;
@@ -685,10 +685,10 @@ namespace UDemo {
     processRslt(r1);
 
     return;
-  }
+}
 
-  // Setup a problem that is exponentially difficult for Lemke's algorithm.
-  tuple<KMatrix, KMatrix, KMatrix, KMatrix> antiLemke(unsigned int n) {
+// Setup a problem that is exponentially difficult for Lemke's algorithm.
+tuple<KMatrix, KMatrix, KMatrix, KMatrix> antiLemke(unsigned int n) {
     // M has a diagonal of 1's, with upper triangle of 2's and lower triangle of 0's
     // q is all -1.
     // Constrained to [0,+infty)^n
@@ -701,29 +701,29 @@ namespace UDemo {
     auto u = KMatrix(n, 1);
     auto v = KMatrix(n, 1);
     for (unsigned int i = 0; i < n; i++) {
-      q(i, 0) = -1;
-      if (i < n - 1) {
-        u(i, 0) = 0;
-        v(i, 0) = 1;
-      }
-      else {
-        u(i, 0) = 1;
-        v(i, 0) = 0;
-      }
-      for (unsigned int j = 0; j < n; j++) {
-        if (i == j) {
-          M(i, j) = 1;
+        q(i, 0) = -1;
+        if (i < n - 1) {
+            u(i, 0) = 0;
+            v(i, 0) = 1;
         }
-        if (i < j) {
-          M(i, j) = 2;
+        else {
+            u(i, 0) = 1;
+            v(i, 0) = 0;
         }
-      }
+        for (unsigned int j = 0; j < n; j++) {
+            if (i == j) {
+                M(i, j) = 1;
+            }
+            if (i < j) {
+                M(i, j) = 2;
+            }
+        }
     }
     return tuple<KMatrix, KMatrix, KMatrix, KMatrix>(M, q, u, v);
-  }
+}
 
-  // Generally, BSHe96 performs much better on this problem than does ABG.
-  void demoAntiLemke(PRNG* rng, unsigned int n) {
+// Generally, BSHe96 performs much better on this problem than does ABG.
+void demoAntiLemke(PRNG* rng, unsigned int n) {
     cout << "Construct and solve AntiLemke LVI in " << n << " dimensions" << endl;
     auto al = antiLemke(n);
     KMatrix M = get<0>(al);
@@ -731,10 +731,10 @@ namespace UDemo {
     KMatrix u = get<2>(al);
     KMatrix v = get<3>(al);
     auto sfe = [](const KMatrix & x, const KMatrix & y) {
-      return (2 * norm(x - y)) / (norm(x) + norm(y));
+        return (2 * norm(x - y)) / (norm(x) + norm(y));
     };
     auto F = [M, q](const KMatrix & x) {
-      return (M*x + q);
+        return (M*x + q);
     };
     auto xInit = KMatrix::uniform(rng, n, 1, -20.0, 20.0);
     double eps = 1E-6;
@@ -743,22 +743,22 @@ namespace UDemo {
     trans(xInit).mPrintf(" %+7.3f ");
 
     auto processRslt = [sfe, M, q, u, eps](tuple<KMatrix, unsigned int, KMatrix> r) {
-      KMatrix u = get<0>(r);
-      unsigned int iter = get<1>(r);
-      KMatrix res = get<2>(r);
-      printf("After %u iterations  \n", iter);
-      cout << "  solution u:  ";
-      trans(u).mPrintf(" %+.3f ");
-      cout << "  residual r:  ";
-      trans(res).mPrintf(" %+.3f ");
-      KMatrix v = M*u + q;
-      double tol = 100 * eps;
-      double e1 = sfe(u, u);
-      double e2 = sfe(v, M*u + q);
-      printf("SFE of u is %.3E,  SFE of v is %.3E \n", e1, e2);
-      assert(e1 < tol); // inaccurate U
-      assert(e2 < tol); // inaccurate V
-      return;
+        KMatrix u = get<0>(r);
+        unsigned int iter = get<1>(r);
+        KMatrix res = get<2>(r);
+        printf("After %u iterations  \n", iter);
+        cout << "  solution u:  ";
+        trans(u).mPrintf(" %+.3f ");
+        cout << "  residual r:  ";
+        trans(res).mPrintf(" %+.3f ");
+        KMatrix v = M*u + q;
+        double tol = 100 * eps;
+        double e1 = sfe(u, u);
+        double e2 = sfe(v, M*u + q);
+        printf("SFE of u is %.3E,  SFE of v is %.3E \n", e1, e2);
+        assert(e1 < tol); // inaccurate U
+        assert(e2 < tol); // inaccurate V
+        return;
     };
 
     cout << endl;
@@ -777,10 +777,10 @@ namespace UDemo {
     processRslt(r2b);
 
     return;
-  }
+}
 
 
-  void demoEllipse(PRNG* rng) {
+void demoEllipse(PRNG* rng) {
     cout << endl;
     unsigned int numD = 9;
     auto a = KMatrix::uniform(rng, numD, 1, 1.0, 10.0);
@@ -799,11 +799,11 @@ namespace UDemo {
 
     UDemo::demoEllipseLVI(rng, 10);
     return;
-  }
+}
 
-  // -------------------------------------------------
+// -------------------------------------------------
 
-  void demoGA(PRNG* rng) {
+void demoGA(PRNG* rng) {
     using KBase::GAOpt;
     const unsigned int nb = 32;
     // many alternatives to search, with a many-peaked function
@@ -826,65 +826,65 @@ namespace UDemo {
     auto tbl = vector<VBool>();
     auto gs = vector<TargetedBV>();
     for (unsigned int i = 0; i < tblSize; i++) {
-      auto gi = TargetedBV();
-      gi.randomize(rng);
-      gs.push_back(gi);
-      wghts.push_back(10.0 * i);
-      tbl.push_back(gi.bits);
+        auto gi = TargetedBV();
+        gi.randomize(rng);
+        gs.push_back(gi);
+        wghts.push_back(10.0 * i);
+        tbl.push_back(gi.bits);
     }
     gs[tblSize - 1] = TargetedBV(trgt);
     tbl[tblSize - 1] = trgt;
 
     cout << "Table eval with minD = " << minD << endl << flush;
     for (unsigned int i = 0; i < tblSize; i++) {
-      printf("%2u  %8.3f  ", i, gs[i].tblEval(minD, wghts, tbl));
-      TargetedBV::showBits(gs[i].bits);
-      cout << endl;
+        printf("%2u  %8.3f  ", i, gs[i].tblEval(minD, wghts, tbl));
+        TargetedBV::showBits(gs[i].bits);
+        cout << endl;
     }
 
     auto compFn = [gs, minD, wghts, tbl](unsigned int i, unsigned int j) {
-      TargetedBV gsi = gs[i];
-      double vi = gsi.tblEval(minD, wghts, tbl);
-      TargetedBV gsj = gs[j];
-      double vj = gsj.tblEval(minD, wghts, tbl);
-      printf("v[%2i]/v[%2i]:  %.3f \n", i, j, (vi / vj));
-      return;
+        TargetedBV gsi = gs[i];
+        double vi = gsi.tblEval(minD, wghts, tbl);
+        TargetedBV gsj = gs[j];
+        double vj = gsj.tblEval(minD, wghts, tbl);
+        printf("v[%2i]/v[%2i]:  %.3f \n", i, j, (vi / vj));
+        return;
     };
     compFn(tblSize - 1, 0);
     compFn(tblSize - 1, tblSize / 2);
     compFn(tblSize - 1, tblSize - 2);
 
     auto mgFn = [](PRNG* rng) {
-      auto tbv = new TargetedBV();
-      tbv->randomize(rng);
-      return tbv;
+        auto tbv = new TargetedBV();
+        tbv->randomize(rng);
+        return tbv;
     };
 
     // good example of how λ-binding lets one define and use
     // parameters which were not anticipated in the original class.
     auto evFn = [minD, wghts, tbl](const TargetedBV* tbv) {
-      return tbv->tblEval(minD, wghts, tbl);
-      //return tbv->evaluate();
+        return tbv->tblEval(minD, wghts, tbl);
+        //return tbv->evaluate();
     };
 
     auto shFn = [](const TargetedBV* tbv) {
-      tbv->show();
-      return;
+        tbv->show();
+        return;
     };
 
     auto eqFn = [](const TargetedBV* g1, const TargetedBV* g2) {
-      bool e = g1->equiv(g2);
-      return e;
+        bool e = g1->equiv(g2);
+        return e;
     };
 
     auto muFn = [](const TargetedBV* g1, PRNG* rng) {
-      auto t2 = g1->mutate(rng);
-      return t2;
+        auto t2 = g1->mutate(rng);
+        return t2;
     };
 
     auto crFn = [](const TargetedBV* t1, const TargetedBV* t2, PRNG* rng) {
-      auto pr = t1->cross(t2, rng);
-      return pr; // memory leak?
+        auto pr = t1->cross(t2, rng);
+        return pr; // memory leak?
     };
 
 
@@ -929,49 +929,49 @@ namespace UDemo {
 
     delete gOpt;
     return;
-  }
+}
 
 
-  void demoGHC(PRNG* rng) {
+void demoGHC(PRNG* rng) {
     unsigned int numBits = 20;
     const VBool bv0 = rng->bits(numBits);
     auto wv0 = KMatrix::uniform(rng, numBits, 1, 1.0, 10.0);
     wv0 = 100.0 *(wv0 / sum(wv0));
 
     auto efn = [bv0, wv0](VBool bv) { // obviously, function<double(VBool)>
-      double s = 0;
-      for (unsigned int i = 0; i < bv0.size(); i++) {
-        if (bv[i] == bv0[i]) {
-          s = s + wv0(i, 0);
+        double s = 0;
+        for (unsigned int i = 0; i < bv0.size(); i++) {
+            if (bv[i] == bv0[i]) {
+                s = s + wv0(i, 0);
+            }
+            else {
+                s = s - wv0(i, 0);
+            }
         }
-        else {
-          s = s - wv0(i, 0);
-        }
-      }
-      return s;
+        return s;
     };
 
     auto sfn = [](VBool bv) {
-      for (auto b : bv) {
-        if (b) {
-          printf("+");
+        for (auto b : bv) {
+            if (b) {
+                printf("+");
+            }
+            else {
+                printf("o");
+            }
         }
-        else {
-          printf("o");
-        }
-      }
-      return;
+        return;
     };
 
     function< vector<VBool>(VBool)> nfn = [](VBool bv0) {
-      auto nb = ((unsigned int)(bv0.size()));
-      auto bvs = vector <VBool>();
-      for (unsigned int i = 0; i < nb; i++) {
-        auto bv = VBool(bv0);
-        bv[i] = !bv[i];
-        bvs.push_back(bv);
-      }
-      return bvs;
+        auto nb = ((unsigned int)(bv0.size()));
+        auto bvs = vector <VBool>();
+        for (unsigned int i = 0; i < nb; i++) {
+            auto bv = VBool(bv0);
+            bv[i] = !bv[i];
+            bvs.push_back(bv);
+        }
+        return bvs;
     };
 
     cout << endl << "Generic hill-climbing search over " << numBits << "-bit strings" << endl;
@@ -995,32 +995,46 @@ namespace UDemo {
     ghc.run(p0, KBase::ReportingLevel::Medium, 100, 3, 0.001);
 
     return;
-  }
+}
 
-  void demoVHC00(PRNG* rng) {
-    unsigned int n = 1 + (rng->uniform() % 5);
-    auto trgt = KMatrix::uniform(rng, n, 1, -100, +100);
+void demoVHC00(uint64_t sd) {
+    auto rng = new PRNG(sd);
+    unsigned int n = (rng->uniform() % 5); // 0 to 4, median 2
+    n = 2 + (n*(n+1))/2; // 2 to 12, median 5
+    const auto trgt = KMatrix::uniform(rng, n, 1, -100, +100);
+    auto tm = KMatrix(n, n);
+    for (unsigned int i=0; i<n; i++) {
+        tm(i,i)=rng->uniform(1.0, 5.0);
+    }
+    cout << "Dimension: "<<n << endl;
     cout << "Target point:  ";
     trans(trgt).mPrintf(" %+.4f ");
+    cout << endl;
+    cout << "Transformation matrix:"<<endl;
+    tm.mPrintf(" %+.4f ");
+    cout << endl;
+
     auto vhc = new VHCSearch();
-    vhc->eval = [trgt](const KMatrix & m) {
-      double d = norm(m - trgt);
-      return 1.0 - (d*d);
+    vhc->eval = [trgt, tm](const KMatrix & m) {
+        auto v1 = tm * (m-trgt);
+        double d2 = dot(v1,v1);
+        double d = norm(m - trgt);
+        return 1.0 - sqrt(d2);
     };
     if (1 == n) {
-      vhc->nghbrs = VHCSearch::vn1;
+        vhc->nghbrs = VHCSearch::vn1;
     }
     else {
-      vhc->nghbrs = VHCSearch::vn2;
+        vhc->nghbrs = VHCSearch::vn2;
     }
     auto p0 = KMatrix::uniform(rng, n, 1, -100, +100);
     cout << "Initial point: ";
     trans(p0).mPrintf(" %+.4f ");
     cout << endl;
     auto rslt = vhc->run(p0,
-      1000, 10, 1E-10,
-      1.0, 0.618, 1.25, 1e-8,
-      ReportingLevel::Low);
+                         500000, 10, 1E-10,
+                         1.0, 0.618, 1.25, 1e-8,
+                         ReportingLevel::Low);
     double vBest = get<0>(rslt);
     KMatrix pBest = get<1>(rslt);
     unsigned int in = get<2>(rslt);
@@ -1032,10 +1046,16 @@ namespace UDemo {
     cout << "Best point:    ";
     trans(pBest).mPrintf(" %+.4f ");
     cout << endl;
-    return;
-  }
 
-  void demoVHC01(PRNG* rng) {
+    printf("Used PRNG seed:  %020" PRIu64 "\n", sd);
+    cout << "Target point was originally "<<endl;
+    trans(trgt).mPrintf(" %+.4f ");
+
+    return;
+}
+
+void demoVHC01(uint64_t sd) {
+    auto rng = new PRNG(sd);
     using KBase::KMatrix;
     using KBase::VHCSearch;
     cout << "Nash bargaining problem, with 1D positions and 2D bargains" << endl;
@@ -1078,20 +1098,20 @@ namespace UDemo {
     vc->nghbrs = VHCSearch::vn2;
 
     auto eFn = [ti, uci, ri, tj, ucj, rj](const KMatrix & dij) {
-      assert(2 == dij.numR());
-      assert(1 == dij.numC());
-      double di = dij(0, 0); // delta-i, the fractional shift of i toward j
-      double dj = dij(1, 0); // delta-j, the fractional shift of j toward i
+        assert(2 == dij.numR());
+        assert(1 == dij.numC());
+        double di = dij(0, 0); // delta-i, the fractional shift of i toward j
+        double dj = dij(1, 0); // delta-j, the fractional shift of j toward i
 
-      double t2i = ti + di*(tj - ti); // resulting position of i
-      double t2j = tj + dj*(ti - tj); // resulting position of j
+        double t2i = ti + di*(tj - ti); // resulting position of i
+        double t2j = tj + dj*(ti - tj); // resulting position of j
 
-      double ubi = bsu(fabs(ti - t2i), ri) + bsu(fabs(ti - t2j), ri);
-      // utility of the bargain to i
-      double ubj = bsu(fabs(tj - t2i), rj) + bsu(fabs(tj - t2j), rj);
-      // utility of the bargain to j
+        double ubi = bsu(fabs(ti - t2i), ri) + bsu(fabs(ti - t2j), ri);
+        // utility of the bargain to i
+        double ubj = bsu(fabs(tj - t2i), rj) + bsu(fabs(tj - t2j), rj);
+        // utility of the bargain to j
 
-      return 100.0*nProd(ubi - uci, ubj - ucj);
+        return 100.0*nProd(ubi - uci, ubj - ucj);
     };
 
     vc->eval = eFn;
@@ -1103,9 +1123,9 @@ namespace UDemo {
     cout << "NP 1: " << eFn(d0ij) << endl << flush;
 
     auto rslt = vc->run(d0ij,
-      1000, 20, 1e-16,
-      0.01, 0.618, 1.25, 1e-8, // NP already multiplied by 1000
-      ReportingLevel::Low);
+                        1000, 20, 1e-16,
+                        0.01, 0.618, 1.25, 1e-8, // NP already multiplied by 1000
+                        ReportingLevel::Low);
     double vBest = get<0>(rslt);
     KMatrix pBest = get<1>(rslt);
     unsigned int in = get<2>(rslt);
@@ -1131,26 +1151,27 @@ namespace UDemo {
     // If ri,rj are mixed, then either outcome may occur.
     //
     if (vBest < 0.0) {
-      cout << "Found no bargain which both prefer to conflict" << endl;
+        cout << "Found no bargain which both prefer to conflict" << endl;
     }
     else {
-      cout << "Found a bargain which both prefer to conflict" << endl;
-      printf("T2i: %.5f   T2j: %.5f   diff: %.5f \n", t2i, t2j, fabs(t2i - t2j));
-      cout << endl;
-      cout << "Not quite zero: " << endl;
-      printf("Pi - D2j:   %+.5f \n", pi - d2j);
-      printf("Pj - D2i:   %+.5f \n", pj - d2i);
-      cout << endl;
+        cout << "Found a bargain which both prefer to conflict" << endl;
+        printf("T2i: %.5f   T2j: %.5f   diff: %.5f \n", t2i, t2j, fabs(t2i - t2j));
+        cout << endl;
+        cout << "Not quite zero: " << endl;
+        printf("Pi - D2j:   %+.5f \n", pi - d2j);
+        printf("Pj - D2i:   %+.5f \n", pj - d2i);
+        cout << endl;
 
-      cout << "Not quite equal: " << endl;
-      printf("D2i - D2j: %+.5f \n", d2i - d2j);
-      printf(" Pj -  Pi: %+.5f \n", pj - pi);
-      cout << endl;
+        cout << "Not quite equal: " << endl;
+        printf("D2i - D2j: %+.5f \n", d2i - d2j);
+        printf(" Pj -  Pi: %+.5f \n", pj - pi);
+        cout << endl;
     }
     return;
-  }
+}
 
-  void demoVHC02(PRNG* rng) {
+void demoVHC02(uint64_t sd) {
+    auto rng = new PRNG(sd);
     using KBase::KMatrix;
     using KBase::dot;
     using KBase::maxAbs;
@@ -1185,8 +1206,8 @@ namespace UDemo {
     double pj = 1 - pi;
 
     auto sfn = [](string s, KMatrix m) {
-      cout << s << "  ";
-      trans(m).mPrintf(" %.4f ");
+        cout << s << "  ";
+        trans(m).mPrintf(" %.4f ");
     };
 
     cout << endl;
@@ -1224,166 +1245,166 @@ namespace UDemo {
     cout << endl << flush;
 
     auto efn2 = [ti, uci, si, ri, tj, ucj, sj, rj](KMatrix t2i, KMatrix t2j) {
-      double ubi = bvu(ti - t2i, si, ri) + bvu(ti - t2j, si, ri);
-      double ubj = bvu(tj - t2i, sj, rj) + bvu(tj - t2j, sj, rj);
-      double np = nProd(ubi - uci, ubj - ucj);
-      return 100.0 * np;
+        double ubi = bvu(ti - t2i, si, ri) + bvu(ti - t2j, si, ri);
+        double ubj = bvu(tj - t2i, sj, rj) + bvu(tj - t2j, sj, rj);
+        double np = nProd(ubi - uci, ubj - ucj);
+        return 100.0 * np;
     };
 
     auto eFn = [efn2](KMatrix v) {
-      unsigned int dim = v.numR();
-      assert(8 == dim);
-      double m2i[] = { v(0, 0), v(1, 0), v(2, 0), v(3, 0) }; // position
-      auto t2i = KMatrix::arrayInit(m2i, 4, 1);
-      double m2j[] = { v(4, 0), v(5, 0), v(6, 0), v(7, 0) }; // position
-      auto t2j = KMatrix::arrayInit(m2j, 4, 1);
-      double np = efn2(t2i, t2j);
-      return np;
+        unsigned int dim = v.numR();
+        assert(8 == dim);
+        double m2i[] = { v(0, 0), v(1, 0), v(2, 0), v(3, 0) }; // position
+        auto t2i = KMatrix::arrayInit(m2i, 4, 1);
+        double m2j[] = { v(4, 0), v(5, 0), v(6, 0), v(7, 0) }; // position
+        auto t2j = KMatrix::arrayInit(m2j, 4, 1);
+        double np = efn2(t2i, t2j);
+        return np;
     };
 
     // A simple closed-form estimator (which ignores risk attitudes, except as reflected in Pi, Pj):
     KMatrix eBS1P1 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik)*(pi);
-      double wjk = (sjk)*(pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      eBS1P1(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik)*(pi);
+        double wjk = (sjk)*(pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        eBS1P1(k, 0) = bk;
     }
     KMatrix eBS2P1 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik*sik)*(pi);
-      double wjk = (sjk*sjk)*(pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      eBS2P1(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik*sik)*(pi);
+        double wjk = (sjk*sjk)*(pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        eBS2P1(k, 0) = bk;
     }
     KMatrix eBS1P2 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik)*(pi*pi);
-      double wjk = (sjk)*(pj*pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      eBS1P2(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik)*(pi*pi);
+        double wjk = (sjk)*(pj*pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        eBS1P2(k, 0) = bk;
     }
     KMatrix eBS2P2 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik*sik)*(pi*pi);
-      double wjk = (sjk*sjk)*(pj*pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      eBS2P2(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik*sik)*(pi*pi);
+        double wjk = (sjk*sjk)*(pj*pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        eBS2P2(k, 0) = bk;
     }
 
     KMatrix dBS1P1 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik)*(1 - pj);
-      double wjk = (sjk)*(pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      dBS1P1(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik)*(1 - pj);
+        double wjk = (sjk)*(pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        dBS1P1(k, 0) = bk;
     }
 
     KMatrix dBS1P2 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik)*(1 - (pj*pj));
-      double wjk = (sjk)*(pj*pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      dBS1P2(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik)*(1 - (pj*pj));
+        double wjk = (sjk)*(pj*pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        dBS1P2(k, 0) = bk;
     }
 
     KMatrix dBS2P1 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik*sik)*(1 - pj);
-      double wjk = (sjk*sjk)*(pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      dBS2P1(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik*sik)*(1 - pj);
+        double wjk = (sjk*sjk)*(pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        dBS2P1(k, 0) = bk;
     }
 
     KMatrix dBS2P2 = KMatrix(4, 1);
     for (unsigned int k = 0; k < 4; k++) {
-      double tik = ti(k, 0);
-      double sik = si(k, 0);
-      double tjk = tj(k, 0);
-      double sjk = sj(k, 0);
-      double wik = (sik*sik)*(1 - (pj*pj));
-      double wjk = (sjk*sjk)*(pj*pj);
-      double bk = (wik*tik + wjk*tjk) / (wik + wjk);
-      dBS2P2(k, 0) = bk;
+        double tik = ti(k, 0);
+        double sik = si(k, 0);
+        double tjk = tj(k, 0);
+        double sjk = sj(k, 0);
+        double wik = (sik*sik)*(1 - (pj*pj));
+        double wjk = (sjk*sjk)*(pj*pj);
+        double bk = (wik*tik + wjk*tjk) / (wik + wjk);
+        dBS2P2(k, 0) = bk;
     }
 
     // NOTE: eSnPm are symmetric, 4-dim bargains.
     // while the fSnPm are (potentially) asymmetric, 8-dim bargains.
     auto estMat = [pi, pj, si, ti, sj, tj](unsigned int sn, unsigned int pm) {
-      KMatrix eSNPM = KMatrix(8, 1);
-      double di = 0;
-      double dj = 0;
-      switch (pm) {
-      case 0:
-        di = (pj > pi) ? pj - pi : 0;
-        dj = (pi > pj) ? pi - pj : 0;
-        break;
-      case 1:
-        di = pj;
-        dj = pi;
-        break;
-      case 2:
-        di = pj*pj;
-        dj = pi*pi;
-        break;
-      default:
-        assert(false);
-        break;
-      }
-      for (unsigned int k = 0; k < 4; k++) {
-        double tik = ti(k, 0);
-        double sik = si(k, 0);
-        double tjk = tj(k, 0);
-        double sjk = sj(k, 0);
-        double wik = 1;
-        double wjk = 1;
-        switch (sn) {
+        KMatrix eSNPM = KMatrix(8, 1);
+        double di = 0;
+        double dj = 0;
+        switch (pm) {
+        case 0:
+            di = (pj > pi) ? pj - pi : 0;
+            dj = (pi > pj) ? pi - pj : 0;
+            break;
         case 1:
-          wik = sik;
-          wjk = sjk;
-          break;
+            di = pj;
+            dj = pi;
+            break;
         case 2:
-          wik = sik*sik;
-          wjk = sjk*sjk;
-          break;
+            di = pj*pj;
+            dj = pi*pi;
+            break;
         default:
-          assert(false);
-          break;
+            assert(false);
+            break;
         }
-        double bik = ((wik*(1 - di)*tik) + (wjk*di*tjk)) / ((wik*(1 - di)) + (wjk*di));
-        double bjk = ((wjk*(1 - dj)*tjk) + (wik*dj*tik)) / ((wjk*(1 - dj)) + (wik*dj));
-        eSNPM(k, 0) = bik;
-        eSNPM(k + 4, 0) = bjk;
-      }
-      return eSNPM;
+        for (unsigned int k = 0; k < 4; k++) {
+            double tik = ti(k, 0);
+            double sik = si(k, 0);
+            double tjk = tj(k, 0);
+            double sjk = sj(k, 0);
+            double wik = 1;
+            double wjk = 1;
+            switch (sn) {
+            case 1:
+                wik = sik;
+                wjk = sjk;
+                break;
+            case 2:
+                wik = sik*sik;
+                wjk = sjk*sjk;
+                break;
+            default:
+                assert(false);
+                break;
+            }
+            double bik = ((wik*(1 - di)*tik) + (wjk*di*tjk)) / ((wik*(1 - di)) + (wjk*di));
+            double bjk = ((wjk*(1 - dj)*tjk) + (wik*dj*tik)) / ((wjk*(1 - dj)) + (wik*dj));
+            eSNPM(k, 0) = bik;
+            eSNPM(k + 4, 0) = bjk;
+        }
+        return eSNPM;
     };
 
     vc->eval = eFn;
@@ -1395,9 +1416,9 @@ namespace UDemo {
     sfn("Initial point: ", p0);
 
     auto rslt = vc->run(p0,
-      1000, 20, 1e-16,
-      0.01, 0.618, 1.25, 1e-8, // NP already multiplied by 1000
-      ReportingLevel::Low);
+                        1000, 20, 1e-16,
+                        0.01, 0.618, 1.25, 1e-8, // NP already multiplied by 1000
+                        ReportingLevel::Low);
 
     double vBest = get<0>(rslt);
     KMatrix pBest = get<1>(rslt);  // an [8,1] column-vector
@@ -1441,88 +1462,89 @@ namespace UDemo {
     printf("Best NP:  %+.4f \n", vBest);
     sfn("Best point: ", pBest);
     if (vBest < 0) {
-      cout << "Found no bargain which both sides prefer to conflict" << endl;
+        cout << "Found no bargain which both sides prefer to conflict" << endl;
     }
     else {
-      cout << "Found a bargain which both sides prefer to conflict" << endl;
-      printf("0:4  %.4f \n", fabs(pBest(0, 0) - pBest(4, 0)));
-      printf("1:5  %.4f \n", fabs(pBest(1, 0) - pBest(5, 0)));
-      printf("2:6  %.4f \n", fabs(pBest(2, 0) - pBest(6, 0)));
-      printf("3:7  %.4f \n", fabs(pBest(3, 0) - pBest(7, 0)));
+        cout << "Found a bargain which both sides prefer to conflict" << endl;
+        printf("0:4  %.4f \n", fabs(pBest(0, 0) - pBest(4, 0)));
+        printf("1:5  %.4f \n", fabs(pBest(1, 0) - pBest(5, 0)));
+        printf("2:6  %.4f \n", fabs(pBest(2, 0) - pBest(6, 0)));
+        printf("3:7  %.4f \n", fabs(pBest(3, 0) - pBest(7, 0)));
 
-      double mb[] = {
-    (pBest(0, 0) + pBest(4, 0)) / 2,
-    (pBest(1, 0) + pBest(5, 0)) / 2,
-    (pBest(2, 0) + pBest(6, 0)) / 2,
-    (pBest(3, 0) + pBest(7, 0)) / 2
-      }; // position
-      auto b = KMatrix::arrayInit(mb, 4, 1);
-      // now if b = p*ti + (1-p)*tj
-      //       = ti + p*(tj-ti)
-      //       = tj + (1-p)*(ti-tj)
-      // then
-      // p = ((b - ti)*(tj - ti)) / ((ti - tj)*(ti - tj));
+        double mb[] = {
+            (pBest(0, 0) + pBest(4, 0)) / 2,
+            (pBest(1, 0) + pBest(5, 0)) / 2,
+            (pBest(2, 0) + pBest(6, 0)) / 2,
+            (pBest(3, 0) + pBest(7, 0)) / 2
+        }; // position
+        auto b = KMatrix::arrayInit(mb, 4, 1);
+        // now if b = p*ti + (1-p)*tj
+        //       = ti + p*(tj-ti)
+        //       = tj + (1-p)*(ti-tj)
+        // then
+        // p = ((b - ti)*(tj - ti)) / ((ti - tj)*(ti - tj));
 
-      auto rms = [](const KMatrix & m) {
-        return norm(m) / sqrt(m.numR() * m.numC());
-      };
+        auto rms = [](const KMatrix & m) {
+            return norm(m) / sqrt(m.numR() * m.numC());
+        };
 
-      // This does a strictly linear regress to find the most accurate
-      // linear interpolation possible. It's RMS error is much larger
-      // than any of the Prob-Sal estimators, as it does standard
-      // vector interpolation which treats all components the same, regardless of salience.
-      //
-      double estDI = dot(b - ti, tj - ti) / dot(ti - tj, ti - tj);
-      double estDJ = 1 - estDI;
-      cout << endl;
-      printf("Effective fractional shifts:  %+.5f  %+.5f \n", estDI, estDJ);
-      KMatrix estB = ti + estDI*(tj - ti);
-      sfn("Interpolated bargain:", estB);
-      double estErr = rms(estB - b);
-      printf("Resulting RMS estimation error: %.4f \n", estErr);
-      cout << endl;
-      // note that dBS1P1 and dBS1P1 are identical to other estimators
+        // This does a strictly linear regress to find the most accurate
+        // linear interpolation possible. It's RMS error is much larger
+        // than any of the Prob-Sal estimators, as it does standard
+        // vector interpolation which treats all components the same, regardless of salience.
+        //
+        double estDI = dot(b - ti, tj - ti) / dot(ti - tj, ti - tj);
+        double estDJ = 1 - estDI;
+        cout << endl;
+        printf("Effective fractional shifts:  %+.5f  %+.5f \n", estDI, estDJ);
+        KMatrix estB = ti + estDI*(tj - ti);
+        sfn("Interpolated bargain:", estB);
+        double estErr = rms(estB - b);
+        printf("Resulting RMS estimation error: %.4f \n", estErr);
+        cout << endl;
+        // note that dBS1P1 and dBS1P1 are identical to other estimators
 
-      auto fS1P0 = estMat(1, 0);
-      auto fS1P1 = estMat(1, 1);
-      auto fS1P2 = estMat(1, 2);
+        auto fS1P0 = estMat(1, 0);
+        auto fS1P1 = estMat(1, 1);
+        auto fS1P2 = estMat(1, 2);
 
-      auto fS2P0 = estMat(2, 0);
-      auto fS2P1 = estMat(2, 1);
-      auto fS2P2 = estMat(2, 2);
+        auto fS2P0 = estMat(2, 0);
+        auto fS2P1 = estMat(2, 1);
+        auto fS2P2 = estMat(2, 2);
 
-      auto joinedRMS = [rms, pBest](const KMatrix & e) {
-        return rms(KBase::joinV(e, e) - pBest);
-      };
+        auto joinedRMS = [rms, pBest](const KMatrix & e) {
+            return rms(KBase::joinV(e, e) - pBest);
+        };
 
-      sfn("Prob-Sal-weighted eBS1P1:", eBS1P1);
-      sfn("Prob-Sal-weighted eBS1P2:", eBS1P2);
-      sfn("Prob-Sal-weighted eBS2P1:", eBS2P1);
-      sfn("Prob-Sal-weighted eBS2P2:", eBS2P2);
-      sfn("Prob-Sal-weighted dBS1P2:", dBS1P2);
-      sfn("Prob-Sal-weighted dBS2P2:", dBS2P2);
+        sfn("Prob-Sal-weighted eBS1P1:", eBS1P1);
+        sfn("Prob-Sal-weighted eBS1P2:", eBS1P2);
+        sfn("Prob-Sal-weighted eBS2P1:", eBS2P1);
+        sfn("Prob-Sal-weighted eBS2P2:", eBS2P2);
+        sfn("Prob-Sal-weighted dBS1P2:", dBS1P2);
+        sfn("Prob-Sal-weighted dBS2P2:", dBS2P2);
 
-      printf("Resulting RMS estimation error: \n");
-      printf("RMS of eS1P1  eS1P2  eS2P1  eS2P2  dS1P2  dS2P2  ");
-      printf("fS1P0 fS1P1 fS1P2 S2P0 fS2P1 fS2P2 ");
-      printf("%7.4f  %7.4f  %7.4f  %7.4f ", joinedRMS(eBS1P1), joinedRMS(eBS1P2), joinedRMS(eBS2P1), joinedRMS(eBS2P2));
-      printf("%7.4f  %7.4f  ", joinedRMS(dBS1P2), joinedRMS(dBS2P2));
+        printf("Resulting RMS estimation error: \n");
+        printf("RMS of eS1P1  eS1P2  eS2P1  eS2P2  dS1P2  dS2P2  ");
+        printf("fS1P0 fS1P1 fS1P2 S2P0 fS2P1 fS2P2 ");
+        printf("%7.4f  %7.4f  %7.4f  %7.4f ", joinedRMS(eBS1P1), joinedRMS(eBS1P2), joinedRMS(eBS2P1), joinedRMS(eBS2P2));
+        printf("%7.4f  %7.4f  ", joinedRMS(dBS1P2), joinedRMS(dBS2P2));
 
-      printf("%7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  ",
-        rms(fS1P0 - pBest), rms(fS1P1 - pBest), rms(fS1P2 - pBest),
-        rms(fS2P0 - pBest), rms(fS2P1 - pBest), rms(fS2P2 - pBest));
-      cout << endl << endl << flush;
+        printf("%7.4f  %7.4f  %7.4f  %7.4f  %7.4f  %7.4f  ",
+               rms(fS1P0 - pBest), rms(fS1P1 - pBest), rms(fS1P2 - pBest),
+               rms(fS2P0 - pBest), rms(fS2P1 - pBest), rms(fS2P2 - pBest));
+        cout << endl << endl << flush;
 
-      printf("Resulting MaxAbs estimation error: \n");
-      printf("MaxAbs of eS1P1  eS1P2  eS2P1  eS2P2  dS1P2  dS2P2  ");
-      printf("%7.4f  %7.4f  %7.4f  %7.4f ", maxAbs(eBS1P1 - b), maxAbs(eBS1P2 - b), maxAbs(eBS2P1 - b), maxAbs(eBS2P2 - b));
-      printf("%7.4f  %7.4f  \n", maxAbs(dBS1P2 - b), maxAbs(dBS2P2 - b));
-      cout << endl;
+        printf("Resulting MaxAbs estimation error: \n");
+        printf("MaxAbs of eS1P1  eS1P2  eS2P1  eS2P2  dS1P2  dS2P2  ");
+        printf("%7.4f  %7.4f  %7.4f  %7.4f ", maxAbs(eBS1P1 - b), maxAbs(eBS1P2 - b), maxAbs(eBS2P1 - b), maxAbs(eBS2P2 - b));
+        printf("%7.4f  %7.4f  \n", maxAbs(dBS1P2 - b), maxAbs(dBS2P2 - b));
+        cout << endl;
     }
     return;
-  }
+}
 
-  void demoVHC03(PRNG* rng) {
+void demoVHC03(uint64_t sd) {
+    auto rng = new PRNG(sd);
     using KBase::KMatrix;
     using KBase::dot;
     using KBase::maxAbs;
@@ -1563,18 +1585,18 @@ namespace UDemo {
     double rj = rng->uniform(minR, maxR);
 
     auto piFn = [ci, cj](unsigned int k, unsigned int n) {
-      assert(0 == n); // column vector
-      double cik = ci(k, 0);
-      double cjk = cj(k, 0);
-      return cik / (cik + cjk);
+        assert(0 == n); // column vector
+        double cik = ci(k, 0);
+        double cjk = cj(k, 0);
+        return cik / (cik + cjk);
     };
 
     auto pi = KMatrix::map(piFn, 4, 1);
     KMatrix pj = (-1.0)*pi + 1;
 
     auto sfn = [](string s, KMatrix m) {
-      cout << s << "  ";
-      trans(m).mPrintf(" %7.4f ");
+        cout << s << "  ";
+        trans(m).mPrintf(" %7.4f ");
     };
 
     // risk attitudes found by random search,
@@ -1599,15 +1621,15 @@ namespace UDemo {
     cout << endl;
 
     auto oneDimBargain = [si, sj, pi, pj, ti, tj](unsigned int k, unsigned int n) {
-      // This is the eS2P2 estimator, in one dimension
-      double eps = 1e-8;
-      assert(0 == n);
-      double wi = si(k, 0) * pi(k, 0);
-      double wj = sj(k, 0) * pj(k, 0);
-      wi = (wi*wi) + eps;
-      wj = (wj*wj) + eps;
-      double bi = ((wi * ti(k, 0)) + (wj * tj(k, 0))) / (wi + wj);
-      return bi;
+        // This is the eS2P2 estimator, in one dimension
+        double eps = 1e-8;
+        assert(0 == n);
+        double wi = si(k, 0) * pi(k, 0);
+        double wj = sj(k, 0) * pj(k, 0);
+        wi = (wi*wi) + eps;
+        wj = (wj*wj) + eps;
+        double bi = ((wi * ti(k, 0)) + (wj * tj(k, 0))) / (wi + wj);
+        return bi;
     };
 
     auto batna = KMatrix::map(oneDimBargain, 4, 1);
@@ -1633,32 +1655,32 @@ namespace UDemo {
 
     // Nash-product, compared to BATNA
     auto efn0 = [ti, uiB, si, ri, tj, ujB, sj, rj](const KMatrix & t2i, const KMatrix & t2j) {
-      double ubi = bvu(ti - t2i, si, ri) + bvu(ti - t2j, si, ri);
-      double ubj = bvu(tj - t2i, sj, rj) + bvu(tj - t2j, sj, rj);
-      double np = nProd(ubi - uiB, ubj - ujB);
-      return 100.0 * np;
+        double ubi = bvu(ti - t2i, si, ri) + bvu(ti - t2j, si, ri);
+        double ubj = bvu(tj - t2i, sj, rj) + bvu(tj - t2j, sj, rj);
+        double np = nProd(ubi - uiB, ubj - ujB);
+        return 100.0 * np;
     };
 
     double npv = efn0(batna, batna);
     cout << "NP of the BATNA: " << npv << endl; // just a double-check
 
     auto getT2I = [](const KMatrix & v) {
-      double m2i[] = { v(0, 0), v(1, 0), v(2, 0), v(3, 0) }; // position
-      auto t2i = KMatrix::arrayInit(m2i, 4, 1);
-      return t2i;
+        double m2i[] = { v(0, 0), v(1, 0), v(2, 0), v(3, 0) }; // position
+        auto t2i = KMatrix::arrayInit(m2i, 4, 1);
+        return t2i;
     };
 
     auto getT2J = [](const KMatrix & v) {
-      double m2j[] = { v(4, 0), v(5, 0), v(6, 0), v(7, 0) }; // position
-      auto t2j = KMatrix::arrayInit(m2j, 4, 1);
-      return t2j;
+        double m2j[] = { v(4, 0), v(5, 0), v(6, 0), v(7, 0) }; // position
+        auto t2j = KMatrix::arrayInit(m2j, 4, 1);
+        return t2j;
     };
 
     auto eFn = [getT2I, getT2J, efn0](KMatrix v) {
-      unsigned int dim = v.numR();
-      assert(8 == dim);
-      double np = efn0(getT2I(v), getT2J(v));
-      return np;
+        unsigned int dim = v.numR();
+        assert(8 == dim);
+        double np = efn0(getT2I(v), getT2J(v));
+        return np;
     };
 
     vc->eval = eFn;
@@ -1670,9 +1692,9 @@ namespace UDemo {
     sfn("Initial point: ", p0);
 
     auto rslt = vc->run(p0,
-      1000, 20, 1e-16,
-      0.01, 0.618, 1.25, 1e-8, // NP already multiplied by 1000
-      ReportingLevel::Low);
+                        1000, 20, 1e-16,
+                        0.01, 0.618, 1.25, 1e-8, // NP already multiplied by 1000
+                        ReportingLevel::Low);
 
     double vBest = get<0>(rslt);
     KMatrix pBest = get<1>(rslt);  // an [8,1] column-vector
@@ -1684,69 +1706,69 @@ namespace UDemo {
     printf("Best NP:  %+.4f \n", vBest);
     sfn("Best point: ", pBest);
     if (vBest < 0) {
-      cout << "Found no bargain which both sides prefer to BATNA" << endl;
+        cout << "Found no bargain which both sides prefer to BATNA" << endl;
     }
     else {
-      // it turns out to have exactly the log-rolling which was expected
-      // from the initial setup. Interestingly, it turns out to be symmetric
-      // in that both actors adopt the same position at the Nash Bargain,
-      // even though they use different metrics and risk attitudes.
-      cout << "Found a bargain which both sides prefer to BATNA" << endl;
-      auto t2I = getT2I(pBest);
-      auto t2J = getT2J(pBest);
-      sfn("t2I:", t2I);
-      sfn("t2J:", t2J);
-      printf("Norm of t2I shift from BATNA: %.3f \n", norm(t2I - batna));
-      printf("Norm of t2J shift from BATNA: %.3f \n", norm(t2J - batna));
+        // it turns out to have exactly the log-rolling which was expected
+        // from the initial setup. Interestingly, it turns out to be symmetric
+        // in that both actors adopt the same position at the Nash Bargain,
+        // even though they use different metrics and risk attitudes.
+        cout << "Found a bargain which both sides prefer to BATNA" << endl;
+        auto t2I = getT2I(pBest);
+        auto t2J = getT2J(pBest);
+        sfn("t2I:", t2I);
+        sfn("t2J:", t2J);
+        printf("Norm of t2I shift from BATNA: %.3f \n", norm(t2I - batna));
+        printf("Norm of t2J shift from BATNA: %.3f \n", norm(t2J - batna));
     }
     return;
-  }
+}
 
 
 
-  VBool TargetedBV::target;
+VBool TargetedBV::target;
 
-  TargetedBV::TargetedBV() {
+TargetedBV::TargetedBV() {
     bits = VBool();
     auto n = ((const unsigned int)(target.size()));
     for (unsigned int i = 0; i < n; i++) {
-      bits.push_back(false);
+        bits.push_back(false);
     }
-  }
+}
 
 
-  TargetedBV::TargetedBV(const VBool & b) {
+TargetedBV::TargetedBV(const VBool & b) {
     bits = b;
-  }
+}
 
-  TargetedBV::~TargetedBV() {  }
-  void TargetedBV::setTarget(vector< bool > trgt)
-  {
+TargetedBV::~TargetedBV() {  }
+void TargetedBV::setTarget(vector< bool > trgt)
+{
     assert(0 < trgt.size());
     target = trgt;
     return;
-  }
-  VBool TargetedBV::getTarget() {
+}
+VBool TargetedBV::getTarget() {
     return target;
-  }
-  VBool TargetedBV::randomBV(PRNG* rng, unsigned int nb) {
+}
+VBool TargetedBV::randomBV(PRNG* rng, unsigned int nb) {
     uint64_t b = rng->uniform();
     auto bv = VBool();
     bv.resize(nb);
     for (unsigned int i = 0; i < nb; i++) {
-      bv[i] = (1 == (b & 0x1));
-      if (0 == b) {
-        b = rng->uniform();
-      }
-      b = b >> 1;
+        bv[i] = (1 == (b & 0x1));
+        if (0 == b) {
+            b = rng->uniform();
+        }
+        b = b >> 1;
     }
     return bv;
-  }
-  void TargetedBV::randomize(PRNG* rng) {
+}
+void TargetedBV::randomize(PRNG* rng) {
     bits = randomBV(rng, target.size());
     return;
-  }
-  TargetedBV * TargetedBV::mutate(PRNG * rng) const {
+}
+TargetedBV * TargetedBV::mutate(PRNG * rng) const {
     auto g2 = new TargetedBV();
     g2->bits = bits;
     unsigned int n = ((unsigned int)(rng->uniform() % target.size()));
@@ -1754,80 +1776,80 @@ namespace UDemo {
     unsigned int m = ((unsigned int)(rng->uniform() % target.size()));
     g2->bits[m] = !(bits[m]);
     return g2;
-  }
-  tuple<TargetedBV*, TargetedBV*>  TargetedBV::cross(const TargetedBV * g2, PRNG * rng) const {
+}
+tuple<TargetedBV*, TargetedBV*>  TargetedBV::cross(const TargetedBV * g2, PRNG * rng) const {
     unsigned int nc = crossSite(rng, target.size());
     auto h1 = new TargetedBV();
     auto h2 = new TargetedBV();
 
     for (unsigned int i = 0; i < target.size(); i++) {
-      bool b1 = this->bits[i];
-      bool b2 = g2->bits[i];
-      if (i < nc) {
-        h1->bits[i] = b1;
-        h2->bits[i] = b2;
-      }
-      else {
-        h1->bits[i] = b2;
-        h2->bits[i] = b1;
-      }
+        bool b1 = this->bits[i];
+        bool b2 = g2->bits[i];
+        if (i < nc) {
+            h1->bits[i] = b1;
+            h2->bits[i] = b2;
+        }
+        else {
+            h1->bits[i] = b2;
+            h2->bits[i] = b1;
+        }
     }
     auto pr = tuple<TargetedBV*, TargetedBV*>(h1, h2);
     return pr;
-  }
-  void TargetedBV::show() const {
+}
+void TargetedBV::show() const {
     showBits(bits);
     return;
-  }
-  void TargetedBV::showBits(VBool bv) {
+}
+void TargetedBV::showBits(VBool bv) {
     for (unsigned int i = 0; i < bv.size(); i++) {
-      bool bi = bv[i];
-      if (bi)
-        printf("+");
-      else
-        printf("o");
+        bool bi = bv[i];
+        if (bi)
+            printf("+");
+        else
+            printf("o");
     }
     return;
-  }
-  bool TargetedBV::equiv(const TargetedBV * g2) const {
+}
+bool TargetedBV::equiv(const TargetedBV * g2) const {
     bool e = true;
     for (unsigned int i = 0; i < target.size(); i++) {
-      bool b1 = this->bits[i];
-      bool b2 = g2->bits[i];
-      e = e && (b1 == b2);
+        bool b1 = this->bits[i];
+        bool b2 = g2->bits[i];
+        e = e && (b1 == b2);
     }
     return e;
-  }
-  double TargetedBV::evaluate() {
+}
+double TargetedBV::evaluate() {
     double v = 100.0 - hDist(target);
     return v;
-  }
-  unsigned int TargetedBV::hDist(VBool bv) const {
+}
+unsigned int TargetedBV::hDist(VBool bv) const {
     assert(bv.size() == target.size());
     unsigned int hd = 0;
     for (unsigned int i = 0; i < bv.size(); i++) {
-      bool b1 = bits[i];
-      bool b2 = bv[i];
-      if (b1 != b2) {
-        hd = hd + 1;
-      }
+        bool b1 = bits[i];
+        bool b2 = bv[i];
+        if (b1 != b2) {
+            hd = hd + 1;
+        }
     }
     return hd;
-  }
-  double TargetedBV::tblEval(double minD, vector<double> wght, vector<VBool> tbl) const {
+}
+double TargetedBV::tblEval(double minD, vector<double> wght, vector<VBool> tbl) const {
     assert(0 < minD);
     double num = 0.0;
     double dnm = 0.0;
     for (unsigned int i = 0; i < tbl.size(); i++) {
-      VBool ti = tbl[i];
-      double di = minD + hDist(ti);
-      num = num + (wght[i] / di);
-      dnm = dnm + (1.0 / di);
+        VBool ti = tbl[i];
+        double di = minD + hDist(ti);
+        num = num + (wght[i] / di);
+        dnm = dnm + (1.0 / di);
     }
     return (num / dnm);
-  }
+}
 
-  void parallelMatrixMult(PRNG * rng) {
+void parallelMatrixMult(PRNG * rng) {
     // Interestingly, this does not start all CPU's right away,
     // unlike demoThreadLambda
 
@@ -1852,241 +1874,249 @@ namespace UDemo {
     auto m3B = KMatrix(r1, c2);
 
     auto mik = [&m1, &m2, &m3B](unsigned int i, unsigned int k) {
-      const unsigned int cr = m1.numC();
-      const unsigned m = 7;
-      const unsigned int st = 1;
-      assert(m2.numR() == cr);
-      double s = 0.0;
-      for (unsigned int j = 0; j < cr; j++) {
-        if (0 == (j%m)) { // force interleaving
-      //printf("Thread %3i,%3i sleeping %2i milliseconds \n", i, k, st);
-      //cout << flush;
-          std::this_thread::sleep_for(std::chrono::milliseconds(st));
+        const unsigned int cr = m1.numC();
+        const unsigned m = 7;
+        const unsigned int st = 1;
+        assert(m2.numR() == cr);
+        double s = 0.0;
+        for (unsigned int j = 0; j < cr; j++) {
+            if (0 == (j%m)) { // force interleaving
+                //printf("Thread %3i,%3i sleeping %2i milliseconds \n", i, k, st);
+                //cout << flush;
+                std::this_thread::sleep_for(std::chrono::milliseconds(st));
+            }
+            s = s + m1(i, j)*m2(j, k);
         }
-        s = s + m1(i, j)*m2(j, k);
-      }
-      m3B(i, k) = s;
-      printf("Thread (%3i, %3i) completed \n", i, k);
-      cout << flush;
-      return;
+        m3B(i, k) = s;
+        printf("Thread (%3i, %3i) completed \n", i, k);
+        cout << flush;
+        return;
     };
 
     auto pfs = vector< thread >();
     for (unsigned int i = 0; i < r1; i++) {
-      for (unsigned int k = 0; k < c2; k++) {
-        pfs.push_back(thread([mik, i, k]() {
-          mik(i, k);
-          return;
-        }));
-        cout << flush; // again, help "tail -f"
-      }
+        for (unsigned int k = 0; k < c2; k++) {
+            pfs.push_back(thread([mik, i, k]() {
+                mik(i, k);
+                return;
+            }));
+            cout << flush; // again, help "tail -f"
+        }
     }
 
     for (auto & t : pfs) {
-      t.join();
+        t.join();
     }
 
     printf("Diff in matrix mults: %.3E \n", norm(m3A - m3B));
 
     return;
-  }
+}
 
 }// namespace
 
 // -------------------------------------------------
 
 int main(int ac, char **av) {
-  using KBase::dSeed;
-  using UDemo::TargetedBV;
-  auto sTime = KBase::displayProgramStart();
-  uint64_t seed = dSeed;
-  bool matrixP = false;
-  bool goptP = false;
-  bool vhcP = false;
-  unsigned int vhcN = 0;
-  bool ghcP = false;
-  // unsigned int ghcN = 0;
-  bool pMultP = false;
-  bool vimcpP = false;
-  unsigned int vimcpN = 0;
-  bool threadP = false;
-  bool run = true;
+    using KBase::dSeed;
+    using UDemo::TargetedBV;
+    auto sTime = KBase::displayProgramStart();
+    uint64_t seed = dSeed;
+    bool matrixP = false;
+    bool goptP = false;
+    bool vhcP = false;
+    unsigned int vhcN = 0;
+    bool ghcP = false;
+    // unsigned int ghcN = 0;
+    bool pMultP = false;
+    bool vimcpP = false;
+    unsigned int vimcpN = 0;
+    bool threadP = false;
+    bool uiP = false;
+    bool run = true;
 
-  // tmp args
-  //vimcpP = true;
-  //vimcpN = 2;
+    // tmp args
+    //vimcpP = true;
+    //vimcpN = 2;
 
-  auto showHelp = []() {
-    printf("\n");
-    printf("Usage: specify one or more of these options\n");
-    printf("\n");
-    printf("--help            print this message and exit \n");
-    printf("\n");
-    printf("--matrix          demo matrix functions \n");
-    printf("\n");
-    printf("--pMult           asynchronous parallel matrix multiply (very slow) \n");
-    printf("\n");
-    printf("--gopt            demo genetic optimization \n");
-    printf("\n");
-    printf("--vhc <n>         demo vector hill-climbing \n");
-    printf("                  0: maximizing a simple quadratic \n");
-    printf("                  1: Nash bargaining between two agents in 1D \n");
-    printf("                  2: Nash bargaining between two agents in 4D, with scalar capabiities \n");
-    printf("                  3: Nash bargaining between two agents in 4D, with vector capabilities \n");
-    printf("\n");
-    printf("--ghc             demo general hill-climbing to maximize a function of bit-vectors \n");
-    printf("\n");
-    printf("--vimcp <n>       demo VI and MCP \n");
-    printf("                  0: the MCP minimize a quadratic subject to box constraints \n");
-    printf("                  1: linear VI with ellipsoidal constraints \n");
-    printf("                  2: Anti-Lemke linear VI \n");
-    printf("\n");
-    printf("--thread          demo several thread operations \n");
-    printf("\n");
-    printf("--seed <n>        set a 64bit seed \n");
-    printf("                  0 means truly random \n");
-    printf("                  default: %020llu \n", dSeed);
-  };
+    auto showHelp = []() {
+        printf("\n");
+        printf("Usage: specify one or more of these options\n");
+        printf("\n");
+        printf("--help            print this message and exit \n");
+        printf("\n");
+        printf("--matrix          matrix functions \n");
+        printf("\n");
+        printf("--pMult           asynchronous parallel matrix multiply (very slow) \n");
+        printf("\n");
+        printf("--gopt            genetic optimization \n");
+        printf("\n");
+        printf("--ui              unique indices \n");
+        printf("\n");
+        printf("--vhc <n>         vector hill-climbing \n");
+        printf("                  0: maximizing a simple quadratic \n");
+        printf("                  1: Nash bargaining between two agents in 1D \n");
+        printf("                  2: Nash bargaining between two agents in 4D, with scalar capabiities \n");
+        printf("                  3: Nash bargaining between two agents in 4D, with vector capabilities \n");
+        printf("\n");
+        printf("--ghc             general hill-climbing to maximize a function of bit-vectors \n");
+        printf("\n");
+        printf("--vimcp <n>       VI and MCP \n");
+        printf("                  0: the MCP minimize a quadratic subject to box constraints \n");
+        printf("                  1: linear VI with ellipsoidal constraints \n");
+        printf("                  2: Anti-Lemke linear VI \n");
+        printf("\n");
+        printf("--thread          several thread operations \n");
+        printf("\n");
+        printf("--seed <n>        set a 64bit seed \n");
+        printf("                  0 means truly random \n");
+        printf("                  default: %020llu \n", dSeed);
+    };
 
-  // a list of <keyword, description, lambda-fn>
-  // might be enough to do this - except for the arguments to options.
-  if (ac > 1) {
-    for (int i = 1; i < ac; i++) {
-      if (strcmp(av[i], "--seed") == 0) {
-        i++;
-        seed = std::stoull(av[i]);
-      }
-      else if (strcmp(av[i], "--matrix") == 0) {
-        matrixP = true;
-      }
-      else if (strcmp(av[i], "--pMult") == 0) {
-        pMultP = true;
-      }
-      else if (strcmp(av[i], "--thread") == 0) {
-        threadP = true;
-      }
-      else if (strcmp(av[i], "--gopt") == 0) {
-        goptP = true;
-      }
-      else if (strcmp(av[i], "--vhc") == 0) {
-        vhcP = true;
-        i++;
-        vhcN = std::stoi(av[i]);
-      }
-      else if (strcmp(av[i], "--ghc") == 0) {
-        ghcP = true;
-        //i++;
-        //ghcN = stoi(av[i]);
-      }
-      else if (strcmp(av[i], "--vimcp") == 0) {
-        vimcpP = true;
-        i++;
-        vimcpN = std::stoi(av[i]);
-      }
-      else if (strcmp(av[i], "--help") == 0) {
-        run = false;
-      }
-      else {
-        run = false;
-        printf("Unrecognized argument: %s\n", av[i]);
-      }
+    // a list of <keyword, description, lambda-fn>
+    // might be enough to do this - except for the arguments to options.
+    if (ac > 1) {
+        for (int i = 1; i < ac; i++) {
+            if (strcmp(av[i], "--seed") == 0) {
+                i++;
+                seed = std::stoull(av[i]);
+            }
+            else if (strcmp(av[i], "--matrix") == 0) {
+                matrixP = true;
+            }
+            else if (strcmp(av[i], "--pMult") == 0) {
+                pMultP = true;
+            }
+            else if (strcmp(av[i], "--thread") == 0) {
+                threadP = true;
+            }
+            else if (strcmp(av[i], "--gopt") == 0) {
+                goptP = true;
+            }
+            else if (strcmp(av[i], "--vhc") == 0) {
+                vhcP = true;
+                i++;
+                vhcN = std::stoi(av[i]);
+            }
+            else if (strcmp(av[i], "--ghc") == 0) {
+                ghcP = true;
+                //i++;
+                //ghcN = stoi(av[i]);
+            }
+            else if (strcmp(av[i], "--ui") == 0) {
+                uiP = true;
+            }
+            else if (strcmp(av[i], "--vimcp") == 0) {
+                vimcpP = true;
+                i++;
+                vimcpN = std::stoi(av[i]);
+            }
+            else if (strcmp(av[i], "--help") == 0) {
+                run = false;
+            }
+            else {
+                run = false;
+                printf("Unrecognized argument: %s\n", av[i]);
+            }
+        }
     }
-  }
 
-  if (!run) {
-    showHelp();
+    if (!run) {
+        showHelp();
+        return 0;
+    }
+
+
+    PRNG * rng = new PRNG();
+    if (0 == seed) {
+        seed = rng->setSeed(seed); // 0 == get a random number
+    }
+
+    //printf("Using PRNG seed:  %020llu \n", seed);
+    //printf("Same seed in hex:   0x%016llX \n", seed);
+    // Unix correctly prints all digits with lu, lX, llu, and llX.
+    // Windows only prints part, with lu, lX, llu, and llX.
+
+    printf("Using PRNG seed:  %020" PRIu64 "\n", seed);
+    printf("Same seed in hex:   0x%016" PRIX64" \n", seed);
+
+
+    //    UDemo::demoCoords(rng);
+
+    if (threadP) {
+        UDemo::demoThreadLambda(10);
+        cout << "Demo using mutex to protect counter ..." << endl;
+        UDemo::demoThreadSynch(10);
+        UDemo::demoThreadSynch(10);
+        UDemo::demoThreadSynch(10);
+        UDemo::demoThreadSynch(10);
+        UDemo::demoThreadSynch(10);
+    }
+
+    if (matrixP) {
+        rng->setSeed(seed);
+        UDemo::demoMatrix(rng);
+    }
+
+    if (pMultP) {
+        rng->setSeed(seed);
+        UDemo::parallelMatrixMult(rng);
+    }
+
+    if (goptP) {
+        rng->setSeed(seed);
+        UDemo::demoGA(rng);
+    }
+
+    if (ghcP) {
+        rng->setSeed(seed);
+        UDemo::demoGHC(rng);
+    }
+
+    if (vhcP) {
+        //rng->setSeed(seed);
+        switch (vhcN) {
+        case 0:
+            UDemo::demoVHC00(seed);
+            break;
+        case 1:
+            UDemo::demoVHC01(seed);
+            break;
+        case 2:
+            UDemo::demoVHC02(seed);
+            break;
+        case 3:
+            UDemo::demoVHC03(seed);
+            break;
+        default:
+            cout << "Unrecognized vhcN: " << vhcN << endl;
+        }
+    }
+
+    if (vimcpP) {
+        rng->setSeed(seed);
+        switch (vimcpN) {
+        case 0:
+            UDemo::demoABG00(rng);
+            break;
+        case 1:
+            UDemo::demoEllipse(rng);
+            break;
+        case 2:
+            UDemo::demoAntiLemke(rng, 25);
+            break;
+        default:
+            cout << "Unrecognized vimcpN: " << vimcpN << endl;
+        }
+    }
+
+    if (uiP) {
+        UDemo::demoUIndices();
+    }
+
+    delete rng;
+    KBase::displayProgramEnd(sTime);
     return 0;
-  }
-
-
-  PRNG * rng = new PRNG();
-  if (0 == seed) {
-    seed = rng->setSeed(seed); // 0 == get a random number
-  }
-
-  //printf("Using PRNG seed:  %020llu \n", seed);
-  //printf("Same seed in hex:   0x%016llX \n", seed);
-  // Unix correctly prints all digits with lu, lX, llu, and llX.
-  // Windows only prints part, with lu, lX, llu, and llX.
-
-  printf("Using PRNG seed:  %020" PRIu64 "\n", seed);
-  printf("Same seed in hex:   0x%016" PRIX64" \n", seed);
-
-
-  //    UDemo::demoCoords(rng);
-
-  if (threadP) {
-    UDemo::demoThreadLambda(10);
-    cout << "Demo using mutex to protect counter ..." << endl;
-    UDemo::demoThreadSynch(10);
-    UDemo::demoThreadSynch(10);
-    UDemo::demoThreadSynch(10);
-    UDemo::demoThreadSynch(10);
-    UDemo::demoThreadSynch(10);
-  }
-
-  if (matrixP) {
-    rng->setSeed(seed);
-    UDemo::demoMatrix(rng);
-  }
-
-  if (pMultP) {
-    rng->setSeed(seed);
-    UDemo::parallelMatrixMult(rng);
-  }
-
-  if (goptP) {
-    rng->setSeed(seed);
-    UDemo::demoGA(rng);
-  }
-
-  if (ghcP) {
-    rng->setSeed(seed);
-    UDemo::demoGHC(rng);
-  }
-
-  if (vhcP) {
-    rng->setSeed(seed);
-    switch (vhcN) {
-    case 0:
-      UDemo::demoVHC00(rng);
-      break;
-    case 1:
-      UDemo::demoVHC01(rng);
-      break;
-    case 2:
-      UDemo::demoVHC02(rng);
-      break;
-    case 3:
-      UDemo::demoVHC03(rng);
-      break;
-    default:
-      cout << "Unrecognized vhcN: " << vhcN << endl;
-    }
-  }
-
-  if (vimcpP) {
-    rng->setSeed(seed);
-    switch (vimcpN) {
-    case 0:
-      UDemo::demoABG00(rng);
-      break;
-    case 1:
-      UDemo::demoEllipse(rng);
-      break;
-    case 2:
-      UDemo::demoAntiLemke(rng, 25);
-      break;
-    default:
-      cout << "Unrecognized vimcpN: " << vimcpN << endl;
-    }
-  }
-
-  UDemo::demoUIndices();
-
-  delete rng;
-  KBase::displayProgramEnd(sTime);
-  return 0;
 }
 
 

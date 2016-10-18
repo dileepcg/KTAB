@@ -104,7 +104,8 @@ namespace DemoComSel {
   }
 
 
-  void demoCSC(unsigned int numA, unsigned int nDim, bool cpP, bool siP, const uint64_t s) {
+  void demoCSC(unsigned int numA, unsigned int nDim, 
+               bool cpP, bool siP, const uint64_t s) {
     // need a template for ...
     // position type  (each is a committee)
     // utility to an actor of a position (committee)
@@ -200,14 +201,17 @@ namespace DemoComSel {
 
     cout << "Computing utilities of positions ... " << endl;
     for (unsigned int i = 0; i < numA; i++) {
-      double uii = csm->getActorCSPstnUtil(i, i); // (0,0) causes computation of entire table
+      // (0,0) causes computation of entire table
+      double uii = csm->getActorCSPstnUtil(i, i); 
     }
 
     // At this point, we have almost a generic enumerated model,
     // so much of the code below should be easily adaptable to EModel.
 
-    KMatrix uij = KMatrix(numA, numPos);  // rows are actors, columns are all possible position
-    cout << "Complete (normalized) utility matrix of all possible positions (rows) versus actors (columns)" << endl << flush;
+    // rows are actors, columns are all possible position
+    KMatrix uij = KMatrix(numA, numPos);  
+    cout << "Complete (normalized) utility matrix of all possible positions (rows)";
+    cout <<" versus actors (columns)" << endl << flush;
     for (unsigned int pj = 0; pj < numPos; pj++) {
       printf("%3i  ", pj);
       auto pstn = positions[pj];
@@ -241,7 +245,10 @@ namespace DemoComSel {
     trans(aCap).mPrintf("%5.2f ");
     cout << endl << flush;
 
-    cout << "Computing zeta ... " << endl; // which happens to indicate the PCW *if* proportional voting, when we actually use PropBin
+    
+    // which happens to indicate the PCW *if* proportional voting,
+    // when we actually use PropBin
+    cout << "Computing zeta ... " << endl; 
     KMatrix zeta = aCap * uij;
     assert((1 == zeta.numR()) && (numPos == zeta.numC()));
 

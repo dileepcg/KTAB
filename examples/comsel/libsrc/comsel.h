@@ -93,17 +93,23 @@ namespace ComSelLib {
     unsigned int numItm = 0;
     unsigned int numCat = 2;
 
-    double getActorCSPstnUtil(unsigned int ai, unsigned int pj); // get [0,1] normalized utility to each actor of each CSposition
+    // get [0,1] normalized utility to each actor of each CSposition
+    double getActorCSPstnUtil(unsigned int ai, unsigned int pj); 
     
   protected:
     unsigned int numDims = 0;
-    KMatrix * actorCSPstnUtil = nullptr; // normalized [0,1] utility to each actor (row) of each CS position (column)
+    
+    // normalized [0,1] utility to each actor (row) of each CS position (column)
+    KMatrix * actorCSPstnUtil = nullptr; 
+    
     void setActorCSPstnUtil();
     
     // return the clm-vector of actors' expected utility for this particular committee
     KMatrix oneCSPstnUtil(const VUI& vb) const;
     
-    KMatrix * actorSpPstnUtil = nullptr; // normalized [0,1] utility to each actor (row) of each spatial position (column)
+    // normalized [0,1] utility to each actor (row) of each spatial position (column)
+    KMatrix * actorSpPstnUtil = nullptr; 
+    
     void setActorSpPstnUtil();
     double oneSpPstnUtil(unsigned int ai, unsigned int pj) const;
     
@@ -146,10 +152,11 @@ namespace ComSelLib {
     explicit CSState(CSModel* mod);
     virtual ~CSState();
 
-    // use the parameters of your state to compute the relative probability of each unique position.
-    // persp = -1 means use everyone's separate perspectives (i.e. get actual probabilities, not one actor's beliefs).
-    // Because the voting mechanisms may differ, so v_k(i:j) could differ widely from sub-class to sub-class,
-    // it is tricky to make a single function to do this.
+    // use the parameters of your state to compute the relative probability of each
+    // unique position. persp = -1 means use everyone's separate perspectives
+    // (i.e. get actual probabilities, not one actor's beliefs).
+    // Because the voting mechanisms may differ, so v_k(i:j) could differ widely from
+    // sub-class to sub-class, it is tricky to make a single function to do this.
     virtual tuple< KMatrix, VUI> pDist(int persp) const;
 
     CSState * stepSUSN();
@@ -165,7 +172,9 @@ namespace ComSelLib {
     
     // Given the utility matrix, uMat, calculate the expected utility to each actor,
     // as a column-vector. Again, this is from the perspective of whoever developed uMat.
-    KMatrix expUtilMat (KBase::ReportingLevel rl, unsigned int numA, unsigned int numP, const KMatrix & uMat) const; 
+    KMatrix expUtilMat (KBase::ReportingLevel rl, 
+                        unsigned int numA, unsigned int numP, 
+                        const KMatrix & uMat) const; 
      
     virtual bool equivNdx(unsigned int i, unsigned int j) const;
 

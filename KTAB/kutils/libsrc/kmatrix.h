@@ -100,11 +100,22 @@ namespace KBase {
     unsigned int numC() const;
     static KMatrix uniform(PRNG* rng, unsigned int nr, unsigned int nc, double a, double b);
 
-    // this builds a matrix by mapping a function over a ranges, setting each element to the returned value
+    // this builds a matrix by mapping a function over integer ranges,
+    // setting each element to the returned value
     static KMatrix map(function<double(unsigned int i, unsigned int j)> f,
 		       unsigned int nr, unsigned int nc);
     
-    // this maps a function over a ranges,, performing the indicated operation on
+    // this builds a matrix by mapping a function over a matrix and it
+    // indices, setting each element to the returned value. Uses indices.
+    static KMatrix map(function<double(double mij, unsigned int i, unsigned int j)> f,
+		       const KMatrix & mat);
+    
+    // this builds a matrix by mapping a function over a matrix and it
+    // indices, setting each element to the returned value. Ignores indices.
+    static KMatrix map(function<double(double x)> f,
+		       const KMatrix & mat);
+    
+    // this maps a function over integer ranges, performing the indicated operation on
     // each pair of indices. As the function must return 'void', it is invoked for side-affects only.
     static void mapV(function<void(unsigned int i, unsigned int j)> f,
 		     unsigned int nr, unsigned int nc);

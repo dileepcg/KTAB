@@ -35,6 +35,12 @@
 #include <QSqlError>
 #include <QRegExp>
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #include <QtWidgets>
 #ifndef QT_NO_PRINTDIALOG
@@ -51,311 +57,327 @@ class QMenu;
 class QTextEdit;
 
 namespace Ui {
-  class MainWindow;
+class MainWindow;
 }
 
 static const int N = 2;
 
 class MainWindow : public QMainWindow
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  //explicit MainWindow(QWidget *parent = 0);
-  MainWindow();
-  ~MainWindow();
+    //explicit MainWindow(QWidget *parent = 0);
+    MainWindow();
+    ~MainWindow();
 
 private slots:
-  void about();
-  void dockWindowChanged();
-  //CSV
-  void setCSVItemModel(QStandardItemModel * model, QStringList scenarioName);
-  void csvGetFilePAth(bool bl);
-  //Database
-  void setDBItemModel(QStandardItemModel *model);
-  void setDBItemModelEdit();
-  void displayMessage(QString cls, QString message);
-  void vectorPositionsFromDB();
-  void dbGetFilePAth(bool bl, QString dbPath =0,bool run = false );
-  void dbEditGetFilePAth(bool bl);
-  void updateStateCountSliderRange(int states);
-  void updateScenarioListComboBox(QStringList * scenarios, QStringList *scenarioIds, QStringList *scenarioDesc, int indx);
-  void updateDimensionCount(int dim, QStringList *dimList);
-  void updateActorCount(int actNum);
+    void about();
+    void dockWindowChanged();
+    //CSV
+    void setCSVItemModel(QStandardItemModel * model, QStringList scenarioName);
+    void csvGetFilePAth(bool bl);
+    //Database
+    void setDBItemModel(QStandardItemModel *model);
+    void setDBItemModelEdit();
+    void displayMessage(QString cls, QString message);
+    void vectorPositionsFromDB();
+    void dbGetFilePAth(bool bl, QString dbPath =0,bool run = false );
+    void dbEditGetFilePAth(bool bl);
+    void updateStateCountSliderRange(int states);
+    void updateScenarioListComboBox(QStringList * scenarios, QStringList *scenarioIds, QStringList *scenarioDesc, int indx);
+    void updateDimensionCount(int dim, QStringList *dimList);
+    void updateActorCount(int actNum);
 
-  //Central-  Controls Frame
-  void sliderStateValueToQryDB(int value);
-  void scenarioComboBoxValue(int scenarioBox);
-  void createNewCSV(bool bl);
-  void cellSelected(QStandardItem *in);
-  void insertNewRowCSV();
-  void insertNewColumnCSV();
-  void donePushButtonClicked(bool bl);
+    //Central-  Controls Frame
+    void sliderStateValueToQryDB(int value);
+    void scenarioComboBoxValue(int scenarioBox);
+    void createNewCSV(bool bl);
+    void cellSelected(QStandardItem *in);
+    void insertNewRowCSV();
+    void insertNewColumnCSV();
+    void donePushButtonClicked(bool bl);
 
-  //    bool eventFilter(QObject*, QEvent*);
-  void displayMenuTableWidget(QPoint pos);
-  void displayMenuTableView(QPoint pos);
+    //    bool eventFilter(QObject*, QEvent*);
+    void displayMenuTableWidget(QPoint pos);
+    void displayMenuTableView(QPoint pos);
 
-  //DB to CSV
-  void actorsNameDesc(QList<QString> actorName, QList<QString> actorDescription);
-  void actorsInfluence(QList<QString> ActorInfluence);
-  void actorsPosition(QList<QString> actorPosition, int dim);
-  void actorsSalience(QList<QString> actorSalience, int dim);
+    //DB to CSV
+    void actorsNameDesc(QList<QString> actorName, QList<QString> actorDescription);
+    void actorsInfluence(QList<QString> ActorInfluence);
+    void actorsPosition(QList<QString> actorPosition, int dim);
+    void actorsSalience(QList<QString> actorSalience, int dim);
 
 signals:
-  //CSV
-  void csvFilePath(QString path);
+    //CSV
+    void csvFilePath(QString path);
 
-  //Database
-  void dbFilePath(QString path,bool runScenario = false);
-  void dbEditFilePath(QString path);
+    //Database
+    void dbFilePath(QString path,bool runScenario = false);
+    void dbEditFilePath(QString path);
 
-  void getScenarioRunValues(int state, QString scenarioBox,int dim);
-  void getScenarioRunValuesEdit(QString scenarioBox);
-  void getStateCountfromDB();
-  void getDimensionCountfromDB();
-  void getDimforBar();
+    void getScenarioRunValues(int state, QString scenarioBox,int dim);
+    void getScenarioRunValuesEdit(QString scenarioBox);
+    void getStateCountfromDB();
+    void getDimensionCountfromDB();
+    void getDimforBar();
 
-  //save DB to csv
-  void getActorsDesc();
-  void getInfluence(int turn);
-  void getPosition(int dim,int turn);
-  void getSalience(int dim,int turn);
+    //save DB to csv
+    void getActorsDesc();
+    void getInfluence(int turn);
+    void getPosition(int dim,int turn);
+    void getSalience(int dim,int turn);
 
 private:
-  //MainWindow
-  void createActions();
-  void createStatusBar();
-  void createGraph1DockWindows();
-  void createGraph2DockWindows();
-  void createModuleParametersDockWindow();
-  void saveTableViewToCSV();
-  void saveTableWidgetToCSV();
-  int validateControlButtons(QString viewName);
+    //MainWindow
+    void createActions();
+    void createStatusBar();
+    void createGraph1DockWindows();
+    void createGraph2DockWindows();
+    void createModuleParametersDockWindow();
+    void saveTableViewToCSV();
+    void saveTableWidgetToCSV();
+    int validateControlButtons(QString viewName);
 
-  void updateDBViewColumns();
-  QString checkForHeaderString(QString header);
+    void updateDBViewColumns();
+    QString checkForHeaderString(QString header);
 
-  // Central Main Frame
-  QFrame *central;
-  QFrame *tableControlsFrame;
-  QGridLayout *gLayout;
-  QStackedWidget * stackWidget;
+    // Central Main Frame
+    QFrame *central;
+    QFrame *tableControlsFrame;
+    QGridLayout *gLayout;
+    QStackedWidget * stackWidget;
 
-  QComboBox * scenarioComboBox;
-  QPushButton * actorsPushButton;
-  QLineEdit * actorsLineEdit;
-  QPushButton * dimensionsPushButton;
-  QLineEdit * dimensionsLineEdit;
-  QPushButton * donePushButton;
-  QLineEdit * scenarioDescriptionLineEdit;
-  QSlider * turnSlider;
+    QComboBox * scenarioComboBox;
+    QPushButton * actorsPushButton;
+    QLineEdit * actorsLineEdit;
+    QPushButton * dimensionsPushButton;
+    QLineEdit * dimensionsLineEdit;
+    QPushButton * donePushButton;
+    QLineEdit * scenarioDescriptionLineEdit;
+    QSlider * turnSlider;
 
-  //Model parameters
-  QFrame * frames[N];
-  QPushButton * runButton;
+    //Model parameters
+    QFrame * frames[N];
+    QPushButton * runButton;
 
-  QRadioButton * rparam1;
-  QRadioButton * rparam2;
-  QRadioButton * rparam3;
+    QRadioButton * rparam1;
+    QRadioButton * rparam2;
+    QRadioButton * rparam3;
 
-  QCheckBox * cparam1;
-  QCheckBox * cparam2;
-  QCheckBox * cparam3;
+    QCheckBox * cparam1;
+    QCheckBox * cparam2;
+    QCheckBox * cparam3;
 
-  //csv window
-  QTableView * csvTableView;
-  CSV *csvObj;
+    //csv window
+    QTableView * csvTableView;
+    CSV *csvObj;
 
-  QTableWidget * csvTableWidget;
+    QTableWidget * csvTableWidget;
 
-  QMenu *viewMenu;
+    QMenu *viewMenu;
 
-  QDockWidget * moduleParametersDock;
-  QDockWidget * lineGraphDock;
-  QDockWidget * barGraphDock;
+    QDockWidget * moduleParametersDock;
+    QDockWidget * lineGraphDock;
+    QDockWidget * barGraphDock;
 
-  QGridLayout * VLayout;
-  QFrame * moduleFrame;
+    QGridLayout * VLayout;
+    QFrame * moduleFrame;
 
-  //Database Obj
-  Database * dbObj ;
-  QSqlDatabase db;
-  int dimensions;
-  QString dbPath;
+    //Database Obj
+    Database * dbObj ;
+    QSqlDatabase db;
+    int dimensions;
+    QString dbPath;
 
-  //Graph 1 widget
-  QFrame *lineGraphMainFrame;
-  QGridLayout * lineGraphGridLayout;
-  QCustomPlot * lineCustomGraph;
+    //Graph 1 widget
+    QFrame *lineGraphMainFrame;
+    QGridLayout * lineGraphGridLayout;
+    QCustomPlot * lineCustomGraph;
 
-  void initializeLineGraphPlot();
-  void plotGraph();
-  void initializeCentralViewFrame();
+    void initializeLineGraphPlot();
+    void plotGraph();
+    void initializeCentralViewFrame();
 
-  QString scenarioBox;
-  QStringList mScenarioIds;
-  QStringList mScenarioDesc;
-  QStringList mScenarioName;
-  //graph - customplot
+    QString scenarioBox;
+    QStringList mScenarioIds;
+    QStringList mScenarioDesc;
+    QStringList mScenarioName;
+    //graph - customplot
 
-  int numAct;
-  //    to  edit headers
+    int numAct;
+    //    to  edit headers
 
-  QLineEdit* headerEditor;
-  int editorIndex;
+    QLineEdit* headerEditor;
+    int editorIndex;
 
-  QString  tableType; // CSV, Database, NewCSV
-  QStandardItemModel *modeltoCSV;
-  QStandardItemModel *modeltoDB;
+    QString  tableType; // CSV, Database, NewCSV
+    QStandardItemModel *modeltoCSV;
+    QStandardItemModel *modeltoDB;
 
-  QString inputCSV;
-  void createSeperateColumn(QTableWidgetItem *hdr);
+    QString inputCSV;
+    void createSeperateColumn(QTableWidgetItem *hdr);
 
-  //DB to CSV
-  int dimension;
-  QList <QString> actorsName;
-  QList <QString> actorsDescription;
-  QList <QString> actorsInfl;
-  QList <QString> actorsPos[3];
-  QList <QString> actorsSal[3];
+    //DB to CSV
+    int dimension;
+    QList <QString> actorsName;
+    QList <QString> actorsDescription;
+    QList <QString> actorsInfl;
+    QList <QString> actorsPos[3];
+    QList <QString> actorsSal[3];
 
-  QStringList dimensionList;
+    QStringList dimensionList;
 
 
 private slots:
-  void titleDoubleClick(QMouseEvent *event, QCPPlotTitle *barGraphTitle);
-  //    void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
-  //    void legendDoubleClick(QCPLegend* legend, QCPAbstractLegendItem* item);
-  //    void selectionChanged();
-  void mousePress();
-  void mouseWheel();
-  void addGraphOnModule1(const QVector<double> &x, const QVector<double> &y, QString Actor, int turn);
-  //    void removeSelectedGraph();
-  void removeAllGraphs();
-  void contextMenuRequest(QPoint pos);
-  void moveLegend();
-  void graphClicked(QCPAbstractPlottable *plottable);
-  void updateBarDimension(QStringList* dims);
+    void titleDoubleClick(QMouseEvent *event, QCPPlotTitle *barGraphTitle);
+    //    void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
+    //    void legendDoubleClick(QCPLegend* legend, QCPAbstractLegendItem* item);
+    //    void selectionChanged();
+    void mousePress();
+    void mouseWheel();
+    void addGraphOnModule1(const QVector<double> &x, const QVector<double> &y, QString Actor, int turn);
+    //    void removeSelectedGraph();
+    void removeAllGraphs();
+    void contextMenuRequest(QPoint pos);
+    void moveLegend();
+    void graphClicked(QCPAbstractPlottable *plottable);
+    void updateBarDimension(QStringList* dims);
 
-  //Bar Charts
+    //Bar Charts
 private :
-  void initializeBarGraphDock();
-  void initializeBarGraphPlot();
-  void populateBarGraphActorsList();
-  void populateBarGraphDimensions(int dim);
-  void populateBarGraphStateRange(int states);
-  void generateColors();
-  void getActorsInRange(int dim);
-  void setStackedBars();
-  void deleteBars();
+    void initializeBarGraphDock();
+    void initializeBarGraphPlot();
+    void populateBarGraphActorsList();
+    void populateBarGraphDimensions(int dim);
+    void populateBarGraphStateRange(int states);
+    void generateColors();
+    void getActorsInRange(int dim);
+    void setStackedBars();
+    void deleteBars();
 
-  QCPBars *createBar(int actorId);
+    QCPBars *createBar(int actorId);
 
-  QFrame * barGraphControlsFrame;
-  QFrame * barGraphMainFrame;
-  QGridLayout * barGraphGridLayout;
-  QGridLayout * barGridLayout;
-  QScrollArea * barGraphActorsScrollArea;
-  QCustomPlot * barCustomGraph;
+    QFrame * barGraphControlsFrame;
+    QFrame * barGraphMainFrame;
+    QGridLayout * barGraphGridLayout;
+    QGridLayout * barGridLayout;
+    QScrollArea * barGraphActorsScrollArea;
+    QCustomPlot * barCustomGraph;
 
-  QCheckBox * barGraphSelectAllCheckBox;
-  QRadioButton * barGraphRadioButton;
-  QComboBox * barGraphDimensionComboBox;
-  QLineEdit * barGraphGroupRangeLineEdit;
+    QCheckBox * barGraphSelectAllCheckBox;
+    QRadioButton * barGraphRadioButton;
+    QComboBox * barGraphDimensionComboBox;
+    QLineEdit * barGraphGroupRangeLineEdit;
 
-  QSlider * barGraphTurnSlider;
-  QList <QCheckBox *> barGraphActorsCheckBoxList;
-  QList <bool> barGraphCheckedActorsIdList;
-  QPushButton * barGraphBinWidthButton;
+    QSlider * barGraphTurnSlider;
+    QList <QCheckBox *> barGraphActorsCheckBoxList;
+    QList <bool> barGraphCheckedActorsIdList;
+    QPushButton * barGraphBinWidthButton;
 
 
-  QList<QCPBars *> bars[100];
-  QCPBars * prevBar;
-  QCPBars * prevBarU;
-  QList<QColor> colorsList;
+    QList<QCPBars *> bars[100];
+    QCPBars * prevBar;
+    QCPBars * prevBarU;
+    QList<QColor> colorsList;
 
-  QList <QCheckBox * > barActorCBList;
-  QList <int> actorsIdsClr;
+    QList <QCheckBox * > barActorCBList;
+    QList <int> actorsIdsClr;
 
-  double yAxisLen;
+    double yAxisLen;
 
-  int in;
-  int barsCount;
+    int in;
+    int barsCount;
 
-  double currentStackHeight[100];
-  double binWidth;
+    double currentStackHeight[100];
+    double binWidth;
 
-  QCPPlotTitle * barGraphTitle;
+    QCPPlotTitle * barGraphTitle;
 
 signals :
-  void getActorIdsInRange(double lowerRange, double upperRange, int dimension, int turn);
+    void getActorIdsInRange(double lowerRange, double upperRange, int dimension, int turn);
 
 private slots:
-  void barGraphSelectAllActorsCheckBoxClicked(bool Click);
-  void barGraphActorsCheckboxClicked(bool click);
-  void barGraphDimensionChanged(int value);
-  void barGraphTurnSliderChanged(int value);
-  void barGraphBinWidthButtonClicked(bool bl);
-  void barGraphActorsSalienceCapability(QList<int> aId, QList<double> sal, QList<double>cap, double r1, double r2);
-  void xAxisRangeChanged( const QCPRange &newRange, const QCPRange &oldRange );
-  void yAxisRangeChanged( const QCPRange &newRange, const QCPRange &oldRange );
+    void barGraphSelectAllActorsCheckBoxClicked(bool Click);
+    void barGraphActorsCheckboxClicked(bool click);
+    void barGraphDimensionChanged(int value);
+    void barGraphTurnSliderChanged(int value);
+    void barGraphBinWidthButtonClicked(bool bl);
+    void barGraphActorsSalienceCapability(QList<int> aId, QList<double> sal, QList<double>cap, double r1, double r2);
+    void xAxisRangeChanged( const QCPRange &newRange, const QCPRange &oldRange );
+    void yAxisRangeChanged( const QCPRange &newRange, const QCPRange &oldRange );
 
-  //line Graph
+    //line Graph
 private :
-  void initializeLineGraphDock();
-  void populateLineGraphActorsList();
-  void populateLineGraphDimensions(int dim);
-  void populateLineGraphStateRange(int states);
-  void createSpline(const QVector<double> &x, const QVector<double> &y, QString Actor, int turn);
+    void initializeLineGraphDock();
+    void populateLineGraphActorsList();
+    void populateLineGraphDimensions(int dim);
+    void populateLineGraphStateRange(int states);
+    void createSpline(const QVector<double> &x, const QVector<double> &y, QString Actor, int turn);
 
-  void clearAllLabels();
-  void clearAllGraphs();
-  void reconnectPlotWidgetSignals();
+    void clearAllLabels();
+    void clearAllGraphs();
+    void reconnectPlotWidgetSignals();
 
-  QFrame * lineGraphControlsFrame;
-  QScrollArea *lineGraphActorsScrollArea;
-  QCheckBox *lineGraphSelectAllCheckBox;
-  QRadioButton *lineGraphRadioButton ;
-  QRadioButton *sankeyGraphRadioButton;
-  QComboBox *lineGraphDimensionComboBox;
-  QStackedWidget *graphTypeStackedWidget;
-  QSlider *lineGraphTurnSlider;
+    QFrame * lineGraphControlsFrame;
+    QScrollArea *lineGraphActorsScrollArea;
+    QCheckBox *lineGraphSelectAllCheckBox;
+    QRadioButton *lineGraphRadioButton ;
+    QRadioButton *sankeyGraphRadioButton;
+    QComboBox *lineGraphDimensionComboBox;
+    QStackedWidget *graphTypeStackedWidget;
+    QSlider *lineGraphTurnSlider;
 
-  QList <QCheckBox *> lineGraphActorsCheckBoxList;
-  QList <bool> lineGraphCheckedActorsIdList;
+    QList <QCheckBox *> lineGraphActorsCheckBoxList;
+    QList <bool> lineGraphCheckedActorsIdList;
 
-  QList <QCheckBox * > lineActorCBList;
+    QList <QCheckBox * > lineActorCBList;
 
-  QCPPlotTitle * lineGraphTitle;
+    QCPPlotTitle * lineGraphTitle;
 
-  int numStates;
+    int numStates;
 
-  QList <bool> lineLabelToggleList;
-  QList <QCPItemText * > lineLabelList;
-  QCPItemText *textLabel ;
-  int tnty;
+    QList <bool> lineLabelToggleList;
+    QList <QCPItemText * > lineLabelList;
+    QCPItemText *textLabel ;
+    int tnty;
 
 private slots :
-  void lineGraphSelectAllActorsCheckBoxClicked(bool click);
-  void lineGraphDimensionChanged(int value);
-  void lineGraphTurnSliderChanged(int);
-  void lineGraphActorsCheckboxClicked(bool click);
-  void updateLineDimension(QStringList *dims);
-  void toggleLabels();
-  void splineValues(const QVector<double> &x, const QVector<double> &y);
+    void lineGraphSelectAllActorsCheckBoxClicked(bool click);
+    void lineGraphDimensionChanged(int value);
+    void lineGraphTurnSliderChanged(int);
+    void lineGraphActorsCheckboxClicked(bool click);
+    void updateLineDimension(QStringList *dims);
+    void toggleLabels();
+    void splineValues(const QVector<double> &x, const QVector<double> &y);
 
-  //run smp
+    //run smp
 
 private :
-  QString csvPath;
+    QString csvPath;
 
 private slots :
-  void runPushButtonClicked(bool bl);
-  void smpDBPath(QString smpdbPath);
-  void disableRunButton(QTableWidgetItem * itm);
+    void runPushButtonClicked(bool bl);
+    void smpDBPath(QString smpdbPath);
+    void disableRunButton(QTableWidgetItem * itm);
+
+    //Log
+private :
+    QString logFileName;
+    QString defaultLogFile;
+
+    QActionGroup * logActions;
+
+    QAction *logDefaultAct;
+    QAction *logNewAct;
+    QAction *logNoneAct;
+
+    std::streambuf *coutbuf;
+    FILE *stream ;
+    FILE fp_old;
+
+    void logSMPDataOptionsAnalysis();
 };
-
 
 #endif // MAINWINDOW_H
 

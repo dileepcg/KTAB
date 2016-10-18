@@ -8,7 +8,7 @@
 # -------------------------------------------
 
 START=1
-END=10
+END=20
 
 rm -f run-smpc*txt  run-smpc*db  test.db
 for i in $(eval echo "{$START..$END}")
@@ -17,7 +17,7 @@ do
   timestamp="$(date --utc +%Y-%m-%d_%H-%M-%S-%NZ)"
   name="run-smpc-$timestamp"
   echo "$i: $name" 
-  nice ../smpc --seed 0 --euSMP > $name.txt ; mv testsmp.db $name.db
+  nice ../smpc --seed 0 --logmin --euSMP > $name.txt ; mv testsmp.db $name.db
 done
 
 

@@ -77,7 +77,8 @@ namespace ComSelLib {
 
   // --------------------------------------------
   // JAH 20160711 added rng seed JAH 20160802 added sql flags
-  CSModel::CSModel(unsigned int nd,  string d, uint64_t s, vector<bool> f) : Model(d, s, f) {
+  CSModel::CSModel(unsigned int nd,  string d, uint64_t s, vector<bool> f)
+  : Model(d, s, f) {
 
     assert(nd > 0);
 
@@ -164,7 +165,8 @@ namespace ComSelLib {
 
     assert(numAct == vb.size()); // must be correct size
 
-    assert(1.0 < nonCommDivisor); // noncommittee members must have reduced strength, with same sign
+    // noncommittee members must have reduced strength, with same sign
+    assert(1.0 < nonCommDivisor); 
 
     // vote_k(i:j), using the effective strengths for this committee
     auto vkij = [this, vb](unsigned int k, unsigned i, unsigned int j) {
@@ -177,11 +179,13 @@ namespace ComSelLib {
       case 1: // on committee, use full strength
         break;
       default:
-        cout << "CSModel::oneCSPstnUtil - unrecognized match value: " << vb[k] << endl << flush;
+        cout << "CSModel::oneCSPstnUtil - unrecognized match value: " << vb[k];
+        cout << endl << flush;
         assert(false); // no way to recover from this programming error
         break;
       }
-      auto v = Model::vote(ak->vr, sk, (*actorSpPstnUtil)(k, i), (*actorSpPstnUtil)(k, j));
+      auto v = Model::vote(ak->vr, sk, 
+                           (*actorSpPstnUtil)(k, i), (*actorSpPstnUtil)(k, j));
       return v;
     };
 
@@ -198,7 +202,8 @@ namespace ComSelLib {
       assert(KBase::norm(p - p0) < 1E-6);
     }
 
-    const auto eu = (*actorSpPstnUtil) * p; // column of expected utilities to each actor
+    // column of expected utilities to each actor
+    const auto eu = (*actorSpPstnUtil) * p; 
     return eu;
   }
 
@@ -260,8 +265,10 @@ namespace ComSelLib {
     // TODO: convert this to a single, commonly used setup function
     // It seems to require only that the Actor must have "vr" and "sCap" data members.
 
+    
     const unsigned int numA = model->numAct;
-    const unsigned int numP = numA; // for this demo, the number of positions is exactly the number of actors
+    // for this demo, the number of positions is exactly the number of actors
+    const unsigned int numP = numA; 
 
     // get unique indices and their probability
     assert(0 < uIndices.size()); // should have been set with setUENdx();
@@ -314,7 +321,9 @@ namespace ComSelLib {
 
   // Given the utility matrix, uMat, calculate the expected utility to each actor,
   // as a column-vector. Again, this is from the perspective of whoever developed uMat.
-  KMatrix CSState::expUtilMat(KBase::ReportingLevel rl, unsigned int numA, unsigned int numP, const KMatrix & uMat) const {
+  KMatrix CSState::expUtilMat(KBase::ReportingLevel rl, 
+                              unsigned int numA, unsigned int numP, 
+                              const KMatrix & uMat) const {
     // BTW, be sure to lambda-bind uMat *after* it is modified.
     assert(uMat.numR() == numA); // must include all actors
     assert(uMat.numC() <= numP); // might have dropped some duplicates
@@ -333,10 +342,13 @@ namespace ComSelLib {
     };
 
     // in Haskell, we could just using currying
-    auto uRng = [assertRange, uMat](unsigned int i, unsigned int j) { assertRange(uMat, i, j); return; };
+    auto uRng = [assertRange, uMat](unsigned int i, unsigned int j) { 
+      assertRange(uMat, i, j); 
+      return; };
     KMatrix::mapV(uRng, uMat.numR(), uMat.numC());
 
-    auto vkij = [this, uMat](unsigned int k, unsigned int i, unsigned int j) { // vote_k(i:j)
+      // vote_k(i:j)
+    auto vkij = [this, uMat](unsigned int k, unsigned int i, unsigned int j) { 
       auto ak = (CSActor*)(model->actrs[k]);
       auto v_kij = Model::vote(ak->vr, ak->sCap, uMat(k, i), uMat(k, j));
       return v_kij;
@@ -362,7 +374,9 @@ namespace ComSelLib {
     assert(numA == eu.numR());
     assert(1 == eu.numC());
     // in Haskell, we could just using currying
-    auto euRng = [assertRange, eu](unsigned int i, unsigned int j) { assertRange(eu, i, j); return; };
+    auto euRng = [assertRange, eu](unsigned int i, unsigned int j) { 
+      assertRange(eu, i, j); 
+      return; };
     KMatrix::mapV(euRng, eu.numR(), eu.numC());
 
 
@@ -429,7 +443,8 @@ namespace ComSelLib {
 
     // Given the utility matrix, uMat, calculate the expected utility to each actor,
     // as a column-vector. Again, this is from the perspective of whoever developed uMat.
-    auto euMat = [rl, numA, numP, this](const KMatrix & uMat) { return expUtilMat(rl, numA, numP, uMat); };
+    auto euMat = [rl, numA, numP, this](const KMatrix & uMat) { 
+      return expUtilMat(rl, numA, numP, uMat); };
     auto euState = euMat(u);
     cout << "Actor expected utilities: ";
     KBase::trans(euState).mPrintf("%6.4f, ");
@@ -452,7 +467,8 @@ namespace ComSelLib {
     }
 
 
-    auto uufn = [u, this](unsigned int i, unsigned int j1) { return u(i, uIndices[j1]); };
+    auto uufn = [u, this](unsigned int i, unsigned int j1) { 
+      return u(i, uIndices[j1]); };
     auto uUnique = KMatrix::map(uufn, numA, numU);
 
 
@@ -579,7 +595,9 @@ namespace ComSelLib {
 
 
       // return vector of neighboring committees
-      auto nfn = [](const MtchPstn & mp0) { auto csVec = mp0.neighbors(2); return csVec; };
+      auto nfn = [](const MtchPstn & mp0) { 
+        auto csVec = mp0.neighbors(2); 
+        return csVec; };
 
       // show some representation of this position on cout
       auto sfn = [](const MtchPstn & mp0) { printVUI(mp0.match); return; };
@@ -631,9 +649,12 @@ namespace ComSelLib {
       //printf("  vBest = %+.6f \n", vBest);
       //printf("  eu0(%i, 0) for %i = %+.6f \n", h, h, eu0(h,0));
       //cout << endl << flush;
-      // Logically, du should always be non-negative, as GHC never returns a worse value than the starting point.
-      // However, actors plan on the assumption that all others do not change - yet they do.
-      const double eps = 0.05; // 0.025; // enough to avoid problems with round-off error
+      // Logically, du should always be non-negative, as GHC never returns a
+      // worse value than the starting point. However, actors plan on the assumption
+      // that all others do not change - yet they do.
+      
+      // enough to avoid problems with round-off error
+      const double eps = 0.05; // 0.025; 
       assert(-eps <= du);
       return;
     }; // end of newPosFn

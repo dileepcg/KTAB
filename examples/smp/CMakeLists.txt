@@ -106,6 +106,25 @@ endif (ENABLE_FLTK_GUI)
 # any application or testing code goes in src
 # -------------------------------------------------
 
+set (MINICSV_PATHS
+    ${PROJECT_SOURCE_DIR}/../../minicsv/
+    )
+
+
+find_path(MINICSV_DIR minicsv.h
+  PATHS ${MINICSV_PATHS}
+  )
+
+if(MINICSV_DIR)
+  message(STATUS "Found minicsv headers: ${MINICSV_DIR}")
+endif(MINICSV_DIR)
+
+if(NOT MINICSV_DIR)
+  message(FATAL "Could not find minicsv headers")
+endif(NOT MINICSV_DIR)
+
+# -------------------------------------------------
+
 set (CSVPARSER_PATHS
   ${PROJECT_SOURCE_DIR}/../../csv-parser/
   )
@@ -133,6 +152,7 @@ include_directories (
   ${PROJECT_SOURCE_DIR}/src/
   ${FLUID_DIR}
   ${FLTK_INCLUDE_DIR}
+  ${MINICSV_DIR}
   ${CSVP_DIR}
   ${SQLITE_INCLUDE_DIR}
   )
@@ -141,6 +161,7 @@ include_directories (
 set(SMPLIB_SRCS
   ${PROJECT_SOURCE_DIR}/libsrc/smp.cpp
   ${PROJECT_SOURCE_DIR}/libsrc/smpbcn.cpp
+  ${PROJECT_SOURCE_DIR}/libsrc/smpread.cpp
   ${PROJECT_SOURCE_DIR}/libsrc/smpsql.cpp
   )
 
@@ -279,6 +300,7 @@ message (STATUS "Using PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
 message (STATUS "KUTILS_INCLUDE_DIR: " ${KUTILS_INCLUDE_DIR})
 message (STATUS "KMODEL_INCLUDE_DIR: " ${KMODEL_INCLUDE_DIR})
 message (STATUS "CSVP_DIR: " ${CSVP_DIR})
+message (STATUS "MINICSV_DIR: " ${MINICSV_DIR})
 message (STATUS "QCUSTOMPLOT_DIR: " ${QCUSTOMPLOT_DIR})
 
 if (ENABLE_FLTK_GUI)

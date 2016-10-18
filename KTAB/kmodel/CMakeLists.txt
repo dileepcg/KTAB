@@ -60,6 +60,25 @@ endif(UNIX)
 # find libraries on which this project depends
 # -------------------------------------------------
 
+set (MINICSV_PATHS
+    ${PROJECT_SOURCE_DIR}/../../minicsv/
+    )
+
+
+find_path(MINICSV_DIR minicsv.h
+  PATHS ${MINICSV_PATHS}
+  )
+
+if(MINICSV_DIR)
+  message(STATUS "Found minicsv headers: ${MINICSV_DIR}")
+endif(MINICSV_DIR)
+
+if(NOT MINICSV_DIR)
+  message(FATAL "Could not find minicsv headers")
+endif(NOT MINICSV_DIR)
+
+# -------------------------------------------------
+
 set (CSVPARSER_PATHS
     ${PROJECT_SOURCE_DIR}/../../csv-parser/
     )
@@ -74,7 +93,7 @@ if(CSVP_DIR)
 endif(CSVP_DIR)
 
 if(NOT CSVP_DIR)
-  message(FATAL "Could not fid csv-parser headers")
+  message(FATAL "Could not find csv-parser headers")
 endif(NOT CSVP_DIR)
 
 # -------------------------------------------------
@@ -166,7 +185,7 @@ INCLUDE_DIRECTORIES(
   ${KUTILS_INCLUDE_DIR}
   ${PROJECT_SOURCE_DIR}/libsrc/
   ${PROJECT_SOURCE_DIR}/src/
-#  ${PROJECT_SOURCE_DIR}/csvparser/
+  ${MINICSV_DIR}
   ${CSVP_DIR}
   ${EFENCE_INCLUDE_DIR}
   ${SQLITE_INCLUDE_DIR}
@@ -206,6 +225,7 @@ ADD_EXECUTABLE(demomodel
   src/edemo.cpp
   src/demoMatrixEMod.cpp
   src/sqlitedemo.cpp
+  src/csvdemo.cpp
   src/tinyxml2demo.cpp
   src/zactor.cpp
   ${CSVP_DIR}/csv_parser.cpp
@@ -224,6 +244,8 @@ message(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
 message(STATUS "KUTILS_INCLUDE_DIR: " ${KUTILS_INCLUDE_DIR})
 message(STATUS "KTAB_INSTALL_DIR: " ${KTAB_INSTALL_DIR})
 message (STATUS "CSVP_DIR: " ${CSVP_DIR})
+message (STATUS "MINICSV_DIR: " ${MINICSV_DIR})
+
 # -------------------------------------------------
 # As of July 2016, C++14 is still not the default
 # for g++, so I have to provide it here.

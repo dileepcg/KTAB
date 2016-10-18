@@ -172,7 +172,8 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
         if (0 == k) {
             wk = wk / 1.0E5;
         }
-        double vkij = Model::vote(KBase::VotingRule::Proportional, wk, uInit(k, i), uInit(k, j));
+        double vkij = Model::vote(KBase::VotingRule::Proportional, wk,
+                                  uInit(k, i), uInit(k, j));
         return vkij;
     };
     auto c0 = Model::coalitions(v0fn, numA, numP); // [numP, numP]
@@ -181,11 +182,11 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
     const auto pv0 = get<1>(ppv0); // [numP, numP]
 
     if (KBase::testProbCE) {
-      cout << "Testing probCE in waterMinProb-0" << endl << flush;
-      auto pv00 = Model::vProb(vpm, c0); // [numP, numP]
-      assert(KBase::norm(pv0 - pv00) < 1E-6);
-      auto pr00 = Model::probCE(PCEModel::ConditionalPCM, pv00); // [numP, 1]
-      assert(KBase::norm(pr0 - pr00) < 1E-6);
+        cout << "Testing probCE in waterMinProb-0" << endl << flush;
+        auto pv00 = Model::vProb(vpm, c0); // [numP, numP]
+        assert(KBase::norm(pv0 - pv00) < 1E-6);
+        auto pr00 = Model::probCE(PCEModel::ConditionalPCM, pv00); // [numP, 1]
+        assert(KBase::norm(pr0 - pr00) < 1E-6);
     }
 
     auto priorBase = pr0(0, 0);
@@ -196,7 +197,8 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
 
     // voting in nominal-policy scenario
     auto v1fn = [w, p0](unsigned int k, unsigned int i, unsigned int j) {
-        double vkij = Model::vote(KBase::VotingRule::Proportional, w(k, 0), uInit(k, i), uInit(k, j));
+        double vkij = Model::vote(KBase::VotingRule::Proportional, w(k, 0),
+                                  uInit(k, i), uInit(k, j));
         return vkij;
     };
     const auto c1 = Model::coalitions(v1fn, numA, numP); // [numP, numP]
@@ -205,11 +207,11 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
     const auto pv1 = get<1>(ppv1); // [numP, numP]
 
     if (KBase::testProbCE) {
-      cout << "Testing probCE in waterMinProb-1" << endl << flush;
-      const auto pv10 = Model::vProb(vpm, c1); // [numP, numP]
-      assert(KBase::norm(pv1 - pv10) < 1E-6);
-      const auto pr10 = Model::probCE(PCEModel::ConditionalPCM, pv10); // [numP, 1]
-      assert(KBase::norm(pr1 - pr10) < 1E-6);
+        cout << "Testing probCE in waterMinProb-1" << endl << flush;
+        const auto pv10 = Model::vProb(vpm, c1); // [numP, numP]
+        assert(KBase::norm(pv1 - pv10) < 1E-6);
+        const auto pr10 = Model::probCE(PCEModel::ConditionalPCM, pv10); // [numP, 1]
+        assert(KBase::norm(pr1 - pr10) < 1E-6);
     }
 
     double postNom = 0.0;
@@ -221,12 +223,11 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
         err1 = 0.0;
     }
 
+// RMS of difference in distributions
+    //double err = KBase::norm(pr1 - pInit) / sqrt(pr1.numC() * pr1.numR());
 
-
-    //double err = KBase::norm(pr1 - pInit) / sqrt(pr1.numC() * pr1.numR()); // RMS of difference in distributions
-
-    double err = sqrt(((err0*err0) + (err1*err1)) / 2.0); // RMS difference of the two critical probabilities
-
+// RMS difference of the two critical probabilities
+    double err = sqrt(((err0*err0) + (err1*err1)) / 2.0);
 
     if (ReportingLevel::Silent < rl) {
         cout << "Actor-cap matrix" << endl;
@@ -337,7 +338,9 @@ void RsrcMinLP::clear() {
     pNames = vector<string>();
 }
 
-RsrcMinLP* RsrcMinLP::makeRMLP(PRNG* rng, unsigned int numPd, unsigned int numPt, unsigned int numSD) {
+RsrcMinLP* RsrcMinLP::makeRMLP(PRNG* rng,
+                               unsigned int numPd, unsigned int numPt,
+                               unsigned int numSD) {
     auto rmlp = new RsrcMinLP();
     rmlp->numProd = numPd;
     rmlp->numPortC = numPt;
@@ -360,7 +363,7 @@ RsrcMinLP* RsrcMinLP::makeRMLP(PRNG* rng, unsigned int numPd, unsigned int numPt
             f = rng->uniform(0.05, 0.20); // at most 5% to 20% decrease
             break;
         case 1: // growth
-            f = rng->uniform(0.50, 1.00); // at most 50% to 100% increase (i.e. double)
+            f = rng->uniform(0.50, 1.00); // at most 50-100% increase (i.e. double)
             break;
         default:
             assert(false);
@@ -379,7 +382,9 @@ RsrcMinLP* RsrcMinLP::makeRMLP(PRNG* rng, unsigned int numPd, unsigned int numPt
         return wij;
     };
     rmlp->portWghts = KMatrix::map(pwfn, numPt, numPd);
-    rmlp->portRed = KMatrix::uniform(rng, numPt, 1, 0.0, 0.10); // reductions are 0 to 10 percent
+    
+    // reductions are 0 to 10 percent
+    rmlp->portRed = KMatrix::uniform(rng, numPt, 1, 0.0, 0.10); 
 
     // set supply/demand weights
     rmlp->spplyWghts = KMatrix::uniform(rng, numSD, numPd, 0.0, 1.0);
@@ -398,7 +403,8 @@ void waterMin() {
 
     setLikelyScenarios(scenQuant);
 
-    auto p = DemoWaterMin::waterMinProb(KBase::ReportingLevel::Medium, KBase::KMatrix(numA, 1));
+    auto p = DemoWaterMin::waterMinProb(KBase::ReportingLevel::Medium,
+                                        KBase::KMatrix(numA, 1));
 
     cout << "Error-minimizing search ..." << endl << flush;
     DemoWaterMin::minProbErr();
@@ -541,7 +547,8 @@ void demoRMLP(PRNG* rng) {
         return (2 * norm(x - y)) / (norm(x) + norm(y));
     };
 
-    auto processRslt = [N, sfe, matM, matQ, eps](tuple<KMatrix, unsigned int, KMatrix> r) {
+    auto processRslt = [N, sfe, matM, matQ, eps]
+    (tuple<KMatrix, unsigned int, KMatrix> r) {
         KMatrix u = get<0>(r);
         unsigned int iter = get<1>(r);
         KMatrix res = get<2>(r);

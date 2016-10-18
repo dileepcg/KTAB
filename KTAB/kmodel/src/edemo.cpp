@@ -64,11 +64,11 @@ namespace MDemo { // a namespace of which M, A, P, S know nothing
     y = 0;
   }
 
-  vector<TwoDPoint*> theta2D() {
-    vector<TwoDPoint*> rslt = {};
+  vector<TwoDPoint> theta2D() {
+    vector<TwoDPoint> rslt = {};
     for (unsigned int i = 0; i <= 100; i++) {
       for (unsigned int j = 0; j <= 100; j++) {
-        auto p = new TwoDPoint(i, j);
+        auto p = TwoDPoint(i, j);
         rslt.push_back(p);
       }
     }
@@ -78,7 +78,7 @@ namespace MDemo { // a namespace of which M, A, P, S know nothing
 
 
   // lambda-bind the parameters and return a function that enumerates the options
-  function < vector<VBool*>()> tbv(unsigned int nAct, unsigned int nBits, PRNG* rng) {
+  function < vector<VBool>()> tbv(unsigned int nAct, unsigned int nBits, PRNG* rng) {
 
     const double fc = exp(log(2.0)*nBits);
     unsigned int ic = (unsigned int)(0.5 + fc);
@@ -97,16 +97,16 @@ namespace MDemo { // a namespace of which M, A, P, S know nothing
     };
 
     auto rfn = [nFromBV, ic, nBits]() {
-      vector<VBool*> rbv = {};
+      vector<VBool> rbv = {};
       for (unsigned int i = 0; i < ic; i++) {
-        auto vi = new VBool(); 
+        auto vi = VBool(); 
         unsigned int m = i;
         for (unsigned int j = 0; j < nBits; j++) {
-          vi->push_back(1 == (m & 1));
+          vi.push_back(1 == (m & 1));
           m = m >> 1;
         }
 
-        unsigned int ni = nFromBV(*vi);
+        unsigned int ni = nFromBV(vi);
         assert(i == ni);
 
         rbv.push_back(vi);
@@ -149,22 +149,6 @@ namespace MDemo { // a namespace of which M, A, P, S know nothing
       }
 
       // now rescale so each actor has max/min utility of 1/0 
-      /*
-      for (unsigned int i = 0; i < nAct; i++) { // for each row, i.e. each actor
-        double minI = um2(i, 0);
-        double maxI = um2(i, 0);
-        for (unsigned int j = 0; j < ic; j++) {
-          minI = (um2(i, j) < minI) ? um2(i, j) : minI;
-          maxI = (um2(i, j) > maxI) ? um2(i, j) : maxI;
-        }
-        assert(maxI > minI);
-        assert(0.0 <= minI);
-        assert(maxI <= 1.0); 
-        for (unsigned int j = 0; j < ic; j++) { 
-          um2(i, j) = (um2(i, j) - minI) / (maxI - minI); 
-        }
-      }
-      */
       um2 = normRows(um2);
       return um2;
     };
@@ -180,20 +164,20 @@ namespace MDemo { // a namespace of which M, A, P, S know nothing
 
 
 
-  function < vector<VBool*>()> thetaBV(unsigned int n) {
+  function < vector<VBool>()> thetaBV(unsigned int n) {
     auto rfn = [n]() {
-      vector<VBool*> rbv = {};
+      vector<VBool> rbv = {};
       const double fc = exp(log(2.0)*n);
       unsigned int ic = (unsigned int)(0.5 + fc);
       for (unsigned int i = 0; i < ic; i++) {
-        auto vi = new VBool(); 
+        auto vi = VBool(); 
         unsigned int m = i;
         for (unsigned int j = 0; j < n; j++) {
           if (0 == (m % 2)) {
-            vi->push_back(false);
+            vi.push_back(false);
           }
           else {
-            vi->push_back(true);
+            vi.push_back(true);
           }
           m = m / 2;
         }

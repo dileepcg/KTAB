@@ -60,14 +60,17 @@ using std::tuple;
 using std::vector;
 
 
-
+ 
+template <class PT> class EState; 
 // -------------------------------------------------
 // this model relies on an explicit enumeration of all possible
 // outcomes/positions: a few tens of thousands of discrete choices.
-// PT is the position-type
+// PT is the position-type, which is assumed to be small and simple
+// so that copying is not a problem.
 
 template <class PT>
 class EModel : public Model {
+    friend class EState<PT>;
 public:
     // JAH 20160711 added rng seed 20160730 JAH added sql flags
     explicit EModel(string d = "", uint64_t s=KBase::dSeed, vector<bool> = {});
@@ -75,16 +78,21 @@ public:
 
     virtual void setOptions(); // just error-check before calling 'enumOptions'
     unsigned int numOptions() const;
-    PT* nthOption(unsigned int i) const;
+    PT nthOption(unsigned int i) const;
 
 
+    // two states are equivalent if all actors have the same EPosition in each.
+    // derived classes may need to extend this to take into account the
+    // iternal state of actors in each EState.
+    virtual bool equivStates(const EState<PT>* es1, const EState<PT>*  es2) const;
+    
     // you have to provide these λ-fns
 
     // Enumerate theta, the set of options
-    function <vector <PT*> ()> enumOptions = nullptr;
+    function <vector <PT> ()> enumOptions = nullptr;
 
 protected:
-    vector <PT*> theta = {}; // the enumerated space of all possible positions/outcomes
+    vector <PT> theta = {}; // the enumerated space of all possible positions/outcomes
     static const unsigned int minNumOptions = 3;
 
 private:
@@ -94,27 +102,33 @@ private:
 
 
 // -------------------------------------------------
-// enumerated positions are just handles that index into the set theta.
-//
+// Enumerated position is just handle for index into the set theta.
+// The set Theta is small enough to be explicitly mostly-enumerated, eg 10K or less.
+// They are assumed to be small simple objects, like string, integer, or
+// small vector of integers.
 template <class PT>
 class EPosition : public Position {
 public:
     EPosition(EModel<PT>* m, int n);
     virtual ~EPosition();
-
+    int getIndex() const { return ndx;}
 protected:
+    
+    // print the ndx to the output stream
     virtual void print(ostream& os) const;
-
+    
+    // index into Theta, which must be 0 or more:
+    // a negative value marks uninitialized state.
     int ndx = -1;
-
+    
 private:
     const EModel<PT>* eMod = nullptr; // saves a lot of type-casting later
-
 };
 
 // -------------------------------------------------
 template <class PT>
 class EState : public State {
+    friend class EModel<PT>;
 public:
     explicit EState( EModel<PT>* mod);
     virtual ~EState();
@@ -123,26 +137,35 @@ public:
     void show() const;
 
     EState<PT>* stepSUSN();
+    EState<PT>* stepBCN();
 
     // TODO: verify pDist
     // use the parameters of this state to compute the relative probability of
     // each actor's position. persp = -1 means use everyone's separate perspectives
     //(i.e. get actual probabilities, not one actor's beliefs)
     tuple <KMatrix, VUI> pDist(int persp) const;
-
-
+    
+    // determine if the i-th position in this state is equivalent to the j-th position
+    virtual bool equivNdx(unsigned int i, unsigned int j) const;
+    
+    // get the index into Theta from the i-th position of this state.
+    unsigned int posNdx(const unsigned int i) const;
+    
 protected:
 
-    void setAllAUtil(ReportingLevel rl);
+    virtual EState<PT>* makeNewEState() const = 0;
+    virtual void setAllAUtil(ReportingLevel rl) = 0; // must be overridden
 
     // you have to provide these λ-fns.
 
     // probably using the EModel's raw-value matrix, actorVFn,
     // compute and set the aUtils vector of matrices,
     // where (aUtils[h])(i,j) = h's estimate of the utility to actor i of position held by actor j.
-    function <vector<KMatrix>()> getAUtils = nullptr;
+    //function <vector<KMatrix>()> getAUtils = nullptr;
 
     // Calculate the values to the actors of the tj-th option, theta[j].
+    // This needs to be done for any possible position, not just those
+    // currently advocated. 
     // Note that this may depend on their current position, as in the SMP.
     // If the value does NOT depend on the current state (e.g. most CGE models),
     // then put it in EModel::baseUtils and just look it up here.
@@ -154,26 +177,23 @@ protected:
     // It might be more efficient to calculate a big data object the first time
     // any part of it is needed, and index into it when other parts are needed.
     //
-    // This has to be lambda-bound to the relevant parameters.
-    function <vector<double>(unsigned int tj, const EModel<PT>*)> actorVFn = nullptr;
+    // 
+    virtual vector<double> actorUtilVectFn( int h, int tj) const = 0;
 
 
     EState<PT>* doSUSN(ReportingLevel rl) const;
+    EState<PT>* doBCN(ReportingLevel rl) const;
 
     // Given the utility matrix, uMat, calculate the expected utility to each actor,
     // as a column-vector. Again, this is from the perspective of whoever developed uMat.
     KMatrix  expUtilMat  (KBase::ReportingLevel rl, unsigned int numA, unsigned int numP,  KBase::VPModel vpm, const KMatrix & uMat) const;
 
+    KMatrix hypExpUtilMat () const;
 
     EModel<PT>*  eMod = nullptr; // saves a lot of type-casting later
 
-    // TODO: finish equivNdx
-    // determine if the i-th position in this state is equivalent to the j-th position
-    virtual bool equivNdx(unsigned int i, unsigned int j) const;
-
 private:
 };
-
 
 // -------------------------------------------------
 // enumerated positions are just handles that index into the set theta.
@@ -205,7 +225,6 @@ protected:
 private:
 
 };
-
 
 
 }; // end of namespace

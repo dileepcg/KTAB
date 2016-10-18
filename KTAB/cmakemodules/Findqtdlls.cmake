@@ -37,6 +37,10 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../plugins/sqldrivers/qsqlited.dll
     ${EXECUTABLE_OUTPUT_PATH}smpq_bin/plugins/sqldrivers
 
+    #plugins - image
+    COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../plugins/imageformats/qjpegd.dll
+    ${EXECUTABLE_OUTPUT_PATH}smpq_bin/plugins/imageformats
+
     #OTHER LIBS
     COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../bin/libEGLd.dll           ${EXECUTABLE_OUTPUT_PATH}smpq_bin
     COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../bin/libGLESv2d.dll        ${EXECUTABLE_OUTPUT_PATH}smpq_bin
@@ -55,6 +59,10 @@ if(WIN32)
     #plugins - sqlite
     COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../plugins/sqldrivers/qsqlite.dll
     ${EXECUTABLE_OUTPUT_PATH}smpq_bin/plugins/sqldrivers
+
+    #plugins - image
+    COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../plugins/imageformats/qjpeg.dll
+    ${EXECUTABLE_OUTPUT_PATH}smpq_bin/plugins/imageformats
 
     COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../bin/libEGL.dll            ${EXECUTABLE_OUTPUT_PATH}smpq_bin
     COMMAND ${CMAKE_COMMAND} -E copy ${PREFIX_PATH}/../../bin/libGLESv2.dll         ${EXECUTABLE_OUTPUT_PATH}smpq_bin

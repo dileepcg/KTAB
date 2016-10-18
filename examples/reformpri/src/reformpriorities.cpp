@@ -92,7 +92,8 @@ namespace RfrmPri {
       positions.push_back(pstn);
     }
     const unsigned int numPos = positions.size();
-    cout << "For " << numRefItem << " reform items there are " << numPos << " positions" << endl;
+    cout << "For " << numRefItem << " reform items there are ";
+    cout << numPos << " positions" << endl;
     
    
     // -------------------------------------------------
@@ -108,7 +109,8 @@ namespace RfrmPri {
       double uip = rpm->utilActorPos(ai, pstn);
       return uip;
     };
-    auto rawUij = KMatrix::map(ruFn, numA, numPos); // rows are actors, columns are all possible positions
+    // rows are actors, columns are all possible positions
+    auto rawUij = KMatrix::map(ruFn, numA, numPos); 
     for (unsigned int i = 0; i < numA; i++) {
       double pvMin = rawUij(i, 0);
       double pvMax = rawUij(i, 0);
@@ -130,7 +132,8 @@ namespace RfrmPri {
     KMatrix uij = KBase::rescaleRows(rawUij, 0.0, 1.0); // von Neumann utility scale
 
     
-    cout << "Complete (normalized) utility matrix of all possible positions (rows) versus actors (columns)" << endl << flush;
+    cout << "Complete (normalized) utility matrix of all possible positions (rows) ";
+    cout << "versus actors (columns)" << endl << flush;
     for (unsigned int pj = 0; pj < numPos; pj++) {
       printf("%3u  ", pj);
       auto pstn = positions[pj];
