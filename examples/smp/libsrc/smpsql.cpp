@@ -68,7 +68,8 @@ KTable * SMPModel::createSQL(unsigned int n)  {
 				"Turn_t		INTEGER NOT NULL DEFAULT 0, "\
 				"Act_i		INTEGER NOT NULL DEFAULT 0, "\
 				"Dim_k		INTEGER NOT NULL DEFAULT 0, "\
-				"Coord		REAL NOT NULL DEFAULT 0"\
+				"Pos_Coord		REAL NOT NULL DEFAULT 0,"\
+				"Idl_Coord		REAL NOT NULL DEFAULT 0"\
 				 ");";
             name = "VectorPosition";
             grpID = 4;// JAH 20161010 put in group 4 all by itself

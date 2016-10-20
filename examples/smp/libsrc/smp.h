@@ -207,6 +207,7 @@ namespace SMPLib {
     // initialize the actors' ideals from the given list of VctrPstn.
     // If the list is omitted or empty, it uses their current positions
     void idealsFromPstns(const vector<VctrPstn> &  ps = {});
+	VctrPstn getIdeal(unsigned int n) const;
     
   protected:
 

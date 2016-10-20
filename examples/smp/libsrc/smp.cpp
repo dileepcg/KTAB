@@ -523,6 +523,11 @@ namespace SMPLib {
     return;
   }
 
+  VctrPstn SMPState::getIdeal(unsigned int n) const 
+  {
+	  return ideals[n]; 
+  }
+
   void SMPState::addPstn(Position* ap) {
     auto sp = (VctrPstn*)ap;
     auto sm = (SMPModel*)model;
@@ -940,7 +945,7 @@ namespace SMPLib {
         //createSQL(Model::NumTables + 0); // Make sure VectorPosition table is present
         auto sqlBuff = newChars(sqlBuffSize);
         sprintf(sqlBuff,
-                "INSERT INTO VectorPosition (ScenarioId, Turn_t, Act_i, Dim_k, Coord) VALUES ('%s', ?1, ?2, ?3, ?4)",
+                "INSERT INTO VectorPosition (ScenarioId, Turn_t, Act_i, Dim_k, Pos_Coord, Idl_Coord) VALUES ('%s', ?1, ?2, ?3, ?4, ?5)",
                 scenId.c_str());
 
         assert(nullptr != smpDB);
@@ -964,6 +969,8 @@ namespace SMPLib {
                     auto st = history[t];
                     auto pit = st->pstns[i];
                     auto vpit = (const VctrPstn*)pit;
+					auto sst = ((const SMPState*)st);  
+					auto vidl = sst->getIdeal(i);      
                     assert(1 == vpit->numC());
                     assert(numDim == vpit->numR());
                     printf("%5.1f , ", 100 * (*vpit)(k, 0)); // have to print "100.0" sometimes
@@ -974,6 +981,12 @@ namespace SMPLib {
                     assert(SQLITE_OK == rslt);
                     rslt = sqlite3_bind_int(insStmt, 3, k);
                     assert(SQLITE_OK == rslt);
+					const double pCoord = (*vpit)(k, 0);
+					rslt = sqlite3_bind_double(insStmt, 4, pCoord);
+					assert(SQLITE_OK == rslt);
+					const double iCoord = vidl(k, 0);              
+					rslt = sqlite3_bind_double(insStmt, 5, iCoord);
+					assert(SQLITE_OK == rslt);                     
                     const double coord = (*vpit)(k, 0);
                     rslt = sqlite3_bind_double(insStmt, 4, coord);
                     assert(SQLITE_OK == rslt);
