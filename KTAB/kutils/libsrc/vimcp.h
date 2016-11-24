@@ -38,24 +38,24 @@
 #include "prng.h"
 
 namespace KBase {
-  
-  using std::function;
-  using std::tuple;
 
-  tuple<KMatrix, KMatrix, KMatrix, KMatrix> antiLemke(unsigned int n);
+using std::function;
+using std::tuple;
 
-  KMatrix projPos(const KMatrix & w);
-  KMatrix projBox(const KMatrix & lb, const KMatrix & ub, const KMatrix & w);
+tuple<KMatrix, KMatrix, KMatrix, KMatrix> antiLemke(unsigned int n);
 
-  tuple<KMatrix, unsigned int, KMatrix> viABG(const KMatrix & xInit,
-    function<KMatrix(const KMatrix & x)> F,
-    function<KMatrix(const KMatrix & x)> P,
-    double beta, double thresh, unsigned int iMax,
-    bool extra);
+KMatrix projPos(const KMatrix & w);
+KMatrix projBox(const KMatrix & lb, const KMatrix & ub, const KMatrix & w);
 
-  tuple<KMatrix, unsigned int, KMatrix> viBSHe96(const KMatrix & M, const KMatrix & q,
-    function<KMatrix(const KMatrix &)> pK,
-    KMatrix u0, const double eps, const unsigned int iMax);
+tuple<KMatrix, unsigned int, KMatrix> viABG(const KMatrix & xInit,
+                                            function<KMatrix(const KMatrix & x)> F,
+                                            function<KMatrix(const KMatrix & x)> P,
+                                            double beta, double thresh, unsigned int iMax,
+                                            bool extra);
+
+tuple<KMatrix, unsigned int, KMatrix> viBSHe96(const KMatrix & M, const KMatrix & q,
+                                               function<KMatrix(const KMatrix &)> pK,
+                                               KMatrix u0, const double eps, const unsigned int iMax);
 
 }; // namespace
 

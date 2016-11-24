@@ -5,7 +5,8 @@
 # before using this script. CMake is the recommended was to do so.
 #
 #------------------------------------------
-DIRS="minwater  reformpri  agenda  smp  comsel"
+
+DIRS=" minwater  agenda  reformpri  smp  comsel  pmatrix"
 
 for d in $DIRS
 do

@@ -32,8 +32,9 @@ MainWindow::MainWindow()
     createStatusBar();
 
     createModuleParametersDockWindow();
-    createGraph1DockWindows();
-    createGraph2DockWindows();
+    createLinePlotsDockWindows();
+    createBarPlotsDockWindows();
+    createQuadMapDockWindows();
 
     setWindowTitle(tr("KTAB"));
 
@@ -98,19 +99,29 @@ MainWindow::MainWindow()
             SLOT(barGraphActorsSalienceCapability(QList<int>,QList<double>,QList<double>,double,double)));
 
     //LINE GRAPHS
-
     //To get dimensions count
     connect(this,SIGNAL(getDimforBar()),dbObj,SLOT(getDims()));
     //received dimension Values
     connect(dbObj,SIGNAL(dimensList(QStringList*)),this,SLOT(updateBarDimension(QStringList*)));
     connect(dbObj,SIGNAL(dimensList(QStringList*)),this,SLOT(updateLineDimension(QStringList*)));
 
+    //QUAD MAPS
+    //to get Util_Chlg and Util_SQ values
+    connect(this,SIGNAL(getUtilChlgAndUtilSQfromDB(QList<int>)),
+            dbObj,SLOT(getUtilChlgAndSQvalues(QList<int>)));
+
+    //received Chlg and sq values
+    connect(dbObj,SIGNAL(utilChlngAndSQ(int , double , double  , int )),
+            this,SLOT(quadMapUtilChlgandSQValues(int , double , double  , int )));
 
     //editable headers of TableWidget and TableView
     headerEditor = 0;
     barsCount=0;
     yAxisLen=100;
-
+    prevScenario="None";
+    initiatorTip=0;
+    prevTurn=0;
+    firstVal=false;
 }
 
 MainWindow::~MainWindow()
@@ -177,6 +188,7 @@ void MainWindow::dbGetFilePAth(bool bl, QString smpDBPath, bool run)
         populateLineGraphDimensions(dimensionsLineEdit->text().toInt());
         //To populate Bar Graph Dimensions combo box
         populateBarGraphDimensions(dimensionsLineEdit->text().toInt());
+
     }
     statusBar()->showMessage(tr(" "));
 }
@@ -211,6 +223,8 @@ void MainWindow::updateStateCountSliderRange(int states)
     populateLineGraphStateRange(states);
     //To set slider Range for Bar Graph
     populateBarGraphStateRange(states);
+    //To set slider Range for Quad Map
+    populateQuadMapStateRange(states);
 }
 
 void MainWindow::updateScenarioListComboBox(QStringList * scenarios,QStringList* scenarioIds,QStringList* scenarioDesc, int indx)
@@ -253,8 +267,14 @@ void MainWindow::sliderStateValueToQryDB(int value)
     if(mScenarioIds.length()>0)
     {
         scenarioBox = mScenarioIds.at(scenarioComboBox->currentIndex());
-        removeAllGraphs();
+        lineCustomGraph->clearGraphs();
+        lineCustomGraph->xAxis->setRange(-1,turnSlider->value()+1);
         emit getScenarioRunValues(value,scenarioBox,dimension);
+
+        lineGraphTitle->setText(QString(lineGraphDimensionComboBox->currentText()
+                                        + " vs Time, Iteration " +
+                                        QString::number(value)));
+        lineCustomGraph->yAxis->setLabel(lineGraphDimensionComboBox->currentText());
         lineCustomGraph->replot();
 
         //csv- DB
@@ -287,6 +307,16 @@ void MainWindow::scenarioComboBoxValue(int scenario)
             emit getDimforBar();
             barGraphTurnSliderChanged(barGraphTurnSlider->value());
 
+            if (prevScenario != scenarioBox)
+            {
+                prevScenario=scenarioBox;
+                populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
+                return;
+            }
+            else
+            {
+                quadMapTurnSliderChanged(quadMapTurnSlider->value());
+            }
         }
     }
 }
@@ -371,13 +401,13 @@ void MainWindow::displayMessage(QString cls, QString message)
     QMessageBox::warning(0,cls,message);
 }
 
-void MainWindow::vectorPositionsFromDB()
-{
-
-}
-
 void MainWindow::dockWindowChanged()
 {
+    if(true==quadMapDock->isVisible() && actorsName.length()>0)
+    {
+        quadMapTurnSliderChanged(quadMapTurnSlider->value());
+    }
+
     //    QWidget *TitleWidgetRec=new QWidget(this);
     //    if(graph2Dock->isFloating())
     //        graph2Dock->setTitleBarWidget(TitleWidgetRec);
@@ -657,7 +687,7 @@ void MainWindow::createNewCSV(bool bl)
     stackWidget->addWidget(csvTableWidget);
     stackWidget->setCurrentIndex(1);
 
-    removeAllGraphs();
+    //removeAllGraphs();
 
     actorsLineEdit->setEnabled(true);
     dimensionsLineEdit->setEnabled(true);
@@ -739,7 +769,6 @@ void MainWindow::initializeCentralViewFrame()
     turnSlider->setTickPosition(QSlider::TicksBothSides);
     turnSlider->setPageStep(1);
     turnSlider->setSingleStep(1);
-
 
     connect(turnSlider,SIGNAL(valueChanged(int)),this,SLOT(sliderStateValueToQryDB(int)));
 
@@ -916,9 +945,9 @@ void MainWindow::createStatusBar()
     statusBar()->showMessage(tr("Ready"));
 }
 
-void MainWindow::createGraph1DockWindows()
+void MainWindow::createLinePlotsDockWindows()
 {
-    lineGraphDock = new QDockWidget(tr("Graph 1"), this);
+    lineGraphDock = new QDockWidget(tr("Line Plots"), this);
     lineGraphMainFrame = new QFrame(lineGraphDock);
     lineGraphGridLayout = new QGridLayout(lineGraphMainFrame);
 
@@ -930,11 +959,12 @@ void MainWindow::createGraph1DockWindows()
     viewMenu->addAction(lineGraphDock->toggleViewAction());
 
     connect(lineGraphDock,SIGNAL(dockLocationChanged(Qt::DockWidgetArea)),this,SLOT(dockWindowChanged()));
+    lineGraphDock->setVisible(true);
 }
 
-void MainWindow::createGraph2DockWindows()
+void MainWindow::createBarPlotsDockWindows()
 {
-    barGraphDock = new QDockWidget(tr("Graph 2"), this);
+    barGraphDock = new QDockWidget(tr("Bar Plots"), this);
     barGraphMainFrame = new QFrame(barGraphDock);
     barGraphGridLayout = new QGridLayout(barGraphMainFrame);
 
@@ -946,6 +976,26 @@ void MainWindow::createGraph2DockWindows()
     viewMenu->addAction(barGraphDock->toggleViewAction());
 
     connect(barGraphDock,SIGNAL(dockLocationChanged(Qt::DockWidgetArea)),this,SLOT(dockWindowChanged()));
+    barGraphDock->setVisible(true);
+}
+
+void MainWindow::createQuadMapDockWindows()
+{
+    quadMapDock = new QDockWidget(tr("QuadMap"), this);
+    quadMapMainFrame = new QFrame(quadMapDock);
+    quadMapGridLayout = new QGridLayout(quadMapMainFrame);
+
+    //initialize QuadMap layout
+    initializeQuadMapDock();
+
+    quadMapDock->setWidget(quadMapMainFrame);
+    addDockWidget(Qt::BottomDockWidgetArea, quadMapDock);
+    viewMenu->addAction(quadMapDock->toggleViewAction());
+
+    connect(quadMapDock,SIGNAL(visibilityChanged(bool)),this,SLOT(dockWindowChanged()));
+
+    quadMapDock->setVisible(false);
+
 }
 
 void MainWindow::createModuleParametersDockWindow()
@@ -995,6 +1045,7 @@ void MainWindow::createModuleParametersDockWindow()
     addDockWidget(Qt::LeftDockWidgetArea, moduleParametersDock);
     viewMenu->addAction(moduleParametersDock->toggleViewAction());
 
+    moduleParametersDock->setVisible(true);
 }
 
 void MainWindow::saveTableViewToCSV()
@@ -1411,12 +1462,10 @@ void MainWindow::displayMenuTableView(QPoint pos)
             statusBar()->showMessage("No Permission !  You cannot Edit Headers of"
                                      " Actor, Description and Influence Columns");
     }
-
     if (act == salCol)
     {
         if(csvTableView->currentIndex().column()>2)
         {
-
             modeltoCSV->insertColumn(csvTableView->currentIndex().column());
             modeltoCSV->setHeaderData(csvTableView->currentIndex().column()-1,Qt::Horizontal,"Salience");
             statusBar()->showMessage("Column Inserted, Header changed");
@@ -1430,7 +1479,6 @@ void MainWindow::displayMenuTableView(QPoint pos)
     {
         modeltoCSV->insertRow(csvTableView->currentIndex().row());
     }
-
 }
 
 void MainWindow::actorsNameDesc(QList <QString> actorName,QList <QString> actorDescription)
@@ -1439,9 +1487,9 @@ void MainWindow::actorsNameDesc(QList <QString> actorName,QList <QString> actorD
     actorsDescription.clear();
     actorsName = actorName;
     actorsDescription = actorDescription;
-    //    qDebug()<<actorsName.at(0) <<actorsName.count();
 
     numAct= actorsName.length();
+    actorsQueriedCount=numAct-1;
     if(!lineGraphActorsCheckBoxList.isEmpty())
     {
         for(int i=0; i < actorsName.length();++i)
@@ -1469,6 +1517,56 @@ void MainWindow::actorsNameDesc(QList <QString> actorName,QList <QString> actorD
     }
     else
         populateBarGraphActorsList();
+
+
+    if(!quadMapInitiatorsRadioButtonList.isEmpty())
+    {
+        for(int i=0; i < actorsName.length();++i)
+        {
+            if(quadMapInitiatorsRadioButtonList.at(i)->text()!=actorsName.at(i)
+                    || quadMapInitiatorsRadioButtonList.length() != actorsName.length())
+            {
+                populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
+                return;
+            }
+            else if ((quadMapInitiatorsRadioButtonList.at(i)->text()!=actorsName.at(i)
+                      || quadMapInitiatorsRadioButtonList.length() != actorsName.length())
+                     && prevScenario != scenarioBox)
+            {
+                prevScenario=scenarioBox;
+                populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
+                return;
+            }
+        }
+    }
+    else
+        populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
+
+    //NOTE: Changes for MultiScenario DB under progress
+    //    if(!quadMapInitiatorsRadioButtonList.isEmpty())
+    //    {
+    //        for(int i=0; i < actorsName.length();++i)
+    //        {
+    //            if(quadMapInitiatorsRadioButtonList.at(i)->text()!= actorsName.at(i)
+    //                    && quadMapInitiatorsRadioButtonList.length() != actorsName.length())
+    //            {
+    //                populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
+    //                return;
+    //            }
+    //            else if (prevScenario != scenarioBox)
+    //            {
+    //                prevScenario=scenarioBox;
+    //                populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
+    //                quadMapTurnSliderChanged(quadMapTurnSlider->value());
+    //                return;
+    //            }
+    //            else
+    //            {
+    //            }
+    //        }
+    //    }
+    //    else
+    //        populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
 
 }
 
@@ -1521,7 +1619,6 @@ void MainWindow :: reconnectPlotWidgetSignals()
     connect(barGraphDimensionComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(barGraphDimensionChanged(int)));
     connect(lineGraphSelectAllCheckBox,SIGNAL(clicked(bool)),this,SLOT(lineGraphSelectAllActorsCheckBoxClicked(bool)));
     connect(barGraphSelectAllCheckBox,SIGNAL(clicked(bool)),this,SLOT(barGraphSelectAllActorsCheckBoxClicked(bool)));
-
     connect(barGraphBinWidthButton,SIGNAL(clicked(bool)),this, SLOT(barGraphBinWidthButtonClicked(bool)));
 
 }

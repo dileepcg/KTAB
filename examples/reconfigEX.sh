@@ -1,12 +1,15 @@
 #------------------------------------------
 #!/bin/bash
+
+set -e
+
 #------------------------------------------
 # This script configures and build the base components
 # of KTAB in the correct order. It will generate
 # "Unix Makefiles", unless the first argument is non-null.
 #------------------------------------------
 
-DIRS=" minwater  agenda  reformpri  smp  comsel "
+DIRS=" minwater  agenda  reformpri  smp  comsel  pmatrix"
 
 DQ="\""
 DEFGEN="Unix Makefiles"

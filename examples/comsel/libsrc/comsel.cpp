@@ -193,15 +193,6 @@ namespace ComSelLib {
     const auto ppv = Model::probCE2(pcem, vpm, c);
     const KMatrix p = get<0>(ppv); // prob of outcomes, column
     const KMatrix pv = get<1>(ppv); // prob of victory, square
-
-    if (KBase::testProbCE) { 
-      //cout << "Testing probCE in oneCSPstnUtil" << endl << flush;
-      const auto pv0 = Model::vProb(vpm, c); // prob of victory, square
-      assert(KBase::norm(pv - pv0) < 1E-6);
-      const auto p0 = Model::probCE(pcem, pv0); // prob of outcomes, column
-      assert(KBase::norm(p - p0) < 1E-6);
-    }
-
     // column of expected utilities to each actor
     const auto eu = (*actorSpPstnUtil) * p; 
     return eu;
@@ -302,20 +293,9 @@ namespace ComSelLib {
     const auto ppv = Model::probCE2(model->pcem, model->vpm, c);
     const auto p = get<0>(ppv); // column
     const auto pv = get<1>(ppv); // square
-
-    if (KBase::testProbCE) {
-      //cout << "Testing probCE in pDist" << endl << flush;
-      const auto pv0 = Model::vProb(model->vpm, c); // square
-      assert(KBase::norm(pv - pv0) < 1E-6);
-      const auto p0 = Model::probCE(model->pcem, pv0); // column
-      assert(KBase::norm(p - p0) < 1E-6);
-    }
-
     const auto eu = uMat*p; // column
-
     assert(numA == eu.numR());
     assert(1 == eu.numC());
-
     return tuple <KMatrix, VUI>(p, uIndices);
   }
 
@@ -360,17 +340,7 @@ namespace ComSelLib {
     const auto ppv = Model::probCE2(model->pcem, model->vpm, c);
     const auto p = get<0>(ppv); // column
     const auto pv = get<1>(ppv); // square
-
-    if (KBase::testProbCE) {
-      //cout << "Testing probCE in expUtilMat" << endl << flush;
-      const auto pv0 = Model::vProb(model->vpm, c); // square
-      assert(KBase::norm(pv - pv0) < 1E-6);
-      const auto p0 = Model::probCE(model->pcem, pv0); // column
-      assert(KBase::norm(p - p0) < 1E-6);
-    }
-
     const auto eu = uMat*p; // column
-
     assert(numA == eu.numR());
     assert(1 == eu.numC());
     // in Haskell, we could just using currying
@@ -378,7 +348,6 @@ namespace ComSelLib {
       assertRange(eu, i, j); 
       return; };
     KMatrix::mapV(euRng, eu.numR(), eu.numC());
-
 
     if (ReportingLevel::Low < rl) {
       printf("Util matrix is %i x %i \n", uMat.numR(), uMat.numC());

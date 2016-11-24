@@ -222,7 +222,8 @@ if(SMPQ_SOURCE_DIR)
     ${SMPQ_SOURCE_DIR}/database.cpp
     ${SMPQ_SOURCE_DIR}/bargraph.cpp
     ${SMPQ_SOURCE_DIR}/linegraph.cpp
-    ${SMPQ_SOURCE_DIR}/runsmp.cpp)
+    ${SMPQ_SOURCE_DIR}/runsmp.cpp
+    ${SMPQ_SOURCE_DIR}/quadmap.cpp)
 
   set (QtProjectLib_hdr
     ${SMPQ_SOURCE_DIR}/mainwindow.h

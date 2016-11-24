@@ -41,35 +41,35 @@
 #include "kmodel.h"
 
 namespace MDemo {
-  // Note that the entire demo is in the MDemo namespace,
-  // to which Model, Actor, Position, State, etc. have no access.
-  using std::string;
-  using std::tuple;
-  using std::vector;
+// Note that the entire demo is in the MDemo namespace,
+// to which Model, Actor, Position, State, etc. have no access.
+using std::string;
+using std::tuple;
+using std::vector;
 
-  using KBase::KMatrix;
-  using KBase::PRNG; 
+using KBase::KMatrix;
+using KBase::PRNG;
 
-  using KBase::Actor;
-  using KBase::Position;
-  using KBase::State;
-  using KBase::Model;
-  using KBase::VotingRule;
-  
-  // ------------------------------------------------- 
-  // The zero-actor is a useful template for creating more complete actors
-  class ZActor : public Actor {
-  public:
-    ZActor(string n, string d);
-    ~ZActor();
-    double vote(unsigned int p1, unsigned int p2, const State* st) const;
-    virtual double vote(const Position * ap1, const Position * ap2) const;
-    double posUtil(const Position * ap1) const;
-  };
-  
-  
+using KBase::Actor;
+using KBase::Position;
+using KBase::State;
+using KBase::Model;
+using KBase::VotingRule;
 
- 
+// -------------------------------------------------
+// The zero-actor is a useful template for creating more complete actors
+class ZActor : public Actor {
+public:
+  ZActor(string n, string d);
+  ~ZActor();
+  double vote(unsigned int p1, unsigned int p2, const State* st) const;
+  virtual double vote(const Position * ap1, const Position * ap2) const;
+  double posUtil(const Position * ap1) const;
+};
+
+
+
+
 };
 // -------------------------------------------------
 #endif

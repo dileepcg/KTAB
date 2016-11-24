@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<Scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="smp.xsd">
+<Scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="smpSchema.xsd">
   <name>DummyData_3Dim</name>
   <desc>Dummy scenario to test reading format</desc>
-  <prngSeed>0x89B9E56731783372</prngSeed>
+  <prngSeed>03707583219545544125</prngSeed>
   <Dimensions>
     <dName>Pstn1</dName>
     <dName>Pstn2</dName>

@@ -1,5 +1,8 @@
 #------------------------------------------
 #!/bin/bash
+
+set -e
+
 #------------------------------------------
 # This script configures and build the base components
 # of KTAB in the correct order. It will generate

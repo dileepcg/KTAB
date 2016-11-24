@@ -27,7 +27,7 @@ cmake_minimum_required(VERSION 3.0)
 cmake_policy(VERSION 3.0)
 set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
-  "${PROJECT_SOURCE_DIR}/../../KTAB/cmakemodules"
+  ${PROJECT_SOURCE_DIR}/../../KTAB/cmakemodules
   )
 
 set(LIBRARY_OUTPUT_PATH      ${PROJECT_SOURCE_DIR}/)
@@ -48,6 +48,8 @@ if (ENABLE_EFENCE)
 endif (ENABLE_EFENCE)
 
 # ------------------------------------------------- 
+# find libraries on which this project depends
+# ------------------------------------------------- 
  
 find_package(TinyXML2)
 if (NOT TINYXML2_FOUND)
@@ -55,8 +57,6 @@ if (NOT TINYXML2_FOUND)
 endif (NOT TINYXML2_FOUND) 
 
 # -------------------------------------------------
-# find libraries on which this project depends
-# ------------------------------------------------- 
  
 find_package(Sqlite)
 if (NOT SQLITE_FOUND)
@@ -132,11 +132,10 @@ target_link_libraries(rpdemo
 # show some useful status/debugging information
 message(STATUS "Using PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
 # -------------------------------------------------
-# As of July 2016, C++14 is still not the default
+# As of early 2014, C++11 is still not the default
 # for g++, so I have to provide it here.
-# Also on Unix, the C++14 thread library relies on pthreads
 if (UNIX OR MINGW)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++14 ")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++11 ")
   if (ENABLE_EFFCPP)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++ ")
   endif (ENABLE_EFFCPP)

@@ -34,91 +34,105 @@
 
 class Database : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 public:
-  Database();
-  ~Database();
+    Database();
+    ~Database();
 
 public slots :
-  void openDB(QString dbPath,bool run=false);
-  void openDBEdit(QString dbPath);
-  void getScenarioData(int turn, QString scenario, int dim);
-  void getScenarioDataEdit(QString scenario);
-  void getStateCount();
-  void getDimensionCount();
+    void openDB(QString dbPath,bool run=false);
+    void openDBEdit(QString dbPath);
+    void getScenarioData(int turn, QString scenario, int dim);
+    void getScenarioDataEdit(QString scenario);
+    void getStateCount();
+    void getDimensionCount();
 
-  //DB to CSV
-  void getActorsDescriptionDB();
-  void getInfluenceDB(int turn =0);
-  void getPositionDB(int dim,int turn =0);
-  void getSalienceDB(int dim,int turn =0);
+    //DB to CSV
+    void getActorsDescriptionDB();
+    void getInfluenceDB(int turn =0);
+    void getPositionDB(int dim,int turn =0);
+    void getSalienceDB(int dim,int turn =0);
 
-  //BarCharts
-  void getActorsInRangeFromDB(double lowerRng, double higherRng, int dim, int turn);
-  void getDims();
+    //BarCharts
+    void getActorsInRangeFromDB(double lowerRng, double higherRng, int dim, int turn);
+    void getDims();
+
+    //QuadMap
+    void getUtilChlgAndSQvalues(QList<int> VHAxisValues);
 
 signals:
-  void Message(QString , QString );
-  void vectorPosition(QVector<double> x, QVector<double> y, QString actor,int turn);
-  void dbModel(QStandardItemModel  *);
-  void dbModelEdit(QSqlTableModel *);
-  void actorCount(int value);
-  void statesCount(int value);
-  void dimensionsCount(int value,QStringList *dimensions);
-  void dimensList(QStringList *dimensions);
-  void scenarios(QStringList *scenariosList,QStringList *scenariosIdList, QStringList *scenarioDesc, int indx);
+    void Message(QString , QString );
+    void vectorPosition(QVector<double> x, QVector<double> y, QString actor,int turn);
+    void dbModel(QStandardItemModel  *);
+    void dbModelEdit(QSqlTableModel *);
+    void actorCount(int value);
+    void statesCount(int value);
+    void dimensionsCount(int value,QStringList *dimensions);
+    void dimensList(QStringList *dimensions);
+    void scenarios(QStringList *scenariosList,QStringList *scenariosIdList, QStringList *scenarioDesc, int indx);
 
-  //DB to CSV
-  void actorsNameDesc(QList <QString>, QList <QString>);
-  void actorsInflu(QList <QString>);
-  void actorsPostn(QList<QString>,int);
-  void actorsSalnce(QList<QString>,int);
+    //DB to CSV
+    void actorsNameDesc(QList <QString>, QList <QString>);
+    void actorsInflu(QList <QString>);
+    void actorsPostn(QList<QString>,int);
+    void actorsSalnce(QList<QString>,int);
 
-  //BarCharts
-  void listActorsSalienceCapability(QList<int>,QList<double>,QList<double>,double r1,double r2);
+    //BarCharts
+    void listActorsSalienceCapability(QList<int>,QList<double>,QList<double>,double r1,double r2);
+
+    //QuadMap
+    void utilChlngAndSQ(int turn, double hor, double ver , int actorID);
 
 private:
-  QSqlDatabase db;
-  //    QSqlTableModel * sqlmodel;
-  QSqlTableModel * sqlmodelEdit;
-  QStandardItemModel * sqlmodel;
+    QSqlDatabase db;
+    //    QSqlTableModel * sqlmodel;
+    QSqlTableModel * sqlmodelEdit;
+    QStandardItemModel * sqlmodel;
 
-  int numActors =0;
-  int numStates =0;
-  int numDimension =0;
-  QStringList * dimensionsList;
-  QStringList * dimList;
-  QStringList * scenarioList;
-  QStringList * scenarioIdList;
-  QStringList * scenarioDescList;
-  QString scenarioM;
+    int numActors =0;
+    int numStates =0;
+    int numDimension =0;
+    QStringList * dimensionsList;
+    QStringList * dimList;
+    QStringList * scenarioList;
+    QStringList * scenarioIdList;
+    QStringList * scenarioDescList;
+    QString scenarioM;
 
-  //DB to CSV
-  QList <QString> actorNameList;
-  QList <QString> actorDescList;
-  QList <QString> actorInfluence;
-  QList <QString> actorPosition;
-  QList <QString> actorSalience;
+    //DB to CSV
+    QList <QString> actorNameList;
+    QList <QString> actorDescList;
+    QList <QString> actorInfluence;
+    QList <QString> actorPosition;
+    QList <QString> actorSalience;
 
-  //BarChart
-  QList <int> actorIdsList;
-  QList <double> actorSalienceList;
-  QList <double> actorCapabilityList;
+    //BarChart
+    QList <int> actorIdsList;
+    QList <double> actorSalienceList;
+    QList <double> actorCapabilityList;
 
+    //quadMap
+    QList <double> utilChlgV;
+    QList <double> utilSQV;
+    QList <double> utilChlgH;
+    QList <double> utilSQH;
 
-  void getVectorPosition(int actor, int dim, int turn, QString scenario);
+    double hCord;
+    double vCord;
 
-  //Default read Turn_t=0
-  void readVectorPositionTable(int state, QString scenario, int dim);
+    void getVectorPosition(int actor, int dim, int turn, QString scenario);
 
-  // number of actors
-  void getNumActors();
-  // number of states/turns in db
-  void getNumStates();
-  // Scenarios list in db
-  void getScenarioList(bool run);
+    //Default read Turn_t=0
+    void readVectorPositionTable(int state, QString scenario, int dim);
 
-  void readVectorPositionTableEdit(QString scenario);
+    // number of actors
+    void getNumActors();
+    // number of states/turns in db
+    void getNumStates();
+    // Scenarios list in db
+    void getScenarioList(bool run);
+
+    void readVectorPositionTableEdit(QString scenario);
 };
 
 #endif // DATABASE_H

@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="Scenario">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string"/>
+        <xs:element name="desc" type="xs:string"/>
+        <xs:element name="prngSeed" type="xs:string"/>
+        <xs:element ref="ModelParameters" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="Dimensions" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="Actors"/>
+        <xs:element ref="IdealAdjustment" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ModelParameters">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="VictoryProbModel" type="VictoryProbModelEnum"/>
+        <xs:element name="PCEModel" type="ProbCondorcetElectionModelEnum"/>
+        <xs:element name="StateTransitions" type="StateTransitionEnum"/>
+        <xs:element name="VotingRule" type="VotingRuleEnum"/>
+        <xs:element name="BigRAdjust" type="BigRAdjustEnum"/>
+        <xs:element name="BigRRange" type="BigRRangeEnum"/>
+        <xs:element name="ThirdPartyCommit" type="ThirdPartyCommitEnum"/>
+        <xs:element name="InterVecBrgn" type="InterVecBrgnEnum"/>
+        <xs:element name="BargnModel" type="BargnModelEnum"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="VictoryProbModelEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Linear"/>
+      <xs:enumeration value="Square"/>
+      <xs:enumeration value="Quartic"/>
+      <xs:enumeration value="Octic"/>
+      <xs:enumeration value="Binary"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ProbCondorcetElectionModelEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Conditional"/>
+      <xs:enumeration value="MarkovIncentive"/>
+      <xs:enumeration value="MarkovUniform"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ThirdPartyCommitEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NoCommit"/>
+      <xs:enumeration value="SemiCommit"/>
+      <xs:enumeration value="FullCommit"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="StateTransitionEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Deterministic"/>
+      <xs:enumeration value="Stochastic"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="VotingRuleEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Binary"/>
+      <xs:enumeration value="PropBin"/>
+      <xs:enumeration value="Proportional"/>
+      <xs:enumeration value="PropCbc"/>
+      <xs:enumeration value="Cubic"/>
+      <xs:enumeration value="ASymProsp"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="BigRAdjustEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Full"/>
+      <xs:enumeration value="TwoThirds"/>
+      <xs:enumeration value="Half"/>
+      <xs:enumeration value="OneThird"/>
+      <xs:enumeration value="No"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="BigRRangeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Min"/>
+      <xs:enumeration value="Mid"/>
+      <xs:enumeration value="Max"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="InterVecBrgnEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="S1P1"/>
+      <xs:enumeration value="S2P2"/>
+      <xs:enumeration value="S2PMax"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="BargnModelEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="InitOnlyInterp"/>
+      <xs:enumeration value="InitRcvrInterp"/>
+      <xs:enumeration value="PWCompInterp"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="Dimensions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="dName" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dName">
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="Actors">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Actor"  minOccurs="3" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Actor">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string"/>
+        <xs:element name="description" type="xs:string"/>
+        <xs:element name="capability">
+          <xs:simpleType>
+            <xs:restriction base="xs:decimal">
+              <xs:minInclusive value="0.0"/>
+              <xs:maxInclusive value="1000.0"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element ref="Position"/>
+        <xs:element ref="Salience"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Position">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="dCoord" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dCoord">
+    <xs:simpleType>
+      <xs:restriction base="xs:decimal">
+        <xs:minInclusive value="0.0"/>
+        <xs:maxInclusive value="100.0"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="Salience">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="dSal" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dSal">
+    <xs:simpleType>
+      <xs:restriction base="xs:decimal">
+        <xs:minInclusive value="0.0"/>
+        <xs:maxInclusive value="100.0"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="IdealAdjustment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="iaPair" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="iaPair">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="adjustingIdeal" type="xs:string"/>
+        <xs:element name="referencePos" type="xs:string"/>
+        <xs:element name="adjust" type="xs:decimal"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

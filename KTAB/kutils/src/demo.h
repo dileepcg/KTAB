@@ -32,46 +32,46 @@
 #include "vimcp.h"
 
 namespace UDemo {
-  // avoid namespace pollution by keeping all this demo stuff in its own namespace.
-  using std::tuple;
-  using std::vector;
-  using KBase::PRNG;
-  using KBase::KMatrix;
-  using KBase::VBool;
+// avoid namespace pollution by keeping all this demo stuff in its own namespace.
+using std::tuple;
+using std::vector;
+using KBase::PRNG;
+using KBase::KMatrix;
+using KBase::VBool;
 
-  // -------------------------------------------------
-  double eNorm(const KMatrix & a, const KMatrix & x);
-  KMatrix eUnitize(const KMatrix & a, const KMatrix & x);
-  KMatrix projEllipse(const KMatrix & a, const KMatrix & w);
-  void demoEllipseLVI(PRNG* rng, unsigned int n);
-  void demoAntiLemke(PRNG* rng, unsigned int n);
+// -------------------------------------------------
+double eNorm(const KMatrix & a, const KMatrix & x);
+KMatrix eUnitize(const KMatrix & a, const KMatrix & x);
+KMatrix projEllipse(const KMatrix & a, const KMatrix & w);
+void demoEllipseLVI(PRNG* rng, unsigned int n);
+void demoAntiLemke(PRNG* rng, unsigned int n);
 
 
-  // -------------------------------------------------
-  // define a simple class of boolean vectors that
-  // get evaluated by how close they are to a target
-  // Note: we re-define this behavior via lambda-fns later.
+// -------------------------------------------------
+// define a simple class of boolean vectors that
+// get evaluated by how close they are to a target
+// Note: we re-define this behavior via lambda-fns later.
 
-  class TargetedBV {
-  public:
-    TargetedBV();
-    explicit TargetedBV(const VBool & b);
-    virtual ~TargetedBV();
-    static void setTarget(VBool trgt);
-    static VBool getTarget();
-    virtual void randomize(PRNG* rng);
-    virtual TargetedBV * mutate(PRNG * rng) const;
-    virtual tuple<TargetedBV*, TargetedBV*> cross(const TargetedBV * g2, PRNG * rng) const;
-    virtual void show() const;
-    virtual bool equiv(const TargetedBV * g2) const;
-    static void showBits(VBool bv);
-    static  VBool randomBV(PRNG* rng, unsigned int nb);
-    double evaluate();
-    double tblEval(double minD, vector<double> weights, vector<VBool> tbl) const;
-    unsigned int hDist(VBool bv) const;
-    VBool bits = VBool();
-    static VBool target; // it is only a one-shot demo, so this can be static
-  };
+class TargetedBV {
+public:
+  TargetedBV();
+  explicit TargetedBV(const VBool & b);
+  virtual ~TargetedBV();
+  static void setTarget(VBool trgt);
+  static VBool getTarget();
+  virtual void randomize(PRNG* rng);
+  virtual TargetedBV * mutate(PRNG * rng) const;
+  virtual tuple<TargetedBV*, TargetedBV*> cross(const TargetedBV * g2, PRNG * rng) const;
+  virtual void show() const;
+  virtual bool equiv(const TargetedBV * g2) const;
+  static void showBits(VBool bv);
+  static  VBool randomBV(PRNG* rng, unsigned int nb);
+  double evaluate();
+  double tblEval(double minD, vector<double> weights, vector<VBool> tbl) const;
+  unsigned int hDist(VBool bv) const;
+  VBool bits = VBool();
+  static VBool target; // it is only a one-shot demo, so this can be static
+};
 
 }; // namespace
 

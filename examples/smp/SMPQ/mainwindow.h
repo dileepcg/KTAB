@@ -81,7 +81,6 @@ private slots:
     void setDBItemModel(QStandardItemModel *model);
     void setDBItemModelEdit();
     void displayMessage(QString cls, QString message);
-    void vectorPositionsFromDB();
     void dbGetFilePAth(bool bl, QString dbPath =0,bool run = false );
     void dbEditGetFilePAth(bool bl);
     void updateStateCountSliderRange(int states);
@@ -132,8 +131,9 @@ private:
     //MainWindow
     void createActions();
     void createStatusBar();
-    void createGraph1DockWindows();
-    void createGraph2DockWindows();
+    void createLinePlotsDockWindows();
+    void createBarPlotsDockWindows();
+    void createQuadMapDockWindows();
     void createModuleParametersDockWindow();
     void saveTableViewToCSV();
     void saveTableWidgetToCSV();
@@ -180,6 +180,7 @@ private:
     QDockWidget * moduleParametersDock;
     QDockWidget * lineGraphDock;
     QDockWidget * barGraphDock;
+    QDockWidget * quadMapDock;
 
     QGridLayout * VLayout;
     QFrame * moduleFrame;
@@ -206,6 +207,8 @@ private:
     //graph - customplot
 
     int numAct;
+    int prevTurn;
+    bool firstVal;
     //    to  edit headers
 
     QLineEdit* headerEditor;
@@ -227,7 +230,6 @@ private:
     QList <QString> actorsSal[3];
 
     QStringList dimensionList;
-
 
 private slots:
     void titleDoubleClick(QMouseEvent *event, QCPPlotTitle *barGraphTitle);
@@ -377,6 +379,83 @@ private :
     FILE fp_old;
 
     void logSMPDataOptionsAnalysis();
+
+    //Quadmap
+private :
+    QFrame * quadMapMainFrame;
+    QGridLayout * quadMapGridLayout;
+    QCustomPlot * quadMapCustomGraph;
+    QCPPlotTitle * quadMapTitle;
+    QScrollArea * quadMapInitiatorsScrollArea;
+    QScrollArea * quadMapReceiversScrollArea;
+    QFrame * quadMapPerspectiveFrame;
+
+    QList <QRadioButton *> quadMapInitiatorsRadioButtonList;
+    QList <QCheckBox *> quadMapReceiversCheckBoxList;
+    QList <bool> quadMapReceiversCBCheckedList;
+
+    QComboBox * vComboBox;
+    QComboBox * hComboBox;
+
+    QCheckBox * selectAllReceiversCB;
+
+    QComboBox * perspectiveComboBox;
+    QSlider * quadMapTurnSlider;
+
+    QVector <double> deltaUtilV;
+    QVector <double> deltaUtilH;
+    int actorIdIndexV;
+    QList <int> actorIdIndexH;
+
+    int actorsQueriedCount;
+
+    QCPItemRect *   xRectItemPP;
+    QCPItemRect *   xRectItemMP;
+    QCPItemRect *   xRectItemMM;
+    QCPItemRect *   xRectItemPM;
+
+    QCheckBox * autoScale;
+    QString prevScenario;
+
+    QList <int> VHAxisValues;
+
+    QPushButton * plotQuadMap;
+    int initiatorTip;
+
+    void initializeQuadMapDock();
+    void initializeQuadMapPlot();
+
+    void populateInitiatorsAndReceiversRadioButtonsAndCheckBoxes();
+    void populatePerspectiveComboBox();
+    void populateQuadMapStateRange(int states);
+    void getUtilChlgHorizontalVerticalAxisData(int turn);
+    void getUtilChlgHorizontalAxisData(int turn);
+    void plotScatterPointsOnGraph(QVector<double> x, QVector<double> y, int actIndex);
+    void plotDeltaValues();
+    void removeAllScatterPoints();
+
+private slots :
+    void populateVHComboBoxPerspective(int index);
+    void populateHcomboBox(QString vComboBoxText);
+
+    void initiatorsChanged(bool bl);
+    void receiversChanged(bool bl);
+
+    void selectAllReceiversClicked(bool bl);
+    void quadMapTurnSliderChanged(int turn);
+
+    void quadMapUtilChlgandSQValues(int turn, double hor, double ver,
+                                    int actorID);
+
+    void xAxisRangeChangedQuad(QCPRange newRange, QCPRange oldRange);
+    void yAxisRangeChangedQuad(QCPRange newRange, QCPRange oldRange);
+
+    void quadMapAutoScale(bool status);
+    void quadMapPlotPoints(bool status);
+
+signals :
+    void getUtilChlgAndUtilSQfromDB(QList <int > VHAxisList);
+
 };
 
 #endif // MAINWINDOW_H

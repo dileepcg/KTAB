@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>KTAB by KAPSARC</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+<!-- JAH 20101016 added google analytics script-->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-86040304-1', 'auto');
+ga('send', 'pageview');
+</script>	  
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>KTAB</h1>
+        <p>KAPSARC&#39;s Toolkit for building models of Collective Decision Making Processes</p>
+
+        <p class="view"><a href="https://github.com/KAPSARC/KTAB">View the Project on GitHub <small>KAPSARC/KTAB</small></a></p>
+
+        <ul>
+          <!--<li><a href="https://github.com/KAPSARC/KTAB/zipball/master">Download <strong>ZIP File</strong></a></li><-->
+          <li><a href="https://github.com/KAPSARC/KTAB/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/KAPSARC/KTAB">View On <strong>GitHub</strong></a></li>
+		  <li><a href="https://github.com/KAPSARC/KTAB/raw/master/KTAB_SMP.zip" download>Download<strong>SMP Release</strong></a></li>
+</ul>
+<h3>KTAB Publications</h3>
+<p><a href="https://www.kapsarc.org/openkapsarc/kapsarc-toolkit-for-behavioral-analysis-ktab/ks-1517-dp011a-an-introduction-to-the-kapsarc-toolkit-for-behavioral-analysis-ktab-2/">An Introduction to the KAPSARC Toolkit for Behavioral Analysis (KTAB)</a></p>
+<p><a href="https://www.kapsarc.org/openkapsarc/kapsarc-toolkit-for-behavioral-analysis-ktab/ks-1524-dp018a-multidimensional-bargaining-using-ktab/">Multidimensional Bargaining Using KTAB</a></p>
+<p><a href="https://www.kapsarc.org/openkapsarc/kapsarc-toolkit-for-behavioral-analysis-ktab/ks-1520-dp014a-reforming-the-role-of-state-owned-enterprise-in-chinas-energy-sector-web-2/">Reforming the Role of State-Owned Enterprise in China’s Energy Sector</a></p>
+<p><a href="https://www.kapsarc.org/openkapsarc/kapsarc-toolkit-for-behavioral-analysis-ktab/ks-1629-mp023b-group-choice-with-interdependent-sublinear-voting_methodology-paper-2/">Group Choice with Interdependent Sublinear Voting</a></p>
+<p><a href="https://www.cambridge.org/core/journals/journal-of-east-asian-studies/article/analyzing-coalitions-in-chinas-policy-formulation-reforming-the-role-of-state-owned-enterprises-in-chinas-energy-sector/02CBC45E77B24847E06A3631ADA20771">Analyzing Coalitions in China’s Policy Formulation</a></p>	      
+</header>
+<section>
+<h1>KAPSARC Toolkit for Behavioral Analysis (KTAB)</h1>
+<p>KTAB is an open-source toolkit for assembling models that allow the systematic and rigorous analysis of Collective Decision-Making Processes (CDMPs). KTAB has been developed to meet the need for widely available, state-of-the-art, supported, and open-source software that facilitates the modeling and analysis of collective decision making.</p>
+<p><img src="./smp_screenshot_20161108.png" /></p>
+<p>The main development site for KTAB is the <a href="http://www.kapsarc.org">King Abdullah Center for Petroleum Studies and Research</a>. Research is distributed at <a href="https://www.kapsarc.org/openkapsarc/">OpenKAPSARC</a>, and the main page for KTAB research and other information is <a href="https://www.kapsarc.org/openkapsarc/kapsarc-toolkit-for-behavioral-analysis-ktab/">here</a>.</p>
+<p>All KTAB models represent stochastic decision-making among comparatively small numbers of actors or stakeholder groups (more than one, but less than hundreds), within the paradigm of &quot;Probabilistic Condorcet Elections&quot;. PCEs are used to estimate the likelihood of different outcomes from a CDMP, depending on the options each agent has or can generate, how they value those options, and the coalitions they can form to support or oppose each option. Details can be found in the online documentation as well as articles on the <a href="https://www.kapsarc.org/openkapsarc/kapsarc-toolkit-for-behavioral-analysis-ktab/">main KTAB page</a>.</p>
+<p>KTAB is intended to be a platform that contains a number of models that can simulate CDMPs. The initial model that has been instantiated in KTAB is called the Spatial Model of Politics (SMP). The class of models represented by the SMP has a long history in the academic discipline of political science. More detail on the SMP, and references to the appropriate literature, can again be found in articles available for download on the main KTAB page. The majority of the development team’s current efforts are focused on producing a GUI for the SMP. A beta version with a working GUI is now available for download.</p>
+
+<h2>Installing SMP Application on Windows</h2>
+<p>Installation of the SMP application on Windows is simple.</p>
+<ol>
+<li>Download and install the Visual C++ Runtime libraries for Visual Studio 2015 <a href="https://www.microsoft.com/en-us/download/details.aspx?id=48145">here</a></li>
+<li>Click the <a href="https://github.com/KAPSARC/KTAB/blob/master/KTAB_SMP.zip" download>SMP Release link on the left</a> to download a zip archive of the application compiled for 64-bit machines, along with all the required QT libraries</li>
+<li>Extract the contents of the archive to your PC, maintaining the directory structure in the archive</li>
+</ol>
+<p>Nothing else should be required to run the application executable <i>smpq.exe</i>.</p>
+<hr>
+<h3>Examples</h3>
+<p>Examples are provided to illustrate the range of modeling which can be done in the framework and to provide templates for further work. Examples in the kmodel directory include the following:</p>
+<ul>
+<li>Using an input/output economic model to bargain over tax/subsidy rates,</li>
+<li>Simple discrete matching </li>
+<li>Negotiating the priority order to tasks to undertake (and which to drop)</li>
+<li>A simple but highly parameterizable version of the <a href="examples/smp/README.md">spatial model of politics</a>. The command line version is <i>smpc</i>; GUI versions will be called <i>smpg</i> and <i>smpq</i>. Dummy data are provided to illustrate the format for CSV input files.</li>
+<li>A simple model of bargaining over the order in which projects should be addressed, taking into account budget limits. Dummy data are provided.</li>
+<li>A simple example of using KTAB to fit parameters. Similar to econometric models, the parameters of a PCE are adjusted until the result closely matches the expected results. The fitted parameters could then be used to analyze possible changes.</li>
+</ul>
+<p>These are merely illustrative examples.  For rigorous work, one could make whatever local modifications are needed to produce a model which met one's own standards for validation.</p>
+
+<h3>Building KTAB</h3>
+<p>KTAB is written in portable, cross-platform C++11.</p>
+<p>KTAB uses CMake for configuration; downloads and instructions can be obtained <a href="http://www.cmake.org">here</a>. The basic procedure is to configure kutils with CMake, then build the library and examples with your favorite IDE. Then configure kmodel with CMake and build it. Detailed build instructions can be found in the subdirectories, starting with kutils' <a href="KTAB/kutils/README.md">README</a>. After building kutils, you can follow kmodel's <a href="KTAB/kmodel/README.md">README</a>. Following these instructions, under both Windows and Linux, it is not necessary to modify your PATH at any point of the installation.</p>
+<p>Example of how to build models outside the main library structure, as one would do for a custom model, are in the examples directories; see the overall <a href="examples/README.md">README</a> and the README files for each.</p>
+<p>The code is compiled, linked, and tested with absolutely no modification, simultaneously on both Windows and Linux: there is one single body of cross-platform code, not separate versions for each OS. All platform- or system-specific configuration is done by CMake. Because no platform-specific code is allowed, porting to Mac or other platforms should be feasible. It was developed and tested on 64-bit Windows and Linux platforms, including the following:</p>
+<ul>
+<li>Windows</li>
+<ul>
+<li>Windows 7 Professional with Visual Studio 2010 Express,</li>
+<li>Windows 7 Professional with Visual Studio 2013, Update 5,</li>
+<li>Windows 8 with Visual Studio 2013 Express,</li>
+<li>Windows 8 &amp; 10 Professional with Visual Studio 2015 Community,</li>
+<li>Windows Server 2012 with Visual Studio 2015 Community,
+</ul>
+<li>Linux</li>
+<ul>
+<li>Fedora 22 with gcc/g++ 5.1,</li>
+<li>openSUSE 13.2 with clang/clang++ 3.5,</li>
+<li>Debian 8.1 with gcc/g++ 4.9,</li>
+<li>Ubuntu 16.04 with gcc/g++ 5.4.</li>
+</ul>
+</ul>
+
+<h4>Language Versions</h4>
+<p>The C++11 standard is supported by the following versions of 
+these common compilers:</p>
+<ul>
+<li>GCC 4.9.0, or higher</li>
+<li>Clang 3.5.0, or higher</li>
+<li>Visual Studio 2013, or higher</li>
+</ul>
+<p>We expect to upgrade to C++17 when it becomes well-supported by gcc, clang, and VS, especially structured bindings, aka parallel assignment with pattern matching.</p>
+
+<h3>User Interfaces</h3>
+<p> A graphical front-end is under development. The current GUI version of the SMP, <i>smpq</i> has been developed in <a href="https://www.qt.io/">Qt</a>.  Qt is dual-licensed under both commercial and open-source terms; details can be found <a href="https://www.qt.io/qt-licensing-terms/">here</a>. The Qt licensing page states that dynamically linking an application to the open-source Qt libraries does not make the application open-source.</p>
+<p>Previous work toward a graphical front-end was based on the <a href = "http://www.fltk.org">FLTK project</a>. FLTK is a cross-platform, C++ toolkit provided under the terms of the GNU Library Public License, Version 2 with exceptions that allow for static linking; details can be found <a href="http://www.fltk.org/COPYING.php">here</a>.  The source code and build instructions for the most recent stable version can be obtained <a href = "http://www.fltk.org/software.php">here</a>. FLTK also uses CMake for configuration, then your favorite IDE to build.</p>
+<p>Because the libraries that analyze negotiation are completely separate from the applications that use them, developers are perfectly free to write command line applications or use other GUI toolkits. Along these lines, the GUI work is expected to diversify into other toolkits, such as <a href="https://www.wxwidgets.org/">WxWidgets</a>, or even a web interface such as <a href="http://www.webtoolkit.eu/wt">Wt</a>. 
+<p>For authoritative ruling on licensing issues, consult appropriate counsel.</p>
+
+<h3>Data Input Formats</h3>
+<p>To read and write XML data files, KTAB is being converted to use the <a href="https://github.com/leethomason/tinyxml2">TinyXML2</a> library, which is available on <a href="https://github.com/">GitHub</a>.</p>
+
+<h3>Contributing and License Information</h3>
+<p>If you are interested in contributing code, ideas, or data to KTAB, please contact <a href="mailto:ktab@kapsarc.org">us</a>.</p>
+<p>KTAB is released under The MIT License (Expat). For details, see the following URLs:</p>
+<ul>
+<li><a href="http://opensource.org/">http://opensource.org/</a></li>
+<li><a href="http://opensource.org/licenses/MIT">http://opensource.org/licenses/MIT</a></li>
+</ul>
+<hr><p>Copyright KAPSARC. Open source MIT License.</p><hr>
+</section>
+  <footer>
+        <p>This project is maintained by <a href="https://github.com/KAPSARC">KAPSARC</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>    
+  </body>
+</html>

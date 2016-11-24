@@ -5,7 +5,8 @@
 # rebuild them
 #
 #------------------------------------------
-FILES="minwater  reformpri  smp  agenda  comsel"
+
+DIRS=" minwater  agenda  reformpri  smp  comsel  pmatrix"
 
 for d in $FILES
 do

@@ -32,50 +32,50 @@
 #include "kmatrix.h"
 
 namespace KBase {
-  using KBase::VBool;
-  using std::mt19937_64;
+using KBase::VBool;
+using std::mt19937_64;
 
 
-  typedef uint64_t W64; // 64 bits
-  const unsigned int WordLength = 64;
+typedef uint64_t W64; // 64 bits
+const unsigned int WordLength = 64;
 
-  const W64 MASK64 = 0xffffffffffffffff; // obviously 2^64 - 1
-  const W64 MASK32 = 0xffffffff; // obviously 2^32 - 1
+const W64 MASK64 = 0xffffffffffffffff; // obviously 2^64 - 1
+const W64 MASK32 = 0xffffffff; // obviously 2^32 - 1
 
 
 
-  // The constant e, left-shifted up to 62 bits.
-  // 2718281828459045235 == 0x25B946EBC0B36173
-  // Shifting one more decimal would be 65 bits.
-  const W64 Q64A = 0x25B946EBC0B36173; // C++14 digit separators
+// The constant e, left-shifted up to 62 bits.
+// 2718281828459045235 == 0x25B946EBC0B36173
+// Shifting one more decimal would be 65 bits.
+const W64 Q64A = 0x25B946EBC0B36173;
 
-  // The constant pi, left shifted up to 62 bits (+1)
-  // 3141592653589793238 + 1 == 0x2B992DDFA23249D7
-  // Shifting one more decimal would be 65 bits.
-  const W64 Q64B = 0x2B992DDFA23249D7;
+// The constant pi, left shifted up to 62 bits (+1)
+// 3141592653589793238 + 1 == 0x2B992DDFA23249D7
+// Shifting one more decimal would be 65 bits.
+const W64 Q64B = 0x2B992DDFA23249D7;
 
-  // Large odd constant to avoid fixed-points in qTrans
-  // phi = 1.618.. = (1+sqrt(5))/2
-  // 16180339887498948482 + 1 -- 64 bits
-  // We right-shifted the decimals and added 1 to make it odd, 64 bits
-  const W64 Q64C = 0xE08C1D668B756F83;
+// Large odd constant to avoid fixed-points in qTrans
+// phi = 1.618.. = (1+sqrt(5))/2
+// 16180339887498948482 + 1 -- 64 bits
+// We right-shifted the decimals and added 1 to make it odd, 64 bits
+const W64 Q64C = 0xE08C1D668B756F83;
 
-  W64 qTrans(W64 s);
-  W64 rotl(const W64 x, unsigned int n);
-  W64 rotr(const W64 x, unsigned int n);
+W64 qTrans(W64 s);
+W64 rotl(const W64 x, unsigned int n);
+W64 rotr(const W64 x, unsigned int n);
 
-  class PRNG {
-  public: 
-    explicit PRNG(uint64_t sd = KBase::dSeed);
-    virtual ~PRNG();
-    uint64_t uniform();
-    double uniform(double a, double b);
-    unsigned int probSel(const KMatrix & cv);
-    VBool bits(unsigned int nb);
-    uint64_t setSeed(uint64_t sd);
-  protected:
-    mt19937_64 mt = mt19937_64();
-  };
+class PRNG {
+public:
+  explicit PRNG(uint64_t sd = KBase::dSeed);
+  virtual ~PRNG();
+  uint64_t uniform();
+  double uniform(double a, double b);
+  unsigned int probSel(const KMatrix & cv);
+  VBool bits(unsigned int nb);
+  uint64_t setSeed(uint64_t sd);
+protected:
+  mt19937_64 mt = mt19937_64();
+};
 
 };
 

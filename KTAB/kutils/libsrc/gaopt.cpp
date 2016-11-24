@@ -33,17 +33,17 @@
 
 namespace KBase {
 
-  // -------------------------------------------------
-  // Template code is all in the *.h file
+// -------------------------------------------------
+// Template code is all in the *.h file
 
 
-  unsigned int crossSite(PRNG* rng, unsigned int nc) {
-    // Position of first chromosome to be swapped between the genes.
-    // Crossing at position 0 is useless: they just swap their entire contents.
-    // Crossing at position nc-1 is useful: they swap just the last chromosome.
-    unsigned int cs = 1 + ((unsigned int)((rng->uniform()) % (nc - 1)));
-    return cs;
-  }
+unsigned int crossSite(PRNG* rng, unsigned int nc) {
+  // Position of first chromosome to be swapped between the genes.
+  // Crossing at position 0 is useless: they just swap their entire contents.
+  // Crossing at position nc-1 is useful: they swap just the last chromosome.
+  unsigned int cs = 1 + ((unsigned int)((rng->uniform()) % (nc - 1)));
+  return cs;
+}
 
 
 }; // namespace

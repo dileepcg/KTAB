@@ -35,16 +35,16 @@
 #include "demoleon.h"
 #include "sqlitedemo.h"
 #include "edemo.h"
-#include "tinyxml2demo.h"
-#include "demoMatrixEMod.h"
+#include "tinyxml2demo.h" 
 #include "csvdemo.h"
 
 using std::cout;
 using std::endl;
 using std::flush;
 using std::get;
-using std::tuple;
 using std::string;
+using std::tuple;
+using std::vector;
 
 using KBase::PRNG;
 using KBase::KMatrix;
@@ -58,7 +58,6 @@ using KBase::State;
 using KBase::PCEModel;
 using KBase::VotingRule;
 using KBase::VPModel;
-using KBase::vrName;
 
 using KBase::GAOpt;
 using KBase::GHCSearch;
@@ -67,194 +66,159 @@ namespace MDemo { // a namespace of which M, A, P, S know nothing
 
 // --------------------------------------------
 
-  void demoPCE(uint64_t s, PRNG* rng) {
-    printf("Using PRNG seed: %020llu \n", s);
-    rng->setSeed(s);
+void demoPCE(uint64_t s, PRNG* rng) {
+  printf("Using PRNG seed: %020llu \n", s);
+  rng->setSeed(s);
 
-    cout << "Demonstrate minimal PCE" << endl << endl;
+  cout << "Demonstrate minimal PCE" << endl << endl;
 
-    VPModel vpm = VPModel::Linear;
-    switch (rng->uniform() % 6) {
-    case 0:
-    case 1:
-      vpm = VPModel::Linear;
-      break;
-    case 2:
-      vpm = VPModel::Square;
-      break;
-    case 3:
-      vpm = VPModel::Quartic;
-      break;
-    case 4:
-      vpm = VPModel::Octic;
-      break;
-    case 5: // unused
-      vpm = VPModel::Binary;
-      break;
-    default:
-      cout << "Unrecognized VPModel option" << endl << flush;
-      assert(false);
-      break;
-    }
-
-    cout << "Using VPModel " << vpm << endl;
-
-    cout << "First, stable distrib is exactly as expected in bilateral conflict" << endl;
-
-    auto cFn = [rng](unsigned int i, unsigned int j) {
-      if (i == j) {
-        return 0.0;
-      }
-      else {
-        double c = rng->uniform(1.0, 10.0);
-        return (c*c);
-      }
-    };
-
-    auto c = KMatrix::map(cFn, 2, 2);
-    double w01 = c(0, 1);
-    double w10 = c(1, 0);
-
-
-    auto show = [](const KMatrix & cMat, const KMatrix & pvMat, const KMatrix & pVec) {
-      cout << "Coalitions matrix:" << endl;
-      cMat.mPrintf(" %6.3f ");
-      cout << endl;
-      cout << "prob[i>j] Markov transitions matrix:" << endl;
-      pvMat.mPrintf(" %.4f ");
-      cout << endl;
-      cout << "limiting stable prob[i] vector:" << endl;
-      pVec.mPrintf(" %.4f ");
-      cout << endl;
-      return;
-    };
-    cout << "Compare simple " << vpm << " ratios to2-by-2  Markov-uniform ..." << endl;
-    //auto pv = Model::vProb(vpm, c);
-    //auto p2 = Model::probCE(PCEModel::MarkovUPCM, pv);
-    auto p3 = Model::markovIncentivePCE(c, vpm);
-    auto ppv = Model::probCE2(PCEModel::MarkovUPCM, vpm, c);
-    auto p2 = get<0>(ppv); // column
-    auto pv = get<1>(ppv); //square
-    if (KBase::testProbCE) {
-      auto pv0 = Model::vProb(vpm, c); //square 
-      assert(KBase::norm(pv - pv0) < 1E-6);
-      auto p20 = Model::probCE(PCEModel::MarkovUPCM, pv0); // column
-      assert(KBase::norm(p2 - p20) < 1E-6);
-    }
-
-    cout << "2-Option Markov Uniform " << endl;
-    show(c, pv, p2);
-    cout << "Markov Incentive" << endl;
-    show(c, pv, p3);
-
-    cout << endl;
-    p3 = get<0>(Model::probCE2(PCEModel::MarkovIPCM, vpm, c));
-    auto p30 = Model::markovIncentivePCE(c, vpm);
-    cout << "2-Option Markov Incentive" << endl;
-    show(c, pv, p3);
-    if (KBase::testProbCE) {
-      assert(KBase::norm(p3 - p30) < 1E-6);
-    }
-
-    cout << endl;
-    cout << "But not so clear with three options ..." << endl;
-    c = KMatrix::map(cFn, 3, 3);
-    ppv = Model::probCE2(PCEModel::MarkovUPCM, vpm, c);
-    p2 = get<0>(ppv); // column
-    pv = get<1>(ppv); //square
-    if (KBase::testProbCE) {
-      auto pv0 = Model::vProb(vpm, c); //square 
-      assert(KBase::norm(pv - pv0) < 1E-6);
-      auto p20 = Model::probCE(PCEModel::MarkovUPCM, pv); // column
-      assert(KBase::norm(p2 - p20) < 1E-6);
-    }
-    cout << "3-Option Markov Uniform " << endl;
-    p3 = Model::markovIncentivePCE(c, vpm);
-
-    cout << endl << "Markov Uniform  " << endl;
-    show(c, pv, p2);
-    cout << "Markov Incentive" << endl;
-    show(c, pv, p3);
-
-    cout << "3-Option Markov Incentive" << endl << flush;
-    cout << "probCE2 ... " << endl << flush;
-    p3 = get<0>(Model::probCE2(PCEModel::MarkovIPCM, vpm, c));
-    cout << "tmpMarkovIncentivePCE ... " << endl << flush;
-    p30 = Model::markovIncentivePCE(c, vpm);
-    show(c, pv, p3);
-    if (KBase::testProbCE) {
-      assert(KBase::norm(p3 - p30) < 1E-6);
-    }
-    // ---------------------------
-
-    cout << endl << "Conditional PCE model: " << endl;
-    p2 = get<0>(Model::probCE2(PCEModel::ConditionalPCM, vpm, c));
-    show(c, pv, p2);
-
-    if (KBase::testProbCE) {
-      auto p20 = Model::probCE(PCEModel::ConditionalPCM, pv);
-      assert(KBase::norm(p2 - p20) < 1E-6);
-    }
-
-    return;
+  VPModel vpm = VPModel::Linear;
+  switch (rng->uniform() % 6) {
+  case 0:
+  case 1:
+    vpm = VPModel::Linear;
+    break;
+  case 2:
+    vpm = VPModel::Square;
+    break;
+  case 3:
+    vpm = VPModel::Quartic;
+    break;
+  case 4:
+    vpm = VPModel::Octic;
+    break;
+  case 5: // unused
+    vpm = VPModel::Binary;
+    break;
+  default:
+    cout << "Unrecognized VPModel option" << endl << flush;
+    assert(false);
+    break;
   }
 
-  // simple demo of shared pointers (largely a test that the compiler is recent enough).
-  void demoSpVSR(uint64_t s, PRNG* rng) {
-    using std::function;
-    using std::get;
-    using std::make_shared;
-    using std::shared_ptr;
-    using std::tuple;
+  cout << "Using VPModel " << vpm << endl;
 
-    printf("Using PRNG seed: %020llu \n", s);
-    rng->setSeed(s);
+  cout << "First, stable distrib is exactly as expected in bilateral conflict" << endl;
 
-    cout << "Demonstrate shared_ptr<void> for returns" << endl;
-    cout << "This will be necessary to return arbitrary structures " << endl;
-    cout << "from bestTarget without using a bare void* pointer." << endl;
-    cout << endl;
-
-    // if x is of type shared_ptr(T), then x.get() is of type T*,
-    // so we dereference a shared pointer as *(x.get()), aka *x.get()
-
-    auto sp1 = make_shared<int>(42); // shared pointer to an integer
-    printf("Use count sp1: %li \n", sp1.use_count());
-    //int* p1 = sp1.get(); // gets the  pointer
-    cout << "The shared integer is " << *sp1.get() << endl;
-    {   // create another reference
-      auto sp2 = sp1;
-      printf("Use count sp1: %li \n", sp1.use_count());
-      // let it go out-of-scope
+  auto cFn = [rng](unsigned int i, unsigned int j) {
+    if (i == j) {
+      return 0.0;
     }
-    printf("Use count sp1: %li \n", sp1.use_count());
+    else {
+      double c = rng->uniform(1.0, 10.0);
+      return (c*c);
+    }
+  };
+
+  auto show = [](const KMatrix & cMat, const KMatrix & pvMat, const KMatrix & pVec) {
+    cout << "Coalitions matrix:" << endl;
+    cMat.mPrintf(" %6.3f ");
     cout << endl;
-    const string fs = " %+6.2f ";
-    // function<shared_ptr<void>(unsigned int, unsigned int)> fn
-    auto fn = [rng, &fs](unsigned int nr, unsigned int nc) {
-      auto m1 = KMatrix::uniform(rng, nr, nc, -10, +50);
-      auto d = KBase::norm(m1);
-      cout << "Inside lambda:" << endl;
-      m1.mPrintf(fs);
-      shared_ptr<void> rslt = make_shared<tuple<double, KMatrix>>(d, m1); // shared_ptr version of (void*)
-      return rslt;
-    };
-
-
-    shared_ptr<void> r1 = fn(5, 3); // DO NOT try "void* r = fn(5,3).get()" - it will segv
-    printf("Reference count: %li \n", r1.use_count());
-
-    auto r53 = *((tuple<double, KMatrix>*) r1.get());
-    // we get() the bare pointer, a void*,
-    // cast it to tuple<...>*,
-    // then dereference that pointer.
-    cout << endl << "As retrieved:" << endl;
-    get<1>(r53).mPrintf(fs);
-
+    cout << "prob[i>j] Markov transitions matrix:" << endl;
+    pvMat.mPrintf(" %.4f ");
+    cout << endl;
+    cout << "limiting stable prob[i] vector:" << endl;
+    pVec.mPrintf(" %.4f ");
+    cout << endl;
     return;
-  }
+  };
+  cout << "Compare simple " << vpm << " ratios to2-by-2  Markov-uniform ..." << endl;
+  auto c = KMatrix::map(cFn, 2, 2);
+  auto p3 = Model::markovIncentivePCE(c, vpm);
+  auto ppv = Model::probCE2(PCEModel::MarkovUPCM, vpm, c);
+  auto p2 = get<0>(ppv); // column
+  auto pv = get<1>(ppv); //square
+  cout << "2-Option Markov Uniform " << endl;
+  show(c, pv, p2);
+  cout << "Markov Incentive" << endl;
+  show(c, pv, p3);
+
+  cout << endl;
+  p3 = get<0>(Model::probCE2(PCEModel::MarkovIPCM, vpm, c));
+  cout << "2-Option Markov Incentive" << endl;
+  show(c, pv, p3);
+  cout << endl;
+  cout << "But not so clear with three options ..." << endl;
+  c = KMatrix::map(cFn, 3, 3);
+  ppv = Model::probCE2(PCEModel::MarkovUPCM, vpm, c);
+  p2 = get<0>(ppv); // column
+  pv = get<1>(ppv); //square
+  cout << "3-Option Markov Uniform " << endl;
+  p3 = Model::markovIncentivePCE(c, vpm);
+
+  cout << endl << "Markov Uniform  " << endl;
+  show(c, pv, p2);
+  cout << "Markov Incentive" << endl;
+  show(c, pv, p3);
+
+  cout << "3-Option Markov Incentive" << endl << flush;
+  cout << "probCE2 ... " << endl << flush;
+  p3 = get<0>(Model::probCE2(PCEModel::MarkovIPCM, vpm, c));
+  cout << "tmpMarkovIncentivePCE ... " << endl << flush;
+  show(c, pv, p3);
+  // ---------------------------
+  cout << endl << "Conditional PCE model: " << endl;
+  p2 = get<0>(Model::probCE2(PCEModel::ConditionalPCM, vpm, c));
+  show(c, pv, p2);
+  return;
 }
-// end of namespace MDemo 
+
+// simple demo of shared pointers (largely a test that the compiler is recent enough).
+void demoSpVSR(uint64_t s, PRNG* rng) {
+  using std::function;
+  using std::get;
+  using std::make_shared;
+  using std::shared_ptr;
+  using std::tuple;
+
+  printf("Using PRNG seed: %020llu \n", s);
+  rng->setSeed(s);
+
+  cout << "Demonstrate shared_ptr<void> for returns" << endl;
+  cout << "This will be necessary to return arbitrary structures " << endl;
+  cout << "from bestTarget without using a bare void* pointer." << endl;
+  cout << endl;
+
+  // if x is of type shared_ptr(T), then x.get() is of type T*,
+  // so we dereference a shared pointer as *(x.get()), aka *x.get()
+
+  auto sp1 = make_shared<int>(42); // shared pointer to an integer
+  printf("Use count sp1: %li \n", sp1.use_count());
+  //int* p1 = sp1.get(); // gets the  pointer
+  cout << "The shared integer is " << *sp1.get() << endl;
+  {   // create another reference
+    auto sp2 = sp1;
+    printf("Use count sp1: %li \n", sp1.use_count());
+    // let it go out-of-scope
+  }
+  printf("Use count sp1: %li \n", sp1.use_count());
+  cout << endl;
+  const string fs = " %+6.2f ";
+  // function<shared_ptr<void>(unsigned int, unsigned int)> fn
+  auto fn = [rng, &fs](unsigned int nr, unsigned int nc) {
+    auto m1 = KMatrix::uniform(rng, nr, nc, -10, +50);
+    auto d = KBase::norm(m1);
+    cout << "Inside lambda:" << endl;
+    m1.mPrintf(fs);
+    shared_ptr<void> rslt = make_shared<tuple<double, KMatrix>>(d, m1); // shared_ptr version of (void*)
+    return rslt;
+  };
+
+
+  shared_ptr<void> r1 = fn(5, 3); // DO NOT try "void* r = fn(5,3).get()" - it will segv
+  printf("Reference count: %li \n", r1.use_count());
+
+  auto r53 = *((tuple<double, KMatrix>*) r1.get());
+  // we get() the bare pointer, a void*,
+  // cast it to tuple<...>*,
+  // then dereference that pointer.
+  cout << endl << "As retrieved:" << endl;
+  get<1>(r53).mPrintf(fs);
+
+  return;
+}
+}
+// end of namespace MDemo
 // -------------------------------------------------
 
 
@@ -274,20 +238,20 @@ int main(int ac, char **av) {
   bool miP = false;
   bool cpP = true;
   bool helpP = true;
-  bool fitP = false;
-  bool csvP = false;
+  bool csvSMP = false;
   string inputXML = "";
-  string inputCSV = "";
+  string inputCSVSMP = "";
+  string inputCSVPMat = "";
 
   auto showHelp = []() {
     printf("\n");
     printf("Usage: specify one or more of these options\n");
     printf("--help            print this message\n");
-    printf("--csv  <file>     demo minicsv library on SMP data file \n");
+    printf("--csvSMP  <file>  demo minicsv library on SMP data file \n");
     printf("--pce             simple PCE\n");
     printf("--mi              markov incentives PCE\n");
     printf("--emod  (si|cp)   simple enumerated model, starting at self-interested or central position \n");
-    printf("--fit             fit weights");
+    printf("--fit             fit weights \n");
     printf("--spvsr           demonstrated shared_ptr<void> return\n");
     printf("--sql             demo SQLite \n");
     printf("--tx2  <file>     demo TinyXML2 library \n"); // e.g. dummyData_3Dim.xml
@@ -305,16 +269,13 @@ int main(int ac, char **av) {
         i++;
         seed = std::stoull(av[i]);
       }
-      else if (strcmp(av[i], "--csv") == 0) {
-        csvP = true;
+      else if (strcmp(av[i], "--csvSMP") == 0) {
+        csvSMP = true;
         i++;
-        inputCSV = av[i];
+        inputCSVSMP = av[i];
       }
       else if (strcmp(av[i], "--pce") == 0) {
         pceP = true;
-      }
-      else if (strcmp(av[i], "--fit") == 0) {
-        fitP = true;
       }
       else if (strcmp(av[i], "--spvsr") == 0) {
         spvsrP = true;
@@ -330,6 +291,7 @@ int main(int ac, char **av) {
       else if (strcmp(av[i], "--emod") == 0) {
         emodP = true;
         i++;
+        assert(i < ac);
         cpP = (strcmp(av[i], "cp") == 0);
       }
       else if (strcmp(av[i], "--sql") == 0) {
@@ -344,6 +306,9 @@ int main(int ac, char **av) {
         printf("Unrecognized argument %s\n", av[i]);
       }
     }
+  }
+  else {
+    run = false;
   }
 
   if (!run) {
@@ -368,12 +333,11 @@ int main(int ac, char **av) {
     cout << "-----------------------------------" << endl;
     MDemo::demoSpVSR(seed, rng);
   }
-  if (csvP) {
+  if (csvSMP) {
     cout << "-----------------------------------" << endl;
-    MDemo::demoMiniCSV(inputCSV);
-    cout << endl;
-    MDemo::pccCSV("file"); // file name is ignored
+    MDemo::demoMiniCSV(inputCSVSMP);
   }
+
   if (miP) {
     unsigned int vNum = rng->uniform() % 3;
     auto vpm = VPModel::Linear;
@@ -402,15 +366,10 @@ int main(int ac, char **av) {
     cout << endl << flush;
   }
 
+
   if (emodP) {
     cout << "-----------------------------------" << endl;
     MDemo::demoEMod(seed);
-    eModKEM::demoEKem(seed, cpP);
-  }
-
-  if (fitP) {
-    cout << "-----------------------------------" << endl;
-    eModKEM::demoWFit(seed);
   }
 
   if (sqlP) {

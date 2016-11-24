@@ -41,16 +41,16 @@ using KBase::VotingRule;
 
 
 namespace MDemo {
-  // -------------------------------------------------
-  // The zero-actor just shows what virtual functions need to be instantiated.
-  ZActor::ZActor(string n, string d) : Actor(n, d) {}
-  ZActor::~ZActor() {}
-  double ZActor::vote(unsigned int, unsigned int, const State*) const { return 0; }
-  double ZActor::vote(const Position * ap1, const Position * ap2) const { return 0; }
-  double ZActor::posUtil(const Position * ap1) const { return 0; }
-  // -------------------------------------------------
+// -------------------------------------------------
+// The zero-actor just shows what virtual functions need to be instantiated.
+ZActor::ZActor(string n, string d) : Actor(n, d) {}
+ZActor::~ZActor() {}
+double ZActor::vote(unsigned int, unsigned int, const State*) const { return 0; }
+double ZActor::vote(const Position * ap1, const Position * ap2) const { return 0; }
+double ZActor::posUtil(const Position * ap1) const { return 0; }
+// -------------------------------------------------
 
- 
+
 
 } // namespace
 

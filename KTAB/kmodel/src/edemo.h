@@ -40,29 +40,29 @@
 #include "sqlitedemo.h"
 
 namespace MDemo {
-  using std::string;
-  using std::vector;
-  using KBase::KMatrix;
-  using KBase::PRNG;
-  using KBase::Actor;
-  using KBase::Position;
-  using KBase::State;
-  using KBase::Model;
-  using KBase::EModel;
-  using KBase::VBool;
+using std::string;
+using std::vector;
+using KBase::KMatrix;
+using KBase::PRNG;
+using KBase::Actor;
+using KBase::Position;
+using KBase::State;
+using KBase::Model;
+using KBase::EModel;
+using KBase::VBool;
 
-  // --------------------------------------------
-  void demoEMod(uint64_t s);
-  // --------------------------------------------
+// --------------------------------------------
+void demoEMod(uint64_t s);
+// --------------------------------------------
 
-  struct TwoDPoint {
-  public:
-    TwoDPoint( );
-    TwoDPoint(unsigned int a, unsigned int b);
-    virtual ~TwoDPoint();
-    unsigned int x = 0;
-    unsigned int y = 0;
-  };
+struct TwoDPoint {
+public:
+  TwoDPoint( );
+  TwoDPoint(unsigned int a, unsigned int b);
+  virtual ~TwoDPoint();
+  unsigned int x = 0;
+  unsigned int y = 0;
+};
 
 };
 // -------------------------------------------------

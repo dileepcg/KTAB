@@ -29,24 +29,24 @@
 #include <tuple>
 
 namespace RfrmPri {
-  // namespace to hold everything related to the
-  // "priority of reforms" CDMP. Note that KBase has no access.
-  
-  using namespace std;
-  
-  using KBase::KMatrix;
-  using KBase::PRNG;
-  using KBase::MtchPstn;
+// namespace to hold everything related to the
+// "priority of reforms" CDMP. Note that KBase has no access.
 
-  // -------------------------------------------------
-  // function declarations
+using namespace std;
 
-  void printPerm(const VUI& n);
-  vector<VUI> scanPositions(const RPModel * rpm);
+using KBase::KMatrix;
+using KBase::PRNG;
+using KBase::MtchPstn;
+
+// -------------------------------------------------
+// function declarations
+
+void printPerm(const VUI& n);
+vector<VUI> scanPositions(const RPModel * rpm);
 
 
-  // -------------------------------------------------
-  // class declarations
+// -------------------------------------------------
+// class declarations
 
 } // end of namespace
 

@@ -1,10 +1,6 @@
 # ===========================================
 # Copyright KAPSARC. Open Source MIT License 
 # ===========================================
-# Even though ComSel does not use csv-parser, smplib does.
-# So csv-parser cannot be removed from this until
-# after it is removed from smplib.
-# ===========================================
 
 project(comsel)
 
@@ -38,6 +34,13 @@ if (ENABLE_EFENCE)
     message(FATAL_ERROR "Could not find Electric Fence memory debugger")
   endif (NOT EFENCE_FOUND)
 endif (ENABLE_EFENCE)
+
+# -------------------------------------------------
+ 
+find_package(TinyXML2)
+if (NOT TINYXML2_FOUND)
+  message(FATAL_ERROR "Could not find TinyXML2")
+endif (NOT TINYXML2_FOUND) 
 
 # --------------------------------------------------------
 find_package(Sqlite)
@@ -74,25 +77,6 @@ set (FLUID_DIR
   fluid)
 
 # --------------------------------------------------------
-
-set (CSVPARSER_PATHS
-    ${PROJECT_SOURCE_DIR}/../../csv-parser/
-    )
-
-
-find_path(CSVP_DIR csv_parser.hpp 
-  PATHS ${CSVPARSER_PATHS}
-  )
-
-if(CSVP_DIR)
-  message(STATUS "Found csv-parser headers: ${CSVP_DIR}")
-endif(CSVP_DIR)
-
-if(NOT CSVP_DIR)
-  message(FATAL "Could not fid csv-parser headers")
-endif(NOT CSVP_DIR)
-
-# -------------------------------------------------
 
 if (ENABLE_EFENCE)
   find_package(efence)
@@ -142,8 +126,8 @@ include_directories (
   ${PROJECT_SOURCE_DIR}/src/
   ${FLUID_DIR}
   ${FLTK_INCLUDE_DIR}
-  ${CSVP_DIR}
   ${SQLITE_INCLUDE_DIR}
+  ${TINYXML2_INCLUDE_DIR}
   )
 
 
@@ -180,7 +164,6 @@ set (CSG_LIBS
 
 add_executable (csg 
   ${CSG_SRCS}
-  ${CSVP_DIR}/csv_parser.cpp
 )
 target_link_libraries(csg
   comsel
@@ -190,6 +173,7 @@ target_link_libraries(csg
   ${KUTILS_LIBRARIES}
   ${SQLITE_LIBRARIES}
   ${EFENCE_LIBRARIES}
+  ${TINYXML2_LIBRARIES}
   )
   
 # suppress the console window under Windows
@@ -216,9 +200,8 @@ message (STATUS "FLTK_INCLUDE_DIR: " ${FLTK_INCLUDE_DIR})
 # -------------------------------------------------
 # As of early 2014, C++11 is still not the default
 # for g++, so I have to provide it here.
-# Also on Unix, the C++14 thread library relies on pthreads
 if (UNIX OR MINGW)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++14 ")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++11 ")
   if (ENABLE_EFFCPP)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++ ")
   endif (ENABLE_EFFCPP)

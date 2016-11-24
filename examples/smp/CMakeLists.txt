@@ -24,8 +24,8 @@ set(CMAKE_BUILD_TYPE Debug)
 set(LIBRARY_OUTPUT_PATH      ${PROJECT_SOURCE_DIR}/)
 set(EXECUTABLE_OUTPUT_PATH   ${PROJECT_SOURCE_DIR}/)
 
-set (ENABLE_FLTK_GUI false CACHE  BOOL "Build app with FLTK GUI")
-set (ENABLE_QT_GUI false CACHE  BOOL "Build app with QT GUI")
+set (ENABLE_FLTK_GUI true CACHE  BOOL "Build app with FLTK GUI")
+set (ENABLE_QT_GUI true CACHE  BOOL "Build app with QT GUI")
 set (ENABLE_COPY_QT_LIBS false CACHE  BOOL "Copy Qt LIBS after build")
 
 if (UNIX)
@@ -42,7 +42,14 @@ if (ENABLE_EFENCE)
   endif (NOT EFENCE_FOUND)
 endif (ENABLE_EFENCE)
 
-# --------------------------------------------------------
+# -------------------------------------------------
+ 
+find_package(TinyXML2)
+if (NOT TINYXML2_FOUND)
+  message(FATAL_ERROR "Could not find TinyXML2")
+endif (NOT TINYXML2_FOUND) 
+
+# -------------------------------------------------
 find_package(Sqlite)
 if (NOT SQLITE_FOUND)
   message(FATAL_ERROR "Could not find SQLite")
@@ -123,25 +130,6 @@ if(NOT MINICSV_DIR)
   message(FATAL "Could not find minicsv headers")
 endif(NOT MINICSV_DIR)
 
-# -------------------------------------------------
-
-set (CSVPARSER_PATHS
-  ${PROJECT_SOURCE_DIR}/../../csv-parser/
-  )
-
-find_path(CSVP_DIR csv_parser.hpp 
-  PATHS ${CSVPARSER_PATHS}
-  )
-
-if(CSVP_DIR)
-  message(STATUS "Found csv-parser headers: ${CSVP_DIR}")
-endif(CSVP_DIR)
-
-if(NOT CSVP_DIR)
-  message(FATAL "Could not find csv-parser headers")
-endif(NOT CSVP_DIR)
-
-
 # -------------------------------------------------    
 
 include_directories (
@@ -153,8 +141,8 @@ include_directories (
   ${FLUID_DIR}
   ${FLTK_INCLUDE_DIR}
   ${MINICSV_DIR}
-  ${CSVP_DIR}
   ${SQLITE_INCLUDE_DIR}
+  ${TINYXML2_INCLUDE_DIR}
   )
 
 # note that we do not put the csv_parser into smp lib.
@@ -227,6 +215,7 @@ if (ENABLE_FLTK_GUI)
     ${SMPG_LIBS}
     ${SQLITE_LIBRARIES}
     ${EFENCE_LIBRARIES}
+    ${TINYXML2_LIBRARIES}
     )
 
   # suppress the console window under Windows
@@ -242,7 +231,6 @@ endif (ENABLE_FLTK_GUI)
 
 add_executable (smpc
   src/demosmp.cpp
-  ${CSVP_DIR}/csv_parser.cpp
   )
 
 target_link_libraries (smpc
@@ -251,11 +239,8 @@ target_link_libraries (smpc
   ${KUTILS_LIBRARY}
   ${SQLITE_LIBRARIES}
   ${EFENCE_LIBRARIES}
+  ${TINYXML2_LIBRARIES}
   )
-
-# -------------------------------------------------
-
-
 #--------------------------------------------------
 #smpq qt based application
 
@@ -280,12 +265,24 @@ if(ENABLE_QT_GUI)
 
   add_library (QtProjectLib STATIC ${QtProjectLib_src} ${QtProjectLib_hdr_moc} ${QtProjectLib_ui_uic})
 
-  target_link_libraries (QtProjectLib Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Sql Qt5::PrintSupport)
+  target_link_libraries (QtProjectLib 
+    Qt5::Core 
+    Qt5::Gui 
+    Qt5::Widgets 
+    Qt5::Sql 
+    Qt5::PrintSupport)
 
   # WIN32 to suppress the console window under Windows
-  add_executable(smpq WIN32 ${QtProjectBin_src} ${CSVP_DIR}/csv_parser.cpp  ${QtProjectLib_qrc_rcc})
+  add_executable(smpq WIN32 ${QtProjectBin_src} ${QtProjectLib_qrc_rcc})
 
-  target_link_libraries (smpq QtProjectLib smp ${KMODEL_LIBRARY} ${KUTILS_LIBRARY} ${SQLITE_LIBRARIES} ${EFENCE_LIBRARIES})
+  target_link_libraries (smpq 
+    QtProjectLib 
+    smp 
+    ${KMODEL_LIBRARY} 
+    ${KUTILS_LIBRARY} 
+    ${SQLITE_LIBRARIES} 
+    ${EFENCE_LIBRARIES}
+    ${TINYXML2_LIBRARIES})
 
   if(ENABLE_COPY_QT_LIBS AND WIN32)
     find_package(qtdlls)
@@ -299,7 +296,6 @@ endif (ENABLE_QT_GUI)
 message (STATUS "Using PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
 message (STATUS "KUTILS_INCLUDE_DIR: " ${KUTILS_INCLUDE_DIR})
 message (STATUS "KMODEL_INCLUDE_DIR: " ${KMODEL_INCLUDE_DIR})
-message (STATUS "CSVP_DIR: " ${CSVP_DIR})
 message (STATUS "MINICSV_DIR: " ${MINICSV_DIR})
 message (STATUS "QCUSTOMPLOT_DIR: " ${QCUSTOMPLOT_DIR})
 
@@ -313,9 +309,8 @@ endif (ENABLE_FLTK_GUI)
 # -------------------------------------------------
 # As of early 2014, C++11 is still not the default
 # for g++, so I have to provide it here.
-# Also on Unix, the C++14 thread library relies on pthreads
 if (UNIX OR MINGW)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++14 ")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++11 ")
   if (ENABLE_EFFCPP)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++ ")
   endif (ENABLE_EFFCPP)

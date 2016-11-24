@@ -8,7 +8,7 @@
 # after you have set it up.
 #------------------------------------------
 
-DIRS="minwater  reformpri  agenda  smp  comsel"
+DIRS=" minwater  agenda  reformpri  smp  comsel  pmatrix"
 
 for d in $DIRS
 do

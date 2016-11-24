@@ -36,135 +36,135 @@ using KBase::PRNG;
 
 namespace AgendaControl {
 
-  void setupScenario0(unsigned int &numActor, unsigned int &numItems,
-    KMatrix &vals, KMatrix &caps, PRNG* rng) {
+void setupScenario0(unsigned int &numActor, unsigned int &numItems,
+                    KMatrix &vals, KMatrix &caps, PRNG* rng) {
 
-    numActor = 15;
-    if (0 == numItems) {
-      numItems = 7;
-    }
-    vals = KMatrix::uniform(rng, numActor, numItems, 0.01, 0.99);
-    caps = KMatrix::uniform(rng, numActor, 1, 10.0, 99.99);
-    return;
+  numActor = 15;
+  if (0 == numItems) {
+    numItems = 7;
   }
+  vals = KMatrix::uniform(rng, numActor, numItems, 0.01, 0.99);
+  caps = KMatrix::uniform(rng, numActor, 1, 10.0, 99.99);
+  return;
+}
 
 
 
-  void setupScenario1(unsigned int &numActor, unsigned int &numItems,
-    KMatrix &vals, KMatrix &caps) {
+void setupScenario1(unsigned int &numActor, unsigned int &numItems,
+                    KMatrix &vals, KMatrix &caps) {
 
-    numActor = 22;
-    numItems = 5;
+  numActor = 22;
+  numItems = 5;
 
-    KMatrix plpM = KMatrix::arrayInit(plpA, numActor, numItems);
-    KMatrix plwM = KMatrix::arrayInit(plwA, numActor, 1);
+  KMatrix plpM = KMatrix::arrayInit(plpA, numActor, numItems);
+  KMatrix plwM = KMatrix::arrayInit(plwA, numActor, 1);
 
-    vals = KMatrix(numActor, numItems);
-    for (unsigned int i = 0; i < numActor; i++) {
-      double rowMax = 0.0;
-      double rowMin = 10.0;
-      for (unsigned int j = 0; j < numItems; j++) {
-        double vij = plpM(i, j);
-        if (vij > rowMax) {
-          rowMax = vij;
-        }
-        if (vij < rowMin) {
-          rowMin = vij;
-        }
+  vals = KMatrix(numActor, numItems);
+  for (unsigned int i = 0; i < numActor; i++) {
+    double rowMax = 0.0;
+    double rowMin = 10.0;
+    for (unsigned int j = 0; j < numItems; j++) {
+      double vij = plpM(i, j);
+      if (vij > rowMax) {
+        rowMax = vij;
       }
-      for (unsigned int j = 0; j < numItems; j++) {
-        double vij = plpM(i, j);
-        vals(i, j) = (vij - rowMin) / (rowMax - rowMin);
+      if (vij < rowMin) {
+        rowMin = vij;
       }
     }
-    caps = plwM;
-    return;
+    for (unsigned int j = 0; j < numItems; j++) {
+      double vij = plpM(i, j);
+      vals(i, j) = (vij - rowMin) / (rowMax - rowMin);
+    }
   }
+  caps = plwM;
+  return;
+}
 
-  void bestAgendaChair(vector<Agenda*> ars, const KMatrix& vals, const KMatrix& caps) {
-    unsigned int bestK = 0;
-    double bestV = -1.0;
-    const double sigDiff = 1E-5; // utility is on [0,1] scale, differences less than this are insignificant
-    unsigned int numAgenda = ars.size();
-    for (unsigned int ai = 0; ai < numAgenda; ai++) {
-      auto ar = ars[ai];
-      ars.push_back(ar);
-      double v0 = ar->eval(vals, 0); //
-      assert(0.0 <= v0);
-      assert(v0 <= 1.0);
+void bestAgendaChair(vector<Agenda*> ars, const KMatrix& vals, const KMatrix& caps) {
+  unsigned int bestK = 0;
+  double bestV = -1.0;
+  const double sigDiff = 1E-5; // utility is on [0,1] scale, differences less than this are insignificant
+  unsigned int numAgenda = ars.size();
+  for (unsigned int ai = 0; ai < numAgenda; ai++) {
+    auto ar = ars[ai];
+    ars.push_back(ar);
+    double v0 = ar->eval(vals, 0); //
+    assert(0.0 <= v0);
+    assert(v0 <= 1.0);
 
-      if (bestV + sigDiff < v0) {
-        bestV = v0;
-        bestK = ai;
-      }
-      //  printf("%4u ", ai); cout << *ar << "  "; printf("%.4f \n", v0);
+    if (bestV + sigDiff < v0) {
+      bestV = v0;
+      bestK = ai;
     }
-    printf("Best option for agenda-setting actor 0 is %u with value %.4f  is  ", bestK, bestV);
-    cout << *(ars[bestK]) << endl << flush;
-    //ars[bestK]->showProbs(1.0);
-    return;
+    //  printf("%4u ", ai); cout << *ar << "  "; printf("%.4f \n", v0);
   }
+  printf("Best option for agenda-setting actor 0 is %u with value %.4f  is  ", bestK, bestV);
+  cout << *(ars[bestK]) << endl << flush;
+  //ars[bestK]->showProbs(1.0);
+  return;
+}
 
-  void demoCounting(unsigned int numI, unsigned int maxU, unsigned int maxS, unsigned int maxB) {
-    cout << endl << flush;
-    unsigned int n = 5;
-    unsigned int m = 2;
-    auto cat = AgendaControl::chooseSet(n, m);
+void demoCounting(unsigned int numI, unsigned int maxU, unsigned int maxS, unsigned int maxB) {
+  cout << endl << flush;
+  unsigned int n = 5;
+  unsigned int m = 2;
+  auto cat = AgendaControl::chooseSet(n, m);
 
-    printf("Found |chooseSet(%u, %u)| = %llu \n", n, m, cat.size());
-    for (auto lst : cat) {
-      for (auto i : lst) {
-        printf("%i ", i);
-      }
-      cout << endl << flush;
-    }
-    assert(cat.size() == AgendaControl::numSets(n, m));
-    cout << endl;
-
-    VUI testI = {};
-    for (unsigned int i = 0; i < numI; i++) {
-      testI.push_back(10 * (1 + i));
-    }
-
-
-    for (unsigned int i = 1; i <= numI + 2; i++) {
-      auto n = AgendaControl::numAgenda(i);
-      printf(" %2i -> %llu \n", i, n);
-    }
-    cout << endl << flush;
-
-    printf("Using %i items: ", numI);
-    for (unsigned int i : testI) {
+  printf("Found |chooseSet(%u, %u)| = %llu \n", n, m, cat.size());
+  for (auto lst : cat) {
+    for (auto i : lst) {
       printf("%i ", i);
     }
     cout << endl << flush;
-
-    auto enumAg = [numI](Agenda::PartitionRule pr, std::string s) {
-      vector<Agenda*> testA = Agenda::enumerateAgendas(numI, pr);
-      printf("For %i items, found %i distinct %s agendas \n", numI, testA.size(), s.c_str());
-      for (auto a : testA) {
-        cout << *a << endl;
-      }
-      cout << endl << flush;
-      if (Agenda::PartitionRule::FreePR == pr) {
-        assert(testA.size() == AgendaControl::numAgenda(numI));
-      }
-      return;
-    };
-
-    if (numI <= maxU) {
-      enumAg(Agenda::PartitionRule::FreePR, "unconstrained");
-      enumAg(Agenda::PartitionRule::SeqPR, "sequential");
-    }
-    if (numI <= maxS) {
-      enumAg(Agenda::PartitionRule::ModBalancedPR, "semi-balanced");
-    }
-    if (numI <= maxB) {
-      enumAg(Agenda::PartitionRule::FullBalancedPR, "balanced");
-    }
-
-    return;
   }
+  assert(cat.size() == AgendaControl::numSets(n, m));
+  cout << endl;
+
+  VUI testI = {};
+  for (unsigned int i = 0; i < numI; i++) {
+    testI.push_back(10 * (1 + i));
+  }
+
+
+  for (unsigned int i = 1; i <= numI + 2; i++) {
+    auto n = AgendaControl::numAgenda(i);
+    printf(" %2i -> %llu \n", i, n);
+  }
+  cout << endl << flush;
+
+  printf("Using %i items: ", numI);
+  for (unsigned int i : testI) {
+    printf("%i ", i);
+  }
+  cout << endl << flush;
+
+  auto enumAg = [numI](Agenda::PartitionRule pr, std::string s) {
+    vector<Agenda*> testA = Agenda::enumerateAgendas(numI, pr);
+    printf("For %i items, found %i distinct %s agendas \n", numI, testA.size(), s.c_str());
+    for (auto a : testA) {
+      cout << *a << endl;
+    }
+    cout << endl << flush;
+    if (Agenda::PartitionRule::FreePR == pr) {
+      assert(testA.size() == AgendaControl::numAgenda(numI));
+    }
+    return;
+  };
+
+  if (numI <= maxU) {
+    enumAg(Agenda::PartitionRule::FreePR, "unconstrained");
+    enumAg(Agenda::PartitionRule::SeqPR, "sequential");
+  }
+  if (numI <= maxS) {
+    enumAg(Agenda::PartitionRule::ModBalancedPR, "semi-balanced");
+  }
+  if (numI <= maxB) {
+    enumAg(Agenda::PartitionRule::FullBalancedPR, "balanced");
+  }
+
+  return;
+}
 
 }; // end of namespace
 
@@ -267,7 +267,7 @@ int main(int ac, char **av) {
     cout << "Enumerating all agendas ("<<name<<") over " << numItems << " items ... ";
     auto ars = Agenda::enumerateAgendas(numItems, pr);
     printf("found %i agendas \n", ars.size());
-    AgendaControl::bestAgendaChair(ars, vals, caps); 
+    AgendaControl::bestAgendaChair(ars, vals, caps);
     for (auto ar : ars) {
       delete ar;
       ar = nullptr;

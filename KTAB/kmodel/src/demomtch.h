@@ -57,7 +57,7 @@ using KBase::State;
 using KBase::Model;
 using KBase::VotingRule;
 using KBase::ReportingLevel;
- using KBase::VUI;
+using KBase::VUI;
 
 using KBase::MtchPstn;
 using KBase::MtchGene;
@@ -79,37 +79,37 @@ bool stableMtchState(unsigned int iter, const State* s);
 // -------------------------------------------------
 class MtchActor : public Actor {
 public:
-    enum class PropModel {
-        ExpUtil, Probability, AgreeUtil
-    };
+  enum class PropModel {
+    ExpUtil, Probability, AgreeUtil
+  };
 
-    MtchActor(string n, string d);
-    ~MtchActor();
-    double vote(unsigned int est,unsigned int i, unsigned int j, const State* st) const;
-    virtual double vote(const Position * ap1, const Position * ap2) const;
-    double posUtil(const Position * ap1) const;
+  MtchActor(string n, string d);
+  ~MtchActor();
+  double vote(unsigned int est,unsigned int i, unsigned int j, const State* st) const;
+  virtual double vote(const Position * ap1, const Position * ap2) const;
+  double posUtil(const Position * ap1) const;
 
-    static MtchPstn* rPos(unsigned int numI, unsigned int numA, PRNG * rng);
-    static MtchActor* rAct(unsigned int numI, double minCap, double maxCap, PRNG* rng, unsigned int i);
+  static MtchPstn* rPos(unsigned int numI, unsigned int numA, PRNG * rng);
+  static MtchActor* rAct(unsigned int numI, double minCap, double maxCap, PRNG* rng, unsigned int i);
 
-    void randomize(PRNG* rng, double minCap, double maxCap, unsigned int id, unsigned int numI);
+  void randomize(PRNG* rng, double minCap, double maxCap, unsigned int id, unsigned int numI);
 
-    tuple<double, MtchPstn> maxProbEUPstn(PropModel pm, const MtchState * mst) const;
+  tuple<double, MtchPstn> maxProbEUPstn(PropModel pm, const MtchState * mst) const;
 
-    unsigned int idNum = 0;
+  unsigned int idNum = 0;
 
-    VotingRule vr =  VotingRule::Proportional;;
-    PropModel pMod = PropModel::ExpUtil;
+  VotingRule vr =  VotingRule::Proportional;;
+  PropModel pMod = PropModel::ExpUtil;
 
-    // scalar capacity, positive
-    double sCap = 0;
+  // scalar capacity, positive
+  double sCap = 0;
 
-    // Similar to the LeonActor, this is a listing of how
-    // much this actor values each item.
-    // The values are all non-negative and sum to 1:
-    // lowest utility, 0, to get nothing, and
-    // highest utility, 1, to get everything.
-    vector<double> vals = {};
+  // Similar to the LeonActor, this is a listing of how
+  // much this actor values each item.
+  // The values are all non-negative and sum to 1:
+  // lowest utility, 0, to get nothing, and
+  // highest utility, 1, to get everything.
+  vector<double> vals = {};
 
 protected:
 
@@ -119,29 +119,29 @@ private:
 
 class MtchState : public State {
 public:
-    explicit MtchState(Model* mod);
-    ~MtchState();
+  explicit MtchState(Model* mod);
+  ~MtchState();
 
-    KMatrix actrCaps() const;
-
-
-    // use the parameters of your state to compute the relative probability of each actor's position.
-    // persp = -1 means use everyone's separate perspectives (i.e. get actual probabilities, not one actor's beliefs)
-    tuple <KMatrix, VUI>  pDist(int persp) const;
+  KMatrix actrCaps() const;
 
 
-    MtchState * stepSUSN();
+  // use the parameters of your state to compute the relative probability of each actor's position.
+  // persp = -1 means use everyone's separate perspectives (i.e. get actual probabilities, not one actor's beliefs)
+  tuple <KMatrix, VUI>  pDist(int persp) const;
 
-    MtchState * stepBCN();
+
+  MtchState * stepSUSN();
+
+  MtchState * stepBCN();
 
 protected:
-    MtchState * doSUSN(ReportingLevel rl) const;
-    MtchState * doBCN(ReportingLevel rl) const;
+  MtchState * doSUSN(ReportingLevel rl) const;
+  MtchState * doBCN(ReportingLevel rl) const;
 
-    bool equivNdx(unsigned int i, unsigned int j) const;
-    // bool stableMtchState(unsigned int iter, const State* s);
-    
-    void setAllAUtil(ReportingLevel rl);
+  bool equivNdx(unsigned int i, unsigned int j) const;
+  // bool stableMtchState(unsigned int iter, const State* s);
+
+  void setAllAUtil(ReportingLevel rl);
 
 private:
 
@@ -150,14 +150,14 @@ private:
 
 class MtchModel : public Model {
 public:
-    // JAH 20160711 added rng seed JAH 20160730 JAH added sql flags
-    explicit MtchModel(string d="", uint64_t s=KBase::dSeed, vector<bool> f={});
-    virtual ~MtchModel();
+  // JAH 20160711 added rng seed JAH 20160730 JAH added sql flags
+  explicit MtchModel(string d="", uint64_t s=KBase::dSeed, vector<bool> f={});
+  virtual ~MtchModel();
 
-    static MtchModel* randomMS(unsigned int numA, unsigned int numI, VotingRule vr, MtchActor::PropModel pMod, uint64_t seed);
+  static MtchModel* randomMS(unsigned int numA, unsigned int numI, VotingRule vr, MtchActor::PropModel pMod, uint64_t seed);
 
-    unsigned int numItm = 0;
-    unsigned int numCat = 0;  // happens to equal numAct, in this demo
+  unsigned int numItm = 0;
+  unsigned int numCat = 0;  // happens to equal numAct, in this demo
 
 protected:
 

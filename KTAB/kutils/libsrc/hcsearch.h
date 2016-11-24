@@ -49,37 +49,39 @@ using std::flush;
 using std::tuple;
 
 using KBase::ReportingLevel;
+// ----------------------------------------------
 
-// Setup and manage maximization of scalar function of a column-vector
+// Setup and manage maximization of scalar function of a column-vector.
+// Subclassing from GHCSearch would have been nice.
 class  VHCSearch {
 public:
-    VHCSearch();
-    virtual ~VHCSearch();
-    tuple<double, KMatrix, unsigned int, unsigned int>
+  explicit VHCSearch();
+  virtual ~VHCSearch();
+  tuple<double, KMatrix, unsigned int, unsigned int>
 
-    // maximize scalar function of a column-vector
-    run(KMatrix p0,
-        unsigned int iMax, unsigned int sMax, double sTol,
-        double s0, double shrink, double grow, double minStep,
-        ReportingLevel rl
-       );
+  // maximize scalar function of a column-vector
+  run(KMatrix p0,
+      unsigned int iMax, unsigned int sMax, double sTol,
+      double s0, double shrink, double grow, double minStep,
+      ReportingLevel rl
+      );
 
-    static vector<KMatrix> vn1(const KMatrix & m0, double s);
-    static vector<KMatrix> vn2(const KMatrix & m0, double s);
+  static vector<KMatrix> vn1(const KMatrix & m0, double s);
+  static vector<KMatrix> vn2(const KMatrix & m0, double s);
 
-    function <double(const KMatrix &)> eval = nullptr; // maximize this function
-    function < vector<KMatrix>(const KMatrix &, double)> nghbrs = nullptr;
-    function <void (const KMatrix &)> report = nullptr;
+  function <double(const KMatrix &)> eval = nullptr; // maximize this function
+  function < vector<KMatrix>(const KMatrix &, double)> nghbrs = nullptr;
+  function <void(const KMatrix &)> report = nullptr;
 
 protected:
-    
-    // Note that these variables to control the search are
-    // unique to this object, so it should be OK to run
-    // several VHCSearch objects concurrently.
-    std::mutex vhcEvalMtx; 
-    double vhcBestVal;
-    KMatrix vhcBestPoint;
-    
+
+  // Note that these variables to control the search are
+  // unique to this object, so it should be OK to run
+  // several VHCSearch objects concurrently.
+  std::mutex vhcEvalMtx;
+  double vhcBestVal = 0.0;
+  KMatrix vhcBestPoint = KMatrix();
+
 private:
 };
 
@@ -88,86 +90,112 @@ private:
 template <class HCP>
 class GHCSearch {
 public:
-    GHCSearch();
-    virtual ~GHCSearch();
+  explicit GHCSearch();
+  virtual ~GHCSearch();
 
-    tuple<double, HCP, unsigned int, unsigned int>
+  // maximize scalar function of arbitrary class
+  tuple<double, HCP, unsigned int, unsigned int>
+  run(HCP p0, ReportingLevel srl, unsigned int iMax, unsigned int sMax, double sTol);
 
-    // maximize scalar function of arbitrary class
-    run(HCP p0, ReportingLevel srl, unsigned int iMax, unsigned int sMax, double sTol);
+  function <double(const HCP)> eval = nullptr;
+  function <vector<HCP>(const HCP)> nghbrs = nullptr;
+  function <void(const HCP)> show = nullptr;
 
-    function <double(const HCP)> eval = nullptr;
-    function <vector<HCP>(const HCP)> nghbrs = nullptr;
-    function <void(const HCP)> show = nullptr;
+protected:
+
+private:
 };
 
 template<class HCP>
 GHCSearch<HCP>::GHCSearch() {
-    eval = nullptr;
-    nghbrs = nullptr;
-    show = nullptr;
+  eval = nullptr;
+  nghbrs = nullptr;
+  show = nullptr;
 }
 
 template<class HCP>
 GHCSearch<HCP>::~GHCSearch() {
-    eval = nullptr;
-    nghbrs = nullptr;
-    show = nullptr;
+  eval = nullptr;
+  nghbrs = nullptr;
+  show = nullptr;
 }
 
 template<class HCP>
 tuple<double, HCP, unsigned int, unsigned int>
 GHCSearch<HCP>::run(HCP p0, ReportingLevel srl,
                     unsigned int iMax, unsigned int sMax, double sTol) {
-    assert(eval != nullptr);
-    assert(nghbrs != nullptr);
-    unsigned int iter = 0;
-    unsigned int sIter = 0;
-    double v0 = eval(p0);
 
-    while ((iter < iMax) && (sIter < sMax)) {
-        double dv = 0;
-        double vBest = v0;
-        HCP pBest = p0;
 
-        for (HCP pTmp : nghbrs(p0)) {
-            double vTmp = eval(pTmp);
-            if (vTmp > vBest) {
-                vBest = vTmp;
-                pBest = pTmp;
-            }
-        }
+  // Note that these variables to control the search are
+  // unique to this object, so it should be OK to run
+  // several GHCSearch objects concurrently.
+  std::mutex ghcEvalMtx;
 
-        if (vBest > v0 + sTol) {
-            sIter = 0;
-            dv = vBest - v0;
-            v0 = vBest;
-            p0 = pBest;
-        }
-        else {
-            sIter++;
-        }
-        iter++;
+  assert(eval != nullptr);
+  assert(nghbrs != nullptr);
+  unsigned int iter = 0;
+  unsigned int sIter = 0;
+  double v0 = eval(p0);
 
-        if (ReportingLevel::Low < srl) {
-            printf("%u/%u iterations    %u/%u stable \n", iter, iMax, sIter, sMax);
-            printf("newBest value: %+.4f up %+.4f \n", vBest, dv);
-            printf("newBest point: ");
-            show(p0);
-            cout << endl << endl;
-        }
-    }
-    if (ReportingLevel::Silent < srl) {
-        printf("GHCSearch::run ended with %u/%u iterations    %u/%u stable \n", iter,
-               iMax, sIter, sMax);
-        printf("newBest value: %+.4f\n", v0);
-        printf("newBest point: ");
-        show(p0);
-        cout << endl << endl;
+
+  // TODO: change this to use groupThreads
+  // Currently, it is actually single-threaded (with a mutex).
+
+  while ((iter < iMax) && (sIter < sMax)) {
+    double dv = 0;
+    double vBest = v0;
+    HCP pBest = p0;
+
+    for (HCP pTmp : nghbrs(p0)) {
+
+      // Notice that 'eval' is not in the critical section, so we could
+      // have arbitrarily many 'eval' operations running concurrently,
+      // interleaved arbitrarily with test&reset in the critical section.
+      // So we may eval(p1), eval(p2), test(val2), eval(p3), test(val3), test(val1)
+      // and it will still correctly get the best of three values, and
+      // the matching point.
+      double vTmp = eval(pTmp);
+      ghcEvalMtx.lock();
+      if (vTmp > vBest) {
+        vBest = vTmp;
+        pBest = pTmp;
+      }
+      ghcEvalMtx.unlock();
     }
 
-    auto rslt = tuple<double, HCP, unsigned int, unsigned int>(v0, p0, iter, sIter);
-    return rslt;
+    // lock is necessary if multi-threaded, harmless if single-threaded
+    ghcEvalMtx.lock();
+    if (vBest > v0 + sTol) {
+      sIter = 0;
+      dv = vBest - v0;
+      v0 = vBest;
+      p0 = pBest;
+    }
+    else {
+      sIter++;
+    }
+    ghcEvalMtx.unlock();
+    iter++;
+
+    if (ReportingLevel::Low < srl) {
+      printf("%u/%u iterations    %u/%u stable \n", iter, iMax, sIter, sMax);
+      printf("newBest value: %+.4f up %+.4f \n", vBest, dv);
+      printf("newBest point: ");
+      show(p0);
+      cout << endl << endl;
+    }
+  }
+  if (ReportingLevel::Silent < srl) {
+    printf("GHCSearch::run ended with %u/%u iterations    %u/%u stable \n", iter,
+           iMax, sIter, sMax);
+    printf("newBest value: %+.4f\n", v0);
+    printf("newBest point: ");
+    show(p0);
+    cout << endl << endl;
+  }
+
+  auto rslt = tuple<double, HCP, unsigned int, unsigned int>(v0, p0, iter, sIter);
+  return rslt;
 }
 
 // ----------------------------------------------

@@ -38,16 +38,16 @@
 #include "kmodel.h"
 
 namespace MDemo {
-  using std::string;
-  using KBase::KMatrix;
-  using KBase::Actor;
-  using KBase::Position;
-  using KBase::State;
-  using KBase::Model;
+using std::string;
+using KBase::KMatrix;
+using KBase::Actor;
+using KBase::Position;
+using KBase::State;
+using KBase::Model;
 
-  class ZActor;
-  class SMPActor;
-  class LeonActor;
+class ZActor;
+class SMPActor;
+class LeonActor;
 
 
 };

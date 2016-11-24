@@ -7,5 +7,6 @@
         <file>images/exit.png</file>
         <file>images/save.png</file>
         <file>images/KTABIcon.jpg</file>
+        <file>images/hourglass.png</file>
     </qresource>
 </RCC>

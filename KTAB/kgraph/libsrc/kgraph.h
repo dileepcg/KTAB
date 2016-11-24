@@ -67,88 +67,88 @@ using std::vector;
 
 //---------------------------------------------
 namespace KGraph {
-  class Canvas;
-  class Picture;
+class Canvas;
+class Picture;
 
-  class CoordMap {
-  public:
-    CoordMap(int s1, double d1, int s2, double d2);
-    virtual ~CoordMap();
+class CoordMap {
+public:
+  CoordMap(int s1, double d1, int s2, double d2);
+  virtual ~CoordMap();
 
-    int d2s(double d);
-    double s2d(int s);
+  int d2s(double d);
+  double s2d(int s);
 
-  protected:
-    double as = 0;
-    double bs = 0;
-    double ad = 0;
-    double bd = 0;
+protected:
+  double as = 0;
+  double bs = 0;
+  double ad = 0;
+  double bd = 0;
 
-  private:
-    const bool testMap = true; // for a while
-    int cmRound(double x);
-  };
-
-
-  // part of the reason for separating Canvas and Picture is 
-  // to make editing easy.
-  // The concrete class derived from Canvas has to be named
-  // in FLTK's Fluid, but the editor provided is pretty basic.
-  // Having a separate Picture object moves the editting out
-  // of Fluid and into the editor/IDE of your choice.
-
-  class Canvas : public Fl_Box {
-    /// Abstract base class
-  public:
-    Canvas(int x, int y, int w, int h, const char * l = 0);
-    virtual ~Canvas();
-    void end();
-
-    void updateMaps();
-    void clearMaps();
-
-    virtual int handle(int ev);
-
-    // these just print information: override them.
-    virtual void onMove(int x, int y);
-    virtual void onDrag(int x, int y);
-    virtual void onPush(int x, int y, int b);
-    virtual void onRelease(int x, int y, int b);
-    virtual void onKeyDown(int x, int y, int k);
-
-    Picture* pict = nullptr;
-    CoordMap* xMap = nullptr;
-    CoordMap* yMap = nullptr;
-
-  protected:
-
-  private:
-  };
+private:
+  const bool testMap = true; // for a while
+  int cmRound(double x);
+};
 
 
-  class Picture  {
-  public:
-    Picture();
-    virtual ~Picture();
+// part of the reason for separating Canvas and Picture is
+// to make editing easy.
+// The concrete class derived from Canvas has to be named
+// in FLTK's Fluid, but the editor provided is pretty basic.
+// Having a separate Picture object moves the editting out
+// of Fluid and into the editor/IDE of your choice.
 
-    void add(Canvas * c); // just adds to list
-    void update() const; // just walks down the list
+class Canvas : public Fl_Box {
+  /// Abstract base class
+public:
+  Canvas(int x, int y, int w, int h, const char * l = 0);
+  virtual ~Canvas();
+  void end();
 
-    // you will need to customize these
-    virtual void connect(Canvas * c); //  initial configuration of the canvas
-    virtual void update(Canvas * c) const; //  set the state of the canvas to whatever is needed
+  void updateMaps();
+  void clearMaps();
 
-    double minX = 0;
-    double maxX = 1;
-    double minW = 1E-6; // deal with minX == maxX
-    double minY = 0;
-    double maxY = 1;
-    double minH = 1E-6; // deal with minY == mxaY
+  virtual int handle(int ev);
 
-  protected:
-    vector<Canvas*> canvases = {}; // all the views 
+  // these just print information: override them.
+  virtual void onMove(int x, int y);
+  virtual void onDrag(int x, int y);
+  virtual void onPush(int x, int y, int b);
+  virtual void onRelease(int x, int y, int b);
+  virtual void onKeyDown(int x, int y, int k);
 
-  };
+  Picture* pict = nullptr;
+  CoordMap* xMap = nullptr;
+  CoordMap* yMap = nullptr;
+
+protected:
+
+private:
+};
+
+
+class Picture  {
+public:
+  Picture();
+  virtual ~Picture();
+
+  void add(Canvas * c); // just adds to list
+  void update() const; // just walks down the list
+
+  // you will need to customize these
+  virtual void connect(Canvas * c); //  initial configuration of the canvas
+  virtual void update(Canvas * c) const; //  set the state of the canvas to whatever is needed
+
+  double minX = 0;
+  double maxX = 1;
+  double minW = 1E-6; // deal with minX == maxX
+  double minY = 0;
+  double maxY = 1;
+  double minH = 1E-6; // deal with minY == mxaY
+
+protected:
+  vector<Canvas*> canvases = {}; // all the views
+
+};
 
 }; // end of namespace
 

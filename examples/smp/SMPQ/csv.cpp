@@ -26,67 +26,67 @@
 
 CSV::CSV()
 {
-  model = new QStandardItemModel;
+    model = new QStandardItemModel;
 }
 void CSV::readCSVFile(QString path)
 {
-  QRegExp space("^\\s*$");
-  //getting the csv file path
-  QStringList scenarioName;
-  if(!path.isEmpty())
+    QRegExp space("^\\s*$");
+    //getting the csv file path
+    QStringList scenarioName;
+    if(!path.isEmpty())
     {
-      // model->clear();
+        // model->clear();
 
-      QFile file(path);
-      if (file.open(QIODevice::ReadOnly) && file.size() > 0)
+        QFile file(path);
+        if (file.open(QIODevice::ReadOnly) && file.size() > 0)
         {
-          int rowindex = 0;                     // file row counter
-          QTextStream in(&file);                 // read to text stream
+            int rowindex = 0;                     // file row counter
+            QTextStream in(&file);                 // read to text stream
 
-          while (!in.atEnd())
+            while (!in.atEnd())
             {
-              // read one line from textstream(separated by "\n")
-              QString fileLine = in.readLine();
+                // read one line from textstream(separated by "\n")
+                QString fileLine = in.readLine();
 
-              // parse the read line into separate pieces(tokens) with "," as the delimiter
-              QStringList lineToken = fileLine.split(",", QString::SkipEmptyParts);
-              QString lastField = lineToken.at(lineToken.length()-1);
-              if(lastField.contains(space))
-                lineToken.removeLast();
+                // parse the read line into separate pieces(tokens) with "," as the delimiter
+                QStringList lineToken = fileLine.split(",", QString::SkipEmptyParts);
+                QString lastField = lineToken.at(lineToken.length()-1);
+                if(lastField.contains(space))
+                    lineToken.removeLast();
 
 
-              if(rowindex >= 2 )
+                if(rowindex >= 2 )
                 {
-                  // load parsed data to model accordingly
-                  for (int j = 0; j < lineToken.size(); j++)
+                    // load parsed data to model accordingly
+                    for (int j = 0; j < lineToken.size(); j++)
                     {
-                      QString value = lineToken.at(j);
-                      QStandardItem *item = new QStandardItem(value.trimmed());
-                      model->setItem(rowindex-2, j, item);
+                        QString value = lineToken.at(j);
+                        QStandardItem *item = new QStandardItem(value.trimmed());
+                        model->setItem(rowindex-2, j, item);
                     }
                 }
-              else if(rowindex == 1)
+                else if(rowindex == 1)
                 {
-                  model->setHorizontalHeaderLabels(lineToken);
+                    model->setHorizontalHeaderLabels(lineToken);
                 }
-              else if(rowindex == 0)
+                else if(rowindex == 0)
                 {
-                  scenarioName.append(lineToken.at(0));
-                  scenarioName.append(lineToken.at(1));
-                  lineToken.clear();
+                    scenarioName.append(lineToken.at(0));
+                    scenarioName.append(lineToken.at(1));
+                    lineToken.clear();
                 }
-              rowindex++;
+                rowindex++;
             }
 
-          file.close();
+            file.close();
         }
-      else
+        else
         {
-          emit sendMessage("CSV","Empty File !");
-          return;
+            emit sendMessage("CSV","Empty File !");
+            return;
         }
     }
-  emit csvModel(model,scenarioName);
+    emit csvModel(model,scenarioName);
 }
 // --------------------------------------------
 // Copyright KAPSARC. Open source MIT License.

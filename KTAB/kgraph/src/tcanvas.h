@@ -40,24 +40,24 @@ using KGraph::Canvas;
 namespace Tetris {
 
 
-  class TCanvas : public Canvas {
-  public:
-    TCanvas(int x, int y, int w, int h, const char * l = 0);
-    virtual ~TCanvas();
-    
-    void onMove(int x, int y);
-    void onDrag(int x, int y);
-    void onPush(int x, int y, int b);
-    void onRelease(int x, int y, int b);
-    void onKeyDown(int x, int y, int k);
-     
-  protected:
-    virtual void draw();
-    // again, user should never call 'draw' directly.
-    // just mark damage and/or call 'redraw'
+class TCanvas : public Canvas {
+public:
+  TCanvas(int x, int y, int w, int h, const char * l = 0);
+  virtual ~TCanvas();
+
+  void onMove(int x, int y);
+  void onDrag(int x, int y);
+  void onPush(int x, int y, int b);
+  void onRelease(int x, int y, int b);
+  void onKeyDown(int x, int y, int k);
+
+protected:
+  virtual void draw();
+  // again, user should never call 'draw' directly.
+  // just mark damage and/or call 'redraw'
   
-  private:
-  };
+private:
+};
 
 }; // end of namespace
 

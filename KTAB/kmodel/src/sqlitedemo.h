@@ -31,35 +31,35 @@
 #include <sqlite3.h> 
 #include <tuple>
 #include <vector>
- 
+
 
 #include "kutils.h"
 #include "prng.h"
 #include "kmatrix.h"
 
 namespace MDemo {
-  using std::string;
-  using std::tuple;
-  using std::vector;
+using std::string;
+using std::tuple;
+using std::vector;
 
 
-  void demoDBObject();
+void demoDBObject();
 
-  class SQLDB {
-  public:
-    explicit SQLDB(char* filename);
-    virtual ~SQLDB();
-    bool open(char* filename);
+class SQLDB {
+public:
+  explicit SQLDB(char* filename);
+  virtual ~SQLDB();
+  bool open(char* filename);
 
-    // returns a vector of rows, where each row is a vector of (string) values
-    tuple<unsigned int, vector<vector<string>>> query(const char* query);
+  // returns a vector of rows, where each row is a vector of (string) values
+  tuple<unsigned int, vector<vector<string>>> query(const char* query);
 
-    void close();
+  void close();
 
-  private:
-    sqlite3 *database = nullptr;
-    bool dbOpen = false;
-  };
+private:
+  sqlite3 *database = nullptr;
+  bool dbOpen = false;
+};
 
 
 }; // end of namespace

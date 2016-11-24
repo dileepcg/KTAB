@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <vector>
 #include <iterator>
- 
+
 #include "kutils.h"
 #include "kmatrix.h"
 #include "prng.h" 
@@ -38,92 +38,92 @@
 
 // ------------------------------------------
 namespace AgendaControl {
-  using std::function;
-  using std::ostream;
-  using std::vector;
-  using std::tuple;
-  using KBase::KMatrix; 
-  using KBase::PRNG; 
-  using KBase::VUI; 
-  
-  using KBase::Position;
+using std::function;
+using std::ostream;
+using std::vector;
+using std::tuple;
+using KBase::KMatrix;
+using KBase::PRNG;
+using KBase::VUI;
 
-  class Agenda;
-  class Choice;
-  class Terminal;
-  
-  uint64_t fact(unsigned int n);
-  uint64_t numSets(unsigned int n, unsigned int m);
-  uint64_t numAgenda(unsigned int n);
-  
-  // returns the list of all lists that have m integers out of the first n integers,  {0, 1, 2, ... n-1}
-  vector< vector <unsigned int> > chooseSet(const unsigned int n, const unsigned int m);
-  
-  // pick out the indicated subset
-  tuple<VUI, VUI> indexedSet(const VUI xs, const VUI is);
+using KBase::Position;
 
+class Agenda;
+class Choice;
+class Terminal;
 
-  class Agenda : public Position {
-  public:
-    enum class PartitionRule { FullBalancedPR, ModBalancedPR, FreePR, SeqPR};
-    Agenda() {};
-    virtual  ~Agenda() {}; 
+uint64_t fact(unsigned int n);
+uint64_t numSets(unsigned int n, unsigned int m);
+uint64_t numAgenda(unsigned int n);
 
-    // estimate the value of this agenda to actor number i
-    virtual double eval(const KMatrix& val, unsigned int i)  = 0;
+// returns the list of all lists that have m integers out of the first n integers,  {0, 1, 2, ... n-1}
+vector< vector <unsigned int> > chooseSet(const unsigned int n, const unsigned int m);
+
+// pick out the indicated subset
+tuple<VUI, VUI> indexedSet(const VUI xs, const VUI is);
 
 
-    static vector<Agenda*> enumerateAgendas(unsigned int n, PartitionRule pr); 
-    virtual unsigned int length() const = 0;
-    virtual bool balanced(PartitionRule pr) const = 0;
-    static bool balancedLR(PartitionRule pr, unsigned int numL, unsigned int numR);
+class Agenda : public Position {
+public:
+  enum class PartitionRule { FullBalancedPR, ModBalancedPR, FreePR, SeqPR};
+  Agenda() {};
+  virtual  ~Agenda() {};
 
-    // list all agendas of the given type, over the given items
-    static vector<Agenda*> agendaSet(PartitionRule pr, const VUI xs);
-
-  protected:
-  private:
-    static Agenda* makeAgenda(vector<int> xs, PartitionRule pr, PRNG* rng);
-    static unsigned int minAgendaSize(PartitionRule pr, unsigned int n);
-  };
+  // estimate the value of this agenda to actor number i
+  virtual double eval(const KMatrix& val, unsigned int i)  = 0;
 
 
-  class Choice : public Agenda {
-  public:
+  static vector<Agenda*> enumerateAgendas(unsigned int n, PartitionRule pr);
+  virtual unsigned int length() const = 0;
+  virtual bool balanced(PartitionRule pr) const = 0;
+  static bool balancedLR(PartitionRule pr, unsigned int numL, unsigned int numR);
+
+  // list all agendas of the given type, over the given items
+  static vector<Agenda*> agendaSet(PartitionRule pr, const VUI xs);
+
+protected:
+private:
+  static Agenda* makeAgenda(vector<int> xs, PartitionRule pr, PRNG* rng);
+  static unsigned int minAgendaSize(PartitionRule pr, unsigned int n);
+};
+
+
+class Choice : public Agenda {
+public:
   Choice( Agenda* la,  Agenda* ra) : Agenda() {
-      lhs = la;
-      rhs = ra;
-    };
-    virtual  ~Choice() { }; // delete lhs; delete rhs; }; 
-    virtual double eval(const KMatrix& val, unsigned int i);
-    virtual unsigned int length() const { return (lhs->length() + rhs->length()); }
-    bool balanced(PartitionRule pr) const;
-
-  protected: 
-    virtual void print(ostream& os) const {
-      os << "[" << *lhs << ":" << *rhs << "]";
-      return;
-    }; 
-    Agenda* lhs = nullptr;
-    Agenda* rhs = nullptr; 
+    lhs = la;
+    rhs = ra;
   };
+  virtual  ~Choice() { }; // delete lhs; delete rhs; };
+  virtual double eval(const KMatrix& val, unsigned int i);
+  virtual unsigned int length() const { return (lhs->length() + rhs->length()); }
+  bool balanced(PartitionRule pr) const;
 
-
-  class Terminal : public Agenda {
-  public:
-    explicit Terminal(unsigned int v = 0) : Agenda() { item = v;  };
-    virtual  ~Terminal() {}; 
-    virtual double eval(const KMatrix& val, unsigned int i);
-    virtual unsigned int length() const { return 1; }
-    bool balanced(PartitionRule pr) const { return true; }
-
-  protected:
-    virtual void print(ostream& os) const {
-      os << item;
-      return;
-    }; 
-    unsigned int item=0;
+protected:
+  virtual void print(ostream& os) const {
+    os << "[" << *lhs << ":" << *rhs << "]";
+    return;
   };
+  Agenda* lhs = nullptr;
+  Agenda* rhs = nullptr;
+};
+
+
+class Terminal : public Agenda {
+public:
+  explicit Terminal(unsigned int v = 0) : Agenda() { item = v;  };
+  virtual  ~Terminal() {};
+  virtual double eval(const KMatrix& val, unsigned int i);
+  virtual unsigned int length() const { return 1; }
+  bool balanced(PartitionRule pr) const { return true; }
+
+protected:
+  virtual void print(ostream& os) const {
+    os << item;
+    return;
+  };
+  unsigned int item=0;
+};
 
 
 }; // end of namespace

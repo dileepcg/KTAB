@@ -180,21 +180,11 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
     const auto ppv0 = Model::probCE2(pcem, vpm, c0);
     const auto pr0 = get<0>(ppv0); // [numP, 1]
     const auto pv0 = get<1>(ppv0); // [numP, numP]
-
-    if (KBase::testProbCE) {
-        cout << "Testing probCE in waterMinProb-0" << endl << flush;
-        auto pv00 = Model::vProb(vpm, c0); // [numP, numP]
-        assert(KBase::norm(pv0 - pv00) < 1E-6);
-        auto pr00 = Model::probCE(PCEModel::ConditionalPCM, pv00); // [numP, 1]
-        assert(KBase::norm(pr0 - pr00) < 1E-6);
-    }
-
     auto priorBase = pr0(0, 0);
     double err0 = trgtP0 - priorBase; // shortfall if positive
     if (err0 < 0.0) {
         err0 = 0.0;
     }
-
     // voting in nominal-policy scenario
     auto v1fn = [w, p0](unsigned int k, unsigned int i, unsigned int j) {
         double vkij = Model::vote(KBase::VotingRule::Proportional, w(k, 0),
@@ -205,15 +195,6 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
     const auto ppv1 = Model::probCE2(pcem, vpm, c1);
     const auto pr1 = get<0>(ppv1); // [numP, 1]
     const auto pv1 = get<1>(ppv1); // [numP, numP]
-
-    if (KBase::testProbCE) {
-        cout << "Testing probCE in waterMinProb-1" << endl << flush;
-        const auto pv10 = Model::vProb(vpm, c1); // [numP, numP]
-        assert(KBase::norm(pv1 - pv10) < 1E-6);
-        const auto pr10 = Model::probCE(PCEModel::ConditionalPCM, pv10); // [numP, 1]
-        assert(KBase::norm(pr1 - pr10) < 1E-6);
-    }
-
     double postNom = 0.0;
     for (auto i : likelyScenarios) {
         postNom = postNom + pr1(i, 0);
@@ -222,9 +203,6 @@ double waterMinProb(ReportingLevel rl, const KMatrix & p0) {
     if (err1 < 0.0) {
         err1 = 0.0;
     }
-
-// RMS of difference in distributions
-    //double err = KBase::norm(pr1 - pInit) / sqrt(pr1.numC() * pr1.numR());
 
 // RMS difference of the two critical probabilities
     double err = sqrt(((err0*err0) + (err1*err1)) / 2.0);

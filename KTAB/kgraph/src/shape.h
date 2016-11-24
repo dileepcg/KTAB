@@ -27,42 +27,42 @@
 //---------------------------------------------
 
 namespace Tetris {
-  
-  enum TCode { // Character codes for the canonical Tetronimoes
-    N = 0, I, J, L, O, S, T, Z
-  };
 
-  class Shape { // any valid transformation of a canonical Tetronimo
-  public:
-    static unsigned int shapeCounter;
-    Shape() { idNum = shapeCounter++; setShape(TCode::N); }
-    explicit Shape(TCode p) { idNum = shapeCounter++; setShape(p); }
-    void setShape(TCode p);
-    void setRandomShape();
-    TCode getShape() const { return tName; }
-    char getName() const { return name;}
-    int x(int index) const { assert(0 <= index); assert(index <= 3); return coords[index][0]; }
-    int y(int index) const { assert(0 <= index); assert(index <= 3); return coords[index][1]; }
+enum TCode { // Character codes for the canonical Tetronimoes
+  N = 0, I, J, L, O, S, T, Z
+};
 
-    int minX() const;
-    int maxX() const;
-    int minY() const;
-    int maxY() const;
+class Shape { // any valid transformation of a canonical Tetronimo
+public:
+  static unsigned int shapeCounter;
+  Shape() { idNum = shapeCounter++; setShape(TCode::N); }
+  explicit Shape(TCode p) { idNum = shapeCounter++; setShape(p); }
+  void setShape(TCode p);
+  void setRandomShape();
+  TCode getShape() const { return tName; }
+  char getName() const { return name;}
+  int x(int index) const { assert(0 <= index); assert(index <= 3); return coords[index][0]; }
+  int y(int index) const { assert(0 <= index); assert(index <= 3); return coords[index][1]; }
 
-    void showCoords() const;
+  int minX() const;
+  int maxX() const;
+  int minY() const;
+  int maxY() const;
 
-    Shape lrot() const;
-    Shape rrot() const;
+  void showCoords() const;
 
-    unsigned int idNum = 0;
+  Shape lrot() const;
+  Shape rrot() const;
 
-  private:
-    void setX(int index, int x) { coords[index][0] = x; }
-    void setY(int index, int y) { coords[index][1] = y; }
-    TCode tName = N; 
-    char name = 'N';
-    int coords[4][2];
-  };
+  unsigned int idNum = 0;
+
+private:
+  void setX(int index, int x) { coords[index][0] = x; }
+  void setY(int index, int y) { coords[index][1] = y; }
+  TCode tName = N;
+  char name = 'N';
+  int coords[4][2];
+};
 
 }; // end of namespace
 
