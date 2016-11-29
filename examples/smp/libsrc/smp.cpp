@@ -536,6 +536,10 @@ void  SMPState::setAccomodate(const KMatrix & aMat) {
   return;
 }
 
+VctrPstn SMPState::getIdeal(unsigned int n) const
+{
+	return ideals[n];
+}
 void SMPState::addPstn(Position* ap) {
   auto sp = (VctrPstn*)ap;
   auto sm = (SMPModel*)model;
@@ -955,7 +959,7 @@ void SMPModel::showVPHistory() const {
     //createSQL(Model::NumTables + 0); // Make sure VectorPosition table is present
     auto sqlBuff = newChars(sqlBuffSize);
     sprintf(sqlBuff,
-            "INSERT INTO VectorPosition (ScenarioId, Turn_t, Act_i, Dim_k, Coord) VALUES ('%s', ?1, ?2, ?3, ?4)",
+		"INSERT INTO VectorPosition (ScenarioId, Turn_t, Act_i, Dim_k, Coord) VALUES ('%s', ?1, ?2, ?3, ?4)",
             scenId.c_str());
 
     assert(nullptr != smpDB);
@@ -976,28 +980,33 @@ void SMPModel::showVPHistory() const {
       for (unsigned int k = 0; k < numDim; k++) {
         printf("%s , %s , ", actrs[i]->name.c_str(), dimName[k].c_str());
         for (unsigned int t = 0; t < history.size(); t++) {
-          auto st = history[t];
-          auto pit = st->pstns[i];
-          auto vpit = (const VctrPstn*)pit;
-          assert(1 == vpit->numC());
-          assert(numDim == vpit->numR());
-          printf("%5.1f , ", 100 * (*vpit)(k, 0)); // have to print "100.0" sometimes
-          int rslt = 0;
-          rslt = sqlite3_bind_int(insStmt, 1, t);
-          assert(SQLITE_OK == rslt);
-          rslt = sqlite3_bind_int(insStmt, 2, i);
-          assert(SQLITE_OK == rslt);
-          rslt = sqlite3_bind_int(insStmt, 3, k);
-          assert(SQLITE_OK == rslt);
-          const double coord = (*vpit)(k, 0);
-          rslt = sqlite3_bind_double(insStmt, 4, coord);
-          assert(SQLITE_OK == rslt);
-          rslt = sqlite3_step(insStmt);
-          assert(SQLITE_DONE == rslt);
-          sqlite3_clear_bindings(insStmt);
-          assert(SQLITE_DONE == rslt);
-          rslt = sqlite3_reset(insStmt);
-          assert(SQLITE_OK == rslt);
+			auto st = history[t];
+			auto pit = st->pstns[i];
+			auto vpit = (const VctrPstn*)pit;
+			auto sst = ((const SMPState*)st);
+			auto vidl = sst->getIdeal(i);
+			assert(1 == vpit->numC());
+			assert(numDim == vpit->numR());
+			printf("%5.1f , ", 100 * (*vpit)(k, 0)); // have to print "100.0" sometimes
+			int rslt = 0;
+			rslt = sqlite3_bind_int(insStmt, 1, t);
+			assert(SQLITE_OK == rslt);
+			rslt = sqlite3_bind_int(insStmt, 2, i);
+			assert(SQLITE_OK == rslt);
+			rslt = sqlite3_bind_int(insStmt, 3, k);
+			assert(SQLITE_OK == rslt);
+			const double pCoord = (*vpit)(k, 0);
+			rslt = sqlite3_bind_double(insStmt, 4, pCoord);
+			assert(SQLITE_OK == rslt);
+	//		const double iCoord = vidl(k, 0);
+		//	rslt = sqlite3_bind_double(insStmt, 5, iCoord);
+//			assert(SQLITE_OK == rslt);
+			rslt = sqlite3_step(insStmt);
+			assert(SQLITE_DONE == rslt);
+			sqlite3_clear_bindings(insStmt);
+			assert(SQLITE_DONE == rslt);
+			rslt = sqlite3_reset(insStmt);
+			assert(SQLITE_OK == rslt);
         }
         cout << endl;
       }

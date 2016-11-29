@@ -172,7 +172,30 @@ void SMPState::bestChallengeUtils(unsigned int i /* actor id */) const {
 }
 
 // --------------------------------------------
+vector<double> SMPState::calcVotes(KMatrix w, KMatrix u, int k) const
+{
+	auto vfn = [&w, &u](VotingRule vr, unsigned int k, unsigned int i, unsigned int j) {
+		double vkij = Model::vote(vr, w(0, k), u(k, i), u(k, j));
+		return vkij;
+	};
+	auto li = u.numC();  
+	auto lj = w.numC();
+	vector<double> votes = {};
+	for (unsigned int i = 0; i < li; i++) //li is the number of bargains
+	{
+		for (unsigned int j = 0; j < i; j++)
+		{
+//			double pv_ij;
 
+			auto vr = ((const SMPActor*)(model->actrs[k]))->vr;
+			double vkij = vfn(vr, k, i, j);
+			votes.push_back(vkij);
+			cout << vkij << " ";
+		}
+	}
+	cout << endl;
+	return votes;
+}
 
 SMPState* SMPState::doBCN() const {
   const bool recordBargainingP = true;
@@ -508,11 +531,35 @@ SMPState* SMPState::doBCN() const {
 
     //populate the Bargain Vote & Util tables
     // JAH added sql flag logging control
-    if (model->sqlFlags[3])
-    {
-      // model->sqlBargainVote(t, k, k, w);
-      model->sqlBargainUtil(t, k, u_im);
-    }
+	if (model->sqlFlags[3])
+	{
+		auto brgns_k = brgns[k];
+		vector< std::tuple<uint64_t, uint64_t>> barginIDsPair_i_j;
+		vector<uint64_t> bargnIdsRows = {};
+		for (int j = 0; j < nb; j++)
+		{
+			bargnIdsRows.push_back(brgns[k][j]->getID());
+		}
+		for (unsigned int brgnFirst = 0; brgnFirst < nb; brgnFirst++)
+		{
+			for (unsigned int brgnSecond = 0; brgnSecond < brgnFirst; brgnSecond++)
+			{
+				barginIDsPair_i_j.push_back(tuple<uint64_t, uint64_t>(brgns_k[brgnFirst]->getID(), brgns_k[brgnSecond]->getID()));
+			}
+		}
+
+		for (unsigned int actor = 0; actor < na; ++actor) {
+			auto pv_ij = calcVotes(w, u_im, actor);
+
+			if (pv_ij.size() != 0)
+			{
+				model->sqlBargainVote(t, barginIDsPair_i_j, pv_ij, actor);
+			}
+		}
+		model->sqlBargainUtil(t, bargnIdsRows, u_im);
+	}
+
+
 
     // TODO: create a fresh position for k, from the selected bargain mMax.
     VctrPstn * pk = nullptr;

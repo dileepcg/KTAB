@@ -458,6 +458,7 @@ KMatrix Model::coalitions(function<double(unsigned int ak, unsigned int pi, unsi
       double cji = minC;
       for (unsigned int k = 0; k < numAct; k++) {
         double vkij = vfn(k, i, j);
+		
         if (vkij > 0) {
           cij = cij + vkij;
         }
@@ -469,6 +470,7 @@ KMatrix Model::coalitions(function<double(unsigned int ak, unsigned int pi, unsi
       c(j, i) = cji;  // set the upper right coalition
 
     }
+	cout << endl;
     c(i, i) = minC; // set the diagonal coalition
   }
   return c;

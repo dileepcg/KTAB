@@ -214,6 +214,7 @@ public:
   // initialize the actors' ideals from the given list of VctrPstn.
   // If the list is omitted or empty, it uses their current positions
   void idealsFromPstns(const vector<VctrPstn> &  ps = {});
+  VctrPstn getIdeal(unsigned int n) const;
 
   void calcUtils(unsigned int i /* actor id */) const;
 
@@ -270,6 +271,9 @@ private:
   mutable std::map<unsigned int /*i*/, eduChlgsJ> eduChlgsIJ;
   
   mutable int bestJ;
+
+	private:
+		vector<double> calcVotes(KMatrix w, KMatrix u, int actor) const;
 };
 
 class SMPModel : public Model {

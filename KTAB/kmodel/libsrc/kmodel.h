@@ -377,13 +377,16 @@ public:
   void sqlAUtil(unsigned int t);
   // output an existing PosEquiv table, for the given turn, to SQLite
   void sqlPosEquiv(unsigned int t);
-  // output an existing actor posprob table, for the given turn, to SQLite
-  void sqlPosProb(unsigned int t);
-  void sqlPosVote(unsigned int t);
-  void sqlBargainEntries(unsigned int t, int bargainId, int initiator, int receiver, double val);
-  void sqlBargainCoords(unsigned int t, int bargnID,  const KBase::VctrPstn & initPos, const KBase::VctrPstn & rcvrPos);
-  void sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat);
-  void sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMatrix Util_mat, unsigned int act_i);
+  // output an existing PosEquiv table, for the given turn, to SQLite
+    void sqlPosProb(unsigned int t);
+    void sqlPosVote(unsigned int t);
+    void sqlBargainEntries(unsigned int t, int bargainId, int initiator, int receiver, double val);
+    void sqlBargainCoords(unsigned int t, int bargnID,  const KBase::VctrPstn & initPos, const KBase::VctrPstn & rcvrPos);
+    //void sqlBargainUtil(unsigned int t, vector<uint64_t> bargnIds,  KBase::KMatrix Util_mat);
+	void sqlBargainUtil(unsigned int t, vector<uint64_t> bargnIds, KBase::KMatrix Util_mat);
+	
+
+	void sqlBargainVote(unsigned int t, vector< std::tuple<uint64_t, uint64_t>> barginidspair_i_j, vector<double> Vote_mat, unsigned int act_k);
 
   void LogInfoTables(); // JAH 20160731
 

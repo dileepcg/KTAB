@@ -680,7 +680,7 @@ void Model::sqlBargainCoords(unsigned int t, int bargnID, const KBase::VctrPstn 
 
 
 
-void Model::sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat)
+void Model::sqlBargainUtil(unsigned int t, vector<uint64_t> bargnIds,  KBase::KMatrix Util_mat)
 {
   // initiate the database
   sqlite3 * db = smpDB;
@@ -703,38 +703,38 @@ void Model::sqlBargainUtil(unsigned int t, int Bargn_i,  KBase::KMatrix Util_mat
   sqlite3_stmt *insStmt;
   sqlite3_prepare_v2(db, insStr, strlen(insStr), &insStmt, NULL);
   assert(nullptr != insStmt); // make sure it is ready
-
-  // start for the transaction
-  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
-
-  for (unsigned int i = 0; i < Util_mat_col; i++)
-  {
-    for (unsigned int j = 0; j < Util_mat_row; j++)
+	// start for the transaction
+	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
+	uint64_t Bargn_i = 0;
+    for (unsigned int i = 0; i < Util_mat_row; i++)
     {
-
-      int rslt = 0;
-      // Turn_t
-      rslt = sqlite3_bind_int(insStmt, 1, t);
-      assert(SQLITE_OK == rslt);
-      //Bargn_i
-      rslt = sqlite3_bind_int(insStmt, 2, Bargn_i+i);
-      assert(SQLITE_OK == rslt);
-      //Act_i
-      rslt = sqlite3_bind_int(insStmt, 3, j);
-      assert(SQLITE_OK == rslt);
-      //Util
-      rslt = sqlite3_bind_double(insStmt, 4, Util_mat(j, i));
-      assert(SQLITE_OK == rslt);
-      // finish
-      assert(SQLITE_OK == rslt);
-      rslt = sqlite3_step(insStmt);
-      assert(SQLITE_DONE == rslt);
-      sqlite3_clear_bindings(insStmt);
-      assert(SQLITE_DONE == rslt);
-      rslt = sqlite3_reset(insStmt);
-      assert(SQLITE_OK == rslt);
-    }
-  }
+		for (unsigned int j = 0; j < Util_mat_col; j++)
+		{
+			
+			int rslt = 0;
+			// Turn_t
+			rslt = sqlite3_bind_int(insStmt, 1, t);
+			assert(SQLITE_OK == rslt);
+			//Bargn_i
+			Bargn_i = bargnIds[j];
+			rslt = sqlite3_bind_int(insStmt, 2, Bargn_i);
+			assert(SQLITE_OK == rslt);
+			//Act_i
+			rslt = sqlite3_bind_int(insStmt, 3, i);
+			assert(SQLITE_OK == rslt);
+			//Util
+			rslt = sqlite3_bind_double(insStmt, 4, Util_mat(i, j));
+			assert(SQLITE_OK == rslt);
+			// finish  
+			assert(SQLITE_OK == rslt);
+			rslt = sqlite3_step(insStmt);
+			assert(SQLITE_DONE == rslt);
+			sqlite3_clear_bindings(insStmt);
+			assert(SQLITE_DONE == rslt);
+			rslt = sqlite3_reset(insStmt);
+			assert(SQLITE_OK == rslt);
+		}
+	}
 
   sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
   sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
@@ -832,69 +832,74 @@ void Model::LogInfoTables()
   return;
 }
 
-void Model::sqlBargainVote(unsigned int t, int Bargn_i, int Bargn_j, KBase::KMatrix Util_mat,unsigned int act_k)
+void Model::sqlBargainVote(unsigned int t, vector< tuple<uint64_t, uint64_t>> barginidspair_i_j, vector<double> Vote_mat,unsigned int act_k)
 {
-  // initiate the database
-  sqlite3 * db = smpDB;
+	// initiate the database
+	sqlite3 * db = smpDB;
 
-  // Error message in case
-  char* zErrMsg = nullptr;
-  auto sqlBuff = newChars(200);
+	// Error message in case
+	char* zErrMsg = nullptr;
+	auto sqlBuff = newChars(200);
 
-  int Util_mat_row = Util_mat.numR();
-  int Util_mat_col = Util_mat.numC();
+	int Util_mat_row = Vote_mat.size();
+//	int Util_mat_col = Vote_mat[0].size();
 
-  // prepare the sql statement to insert
-  sprintf(sqlBuff,
-          "INSERT INTO BargnVote  (ScenarioId, Turn_t,Bargn_i,  Bargn_j, Act_k, Vote) VALUES ('%s', ?1, ?2, ?3,?4,?5)",scenId.c_str());
+	// prepare the sql statement to insert
+	sprintf(sqlBuff,
+		"INSERT INTO BargnVote  (ScenarioId, Turn_t,BargnId_i,  BargnId_j, Act_k, Vote) VALUES ('%s', ?1, ?2, ?3,?4,?5)",scenId.c_str());
+	
+    assert(nullptr != db);
+	const char* insStr = sqlBuff;
+	sqlite3_stmt *insStmt;
+	sqlite3_prepare_v2(db, insStr, strlen(insStr), &insStmt, NULL);
+    assert(nullptr != insStmt); //make sure it is ready
 
-  assert(nullptr != db);
-  const char* insStr = sqlBuff;
-  sqlite3_stmt *insStmt;
-  sqlite3_prepare_v2(db, insStr, strlen(insStr), &insStmt, NULL);
-  assert(nullptr != insStmt); //make sure it is ready
+	// start for the transaction
+	sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
 
-  // start for the transaction
-  sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
-
-  for (unsigned int i = 0; i < Util_mat_col; i++)
-  {
-    for (unsigned int j = 0; j < Util_mat_row; j++)
+    for (unsigned int i = 0; i <Util_mat_row ; i++)
     {
-      int rslt = 0;
-      // Turn_t
-      rslt = sqlite3_bind_int(insStmt, 1, t);
-      assert(SQLITE_OK == rslt);
-      //Bargn_i
-      rslt = sqlite3_bind_int(insStmt, 2, Bargn_i);
-      assert(SQLITE_OK == rslt);
-      //Bargn_j
-      rslt = sqlite3_bind_int(insStmt, 3, Bargn_j);
-      assert(SQLITE_OK == rslt);
-      //Act_i
-      rslt = sqlite3_bind_int(insStmt, 4, act_k);
-      assert(SQLITE_OK == rslt);
-      //Util
-      rslt = sqlite3_bind_double(insStmt, 5, Util_mat(j, i));
-      assert(SQLITE_OK == rslt);
-      // finish
-      assert(SQLITE_OK == rslt);
-      rslt = sqlite3_step(insStmt);
-      assert(SQLITE_DONE == rslt);
-      sqlite3_clear_bindings(insStmt);
-      assert(SQLITE_DONE == rslt);
-      rslt = sqlite3_reset(insStmt);
-      assert(SQLITE_OK == rslt);
-    }
-  }
-  sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
-  sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
+		tuple<uint64_t, uint64_t> tijids = barginidspair_i_j[i];
+		uint64_t Bargn_i = std::get<0>(tijids);
+		uint64_t Bargn_j = std::get<1>(tijids);
+		
+//for (unsigned int j = 0; j <  Util_mat_col; j++)
+//		{
+			int rslt = 0;
+			// Turn_t
+			rslt = sqlite3_bind_int(insStmt, 1, t);
+			assert(SQLITE_OK == rslt);
+			//Bargn_i
+			rslt = sqlite3_bind_int(insStmt, 2, Bargn_i);
+			assert(SQLITE_OK == rslt);
+			//Bargn_j
+			rslt = sqlite3_bind_int(insStmt, 3, Bargn_j);
+			assert(SQLITE_OK == rslt);
+			//Act_i
+			rslt = sqlite3_bind_int(insStmt, 4, act_k);
+			assert(SQLITE_OK == rslt);
+			//Util
+			rslt = sqlite3_bind_double(insStmt, 5, Vote_mat[i]);
+			assert(SQLITE_OK == rslt);
+			// finish  
+			assert(SQLITE_OK == rslt);
+			rslt = sqlite3_step(insStmt);
+			assert(SQLITE_DONE == rslt);
+			sqlite3_clear_bindings(insStmt);
+			assert(SQLITE_DONE == rslt);
+			rslt = sqlite3_reset(insStmt);
+			assert(SQLITE_OK == rslt);
+		//}
+	}
+	sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
+	sqlite3_finalize(insStmt); // finalize statement to avoid resource leaks
 
-  delete sqlBuff;
-  sqlBuff = nullptr;
+	delete sqlBuff;
+	sqlBuff = nullptr;
 
-  smpDB = db;
+	smpDB = db;
 }
+
 // populates record for table PosProb for each step of
 // module run
 void Model::sqlPosProb(unsigned int t)
