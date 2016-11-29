@@ -524,8 +524,6 @@ double SMPState::aNRA(unsigned int i) const {
   return ri;
 }
 
-
-
 void  SMPState::setAccomodate(const KMatrix & aMat) {
   const unsigned int na = model->numAct;
   assert(Model::minNumActor <= na);
@@ -533,6 +531,7 @@ void  SMPState::setAccomodate(const KMatrix & aMat) {
   assert(na == aMat.numR());
   assert(na == aMat.numC());
   accomodate = aMat;
+  identAccMat = KBase::iMatP(accomodate);
   return;
 }
 
@@ -549,7 +548,6 @@ void SMPState::addPstn(Position* ap) {
   State::addPstn(ap);
   return;
 }
-
 
 bool SMPState::equivNdx(unsigned int i, unsigned int j) const {
   /// Compare two actual positions in the current state

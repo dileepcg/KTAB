@@ -688,7 +688,7 @@ tuple<double, double> SMPState::probEduChlg(unsigned int h, unsigned int k, unsi
   // h's estimate of i's unilateral influence contribution to (i:j).
   // When ideals perfectly track positions, this must be positive
   double contrib_i_ij = Model::vote(vr, si*ci, uii, uij);
-  if (KBase::iMatP(accomodate)) {
+  if (identAccMat) {
     assert(0 <= contrib_i_ij);
   }
   // If not, you could have the ordering (Idl_i, Pos_j, Pos_i)
@@ -698,7 +698,7 @@ tuple<double, double> SMPState::probEduChlg(unsigned int h, unsigned int k, unsi
   // h's estimate of j's unilateral influence contribution to (i:j).
   // When ideals perfectly track positions, this must be negative
   double contrib_j_ij = Model::vote(vr, sj*cj, uji, ujj);
-  if (KBase::iMatP(accomodate)) {
+  if (identAccMat) {
     assert(contrib_j_ij <= 0);
   }
   // Similarly, you could have an ordering like (Idl_j, Pos_i, Pos_j)
