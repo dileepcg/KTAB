@@ -190,7 +190,7 @@ vector<double> SMPState::calcVotes(KMatrix w, KMatrix u, int k) const
 			auto vr = ((const SMPActor*)(model->actrs[k]))->vr;
 			double vkij = vfn(vr, k, i, j);
 			votes.push_back(vkij);
-			cout << vkij << " ";
+			
 		}
 	}
 	cout << endl;
@@ -551,10 +551,10 @@ SMPState* SMPState::doBCN() const {
 		for (unsigned int actor = 0; actor < na; ++actor) {
 			auto pv_ij = calcVotes(w, u_im, actor);
 
-			if (pv_ij.size() != 0)
-			{
+			//if (pv_ij.size() != 0)
+			//{
 				model->sqlBargainVote(t, barginIDsPair_i_j, pv_ij, actor);
-			}
+		//	}
 		}
 		model->sqlBargainUtil(t, bargnIdsRows, u_im);
 	}
