@@ -470,8 +470,7 @@ KMatrix Model::coalitions(function<double(unsigned int ak, unsigned int pi, unsi
       c(j, i) = cji;  // set the upper right coalition
 
     }
-	cout << endl;
-    c(i, i) = minC; // set the diagonal coalition
+	c(i, i) = minC; // set the diagonal coalition
   }
   return c;
 }
