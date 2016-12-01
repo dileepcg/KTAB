@@ -99,7 +99,7 @@ void MainWindow::initializeQuadMapDock()
 
 void MainWindow::initializeQuadMapPlot()
 {
-    QFont font("Helvetica[Adobe]",15);
+    QFont font("Helvetica[Adobe]",10);
     quadMapTitle = new QCPPlotTitle(quadMapCustomGraph,"Quad Map");
     quadMapTitle->setFont(font);
     quadMapTitle->setTextColor(QColor(0,128,0));
@@ -734,7 +734,7 @@ void MainWindow::quadMapPlotPoints(bool status)
             quadMapAutoScale(false);
         }
         plotQuadMap->setEnabled(true);
-        QApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
+        QApplication::restoreOverrideCursor();
     }
 }
 

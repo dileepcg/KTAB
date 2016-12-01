@@ -59,7 +59,7 @@ using SMPLib::SMPState;
 
 // -------------------------------------------------
 
-void demoEUSpatial(unsigned int numA, unsigned int sDim, bool accP, uint64_t s,  vector<bool> f) {
+void demoRandSMP(unsigned int numA, unsigned int sDim, bool accP, uint64_t s,  vector<bool> f) {
   printf("Using PRNG seed: %020llu \n", s);
   // JAH 20160711 added rng seed 20160730 JAH added sql flags
   auto md0 = new SMPModel( "", s, f);
@@ -252,7 +252,7 @@ int main(int ac, char **av) {
     printf("                  default: %020llu \n", dSeed);
   };
 
-  if (ac > 0) {
+  if (ac > 1) {
     for (int i = 1; i < ac; i++) {
       if (strcmp(av[i], "--seed") == 0) {
         i++;
@@ -322,7 +322,7 @@ int main(int ac, char **av) {
   // seed required to reproduce the bug.
   if (euSmpP) {
     cout << "-----------------------------------" << endl;
-    DemoSMP::demoEUSpatial(0, 0, randAccP, seed, sqlFlags);
+    DemoSMP::demoRandSMP(0, 0, randAccP, seed, sqlFlags);
   }
   if (csvP) {
     cout << "-----------------------------------" << endl;

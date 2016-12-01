@@ -108,7 +108,7 @@ void recordUtility(unsigned int i /* actor id */, const SMPState* obj) {
  * Calculate all the utilities and record in database. utitlity for (i,i,i,j)
  * combination is getting calculated and recorded in a separate method
  */
-void SMPState::calcUtils(unsigned int i /* actor id */) const {
+void SMPState::calcUtils(unsigned int i ) const { // i == actor id 
   const unsigned int na = model->numAct;
   const bool recordTmpSQLP = true;  // Record this in SQLite
   auto pFn = [this, recordTmpSQLP](unsigned int h, unsigned int k, unsigned int i, unsigned int j) {

@@ -106,7 +106,7 @@ void MainWindow::initializeLineGraphDock()
 void MainWindow::initializeLineGraphPlot()
 {
 
-    QFont font("Helvetica[Adobe]",15);
+    QFont font("Helvetica[Adobe]",10);
     lineGraphTitle = new QCPPlotTitle(lineCustomGraph," ");
     lineGraphTitle->setFont(font);
     lineGraphTitle->setTextColor(QColor(255,51,51));

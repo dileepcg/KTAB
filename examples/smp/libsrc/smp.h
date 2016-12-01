@@ -216,7 +216,7 @@ public:
   void idealsFromPstns(const vector<VctrPstn> &  ps = {});
   VctrPstn getIdeal(unsigned int n) const;
 
-  void calcUtils(unsigned int i /* actor id */) const;
+  void calcUtils(unsigned int i) const;  // i == actor id 
 
 protected:
 
@@ -295,7 +295,8 @@ public:
   static void configExec(SMPModel * md0);
 
   // read, configure, and run from CSV
-  static void csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, string dbFilePath);
+  static void csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, string dbFilePath,
+                          vector<int> par=vector<int>());
 
   // read, configure, and run from XML
   static void xmlReadExec(string inputXML, vector<bool> f, string dbFilePath);
@@ -304,9 +305,11 @@ public:
   static SMPModel * xmlRead(string fName,vector<bool> f);
 
   static  SMPModel * initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
-                               const KMatrix & cap, const KMatrix & pos, const KMatrix & sal,
-                               const KMatrix & accM,
-                               uint64_t s, vector<bool> f);
+    const KMatrix & cap, // one row per actor
+    const KMatrix & pos, // one row per actor, one column per dimension
+    const KMatrix & sal, // one row per actor, one column per dimension
+    const KMatrix & accM,
+    uint64_t s, vector<bool> f);
 
   // print history of each actor in CSV (might want to generalize to arbitrary VctrPstn)
   void showVPHistory() const;
@@ -328,6 +331,9 @@ public:
 
   // this does not set AUtil, just output it to SQLite
   //virtual void sqlAUtil(unsigned int t);
+
+  //Model Parameters
+  static void updateModelParameters(SMPModel *md0, vector<int> parameters);
 
 protected:
   //sqlite3 *smpDB = nullptr; // keep this protected, to ease multi-threading

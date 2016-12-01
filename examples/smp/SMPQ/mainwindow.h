@@ -60,8 +60,6 @@ namespace Ui {
 class MainWindow;
 }
 
-static const int N = 2;
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -134,7 +132,7 @@ private:
     void createLinePlotsDockWindows();
     void createBarPlotsDockWindows();
     void createQuadMapDockWindows();
-    void createModuleParametersDockWindow();
+    void createModelParametersDockWindow();
     void saveTableViewToCSV();
     void saveTableWidgetToCSV();
     int validateControlButtons(QString viewName);
@@ -158,16 +156,30 @@ private:
     QSlider * turnSlider;
 
     //Model parameters
-    QFrame * frames[N];
+    QFrame * frames;
     QPushButton * runButton;
 
-    QRadioButton * rparam1;
-    QRadioButton * rparam2;
-    QRadioButton * rparam3;
+    QComboBox * victProbModelComboBox;
+    QComboBox * pCEModelComboBox;
+    QComboBox * stateTransitionsComboBox;
+    QComboBox * votingRuleComboBox;
+    QComboBox * bigRAdjustComboBox;
+    QComboBox * bigRRangeComboBox;
+    QComboBox * thirdPartyCommitComboBox;
+    QComboBox * interVecBrgnComboBox;
+    QComboBox * bargnModelComboBox;
 
-    QCheckBox * cparam1;
-    QCheckBox * cparam2;
-    QCheckBox * cparam3;
+    int victProbModel;
+    int pCEModel;
+    int stateTransitions;
+    int votingRule;
+    int bigRAdjust;
+    int bigRRange;
+    int thirdPartyCommit;
+    int interVecBrgn;
+    int bargnModel;
+
+    std::vector<int> parameters;
 
     //csv window
     QTableView * csvTableView;
@@ -177,13 +189,13 @@ private:
 
     QMenu *viewMenu;
 
-    QDockWidget * moduleParametersDock;
+    QDockWidget * modelParametersDock;
     QDockWidget * lineGraphDock;
     QDockWidget * barGraphDock;
     QDockWidget * quadMapDock;
 
     QGridLayout * VLayout;
-    QFrame * moduleFrame;
+    QFrame * modelParametersFrame;
 
     //Database Obj
     Database * dbObj ;
@@ -354,9 +366,14 @@ private slots :
     void splineValues(const QVector<double> &x, const QVector<double> &y);
 
     //run smp
-
 private :
     QString csvPath;
+    QCheckBox * logMinimum;
+    QLineEdit * seedRand;
+
+    void initializeModelParametersDock();
+    void getParametersValues();
+    //    QStandardItemModel *initializeComboBox(int rows, QStringList items);
 
 private slots :
     void runPushButtonClicked(bool bl);
@@ -457,6 +474,7 @@ signals :
     void getUtilChlgAndUtilSQfromDB(QList <int > VHAxisList);
 
 };
+
 
 #endif // MAINWINDOW_H
 

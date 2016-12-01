@@ -198,8 +198,8 @@ void initScen(uint64_t sd) {
   auto diffFn = [](unsigned int i, unsigned int j, const KMatrix& uMat) {
     const auto colI = KBase::vSlice(uMat, i);
     const auto colJ = KBase::vSlice(uMat, j);
-    for (unsigned int k=0;k<colI.numR(); k++){
-    }
+    //for (unsigned int k=0;k<colI.numR(); k++){
+    //}
     double dij = KBase::norm(colI - colJ);
     return dij;
   };

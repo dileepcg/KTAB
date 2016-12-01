@@ -1,0 +1,288 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{fancyhdr}
+
+
+\usepackage{graphicx}
+\makeatletter
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.5}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+\makeatother
+
+% setup fancy header, footer, and page count
+\pagestyle{fancy}
+\usepackage{lastpage}
+\lhead{B. P. Wise}
+\rhead{Markov Incentives}
+\lfoot{\textbf{\color{red}{DRAFT}}}
+\cfoot{}
+\rfoot{Page \thepage\ of \pageref{LastPage}}
+
+\usepackage{amsmath} 
+\usepackage[utf8]{inputenc}
+\usepackage{color}
+
+
+%opening
+\title{Markov Voting with Incentives in KTAB}
+\author{Ben P. Wise, KAPSARC, \textbf{\color{red}{DRAFT v04}}}
+
+
+
+%\setlength{\parindent}{4em}
+\setlength{\parskip}{1em}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+Something abstract
+\end{abstract}
+
+
+\section{Purpose}
+
+We consider a stochastic generalization of the kind of voting process considered by Duncan Black in (MVT Paper). Out of a space $\Omega$
+  of possible policy options, some position $\theta \in \Omega$
+  is the current favorite, if a decision had to be made this instant. Of course, whatever particular option is “on the table” at the moment,
+ members of the committee may have an incentive to present another option. If it defeats the current option, it becomes the new favorite. 
+We give a model to compute the expected distribution of which option will be the favorite at any moment. If the distribution is extremely
+ concentrated on one particular option, then that would be the almost certain choice. However, if no option were so dominant, we would 
+get a flatter distribution.
+
+We consider informal voting, where the probability of one option being chosen over another depends on the ratio of which has more support. 
+This is unlike formal committee voting, where an advantage of just a single vote guarantees victory. One example is the informal exertion
+ of influence behind the scenes before a formal committee vote: equal informal support for each of two options means that each 
+has a 50\% chance of winning the formal decision.
+
+
+\section{Development of Equations}
+
+
+Suppose we have $N$  actors considering options $a,b,c,\ldots\in\Omega$.
+  Each actor has a weight $w_{i} > 0$ and a von Neumann utility function $u_{i}:\Omega\rightarrow[0,1]$.
+  The number of possible options is $M=|\Omega|$.
+
+We will follow the notation that rounded  parentheses denote vector or matrix subscripts, such as $x(i)$ or $A(i,j)$, while
+square brackets denote events or conditions.
+
+The support of the group for option $a$  over $b$   depends on which actors consider $a$
+  to have higher utility, and how much weight they have. If $\left[x\right]^{+}$
+  is $x$
+  when positive and zero otherwise, we have
+
+\begin{equation} \label{eq:basicSupport}
+S\left[a:b\right]=\sum_{i=1}w_{i}\left[u_{i}\left(a\right)-u_{i}\left(b\right)\right]^{+}
+\end{equation} 
+ 
+
+The strength of the opposing coalition is symmetricaly defined by swapping $a$  and $b$.
+The probability of choosing $a$   over $b$   depends on the ratio of the supports:
+
+
+\begin{equation} \label{eq:basicProbability}
+P\left[a\succ b\right] = \frac{ S[a:b]^\nu }{S[a:b]^\nu +S[b:a]^\nu}
+\end{equation}
+
+The exponent $\nu$ can be 1, 2, or 4, depending on how rapidly the odds shift as the strength ratio shifts.
+
+
+The probability at turn $t$   that the favorite is $a$
+  is denoted by $P_{t}(a)$, where the probability vector is considered to be a column-vector.
+ We seek the limiting distribution, $P_{\infty}$ , of the Markov process outlined above.
+The usual numerical calculation is to start with a uniform distribution and update it with transition probabilities until it stabilizes.
+
+
+Note that, if we consider $a$ to index the rows and $b$ to index the columns, equation (\ref{eq:basicProbability}) is just
+ a matrix of victory probabilities,
+independent of the current $P_t$: $V(a,b) = P[a \succ b]$.  It has the symmetry
+condition that $1 =V(a,b) +V(b,a)$. For mathematical convenience, we would like this symmetry condition
+to apply in all cases, without a special, or  undefined, case for $a=b$. This is similar to 
+the conventions that $0!=1$ or $1=x^0$, which are designed to avoid a special case for 0.
+We adopt the following convention:
+
+
+\begin{equation} \label{eq:trivialProbability}
+V(a,a)= \frac{1}{2}  =  P[a \succ a]
+\end{equation}
+
+ Intuitively, there is a 50\% chance of the first "$a$" in $ P[a \succ a]$ and a 50\% chance of the 
+second "$a$", or a 100\% chance
+that $a$ will be chosen when (trivially) compared to itself.
+
+
+If option $b$
+  is the current favorite, then the incentive of actor $i$
+  to propose option $a$
+  to challenge it is depends both on what is to be gained, $\left[u_{i}\left(a\right)-u_{i}\left(b\right)\right]^{+}$
+  and the probability of success, $P\left[a\succ b\right]$.
+ For example, if $a_1$ has twice the utility gain, but half the probability of success, as $a_2$, then actor $i$ might be indifferent
+between introducing either.
+
+Assuming actors exert influence proportional to their weight and incentive, we find that the individual influence of
+ actor $i$ supporting the proposal of $a$   to challenge $b$   is the product of three  factors:
+\begin{equation}
+n_{i}[a \rightarrow b  ] = w_i \; \times \;  \left[u_{i}\left(a\right)-u_{i}\left(b\right)\right]^{+} \; \times \; P\left[a\succ b\right] 
+\end{equation}
+
+
+Summing over all actors to find the total influence supporting the action of proposing $a$ to challenge the current favorite, $b$:
+
+\begin{align}
+n[a  \rightarrow b  ] 
+  & = \sum_i n_{i}[a  \rightarrow b  ]  \\ 
+  &= S[a:b]  P\left[a\succ b\right]  
+\end{align}
+
+If we combine this with equation (\ref{eq:basicProbability}), we get the following:
+
+\begin{align}
+n[a  \rightarrow b   ] 
+  &= S[a:b]  \frac { S[a:b]^\nu} { S[a:b]^\nu+ S[b:a]^\nu}  \\
+  &=   \frac { S[a:b]^{\nu+1}} {  S[a:b]^\nu+ S[b:a]^\nu} 
+\end{align}
+
+Note that $0 = n[a  \rightarrow b  ]  $  when no actor prefers $a$ over $b$. 
+
+Of course, all options could be proposed, so the probability of any one is determined by relative support, as given by the 
+obvious generalization of equation   (\ref{eq:basicProbability}). Given  a fixed $b$, the conditional probability that option $a$ will be
+ proposed as an alternative is given by the following:
+
+
+\begin{equation}\label{eq:chlgProbs}
+P[a  \rightarrow b  \, | \, b] = \frac {n[a  \rightarrow b   ] }  { \sum_{\alpha} n[\alpha  \rightarrow b   ]  }  
+\end{equation}
+
+Note that this denominator is zero only when no actor prefers any option over $b$, i.e. $b$ is the option which all actors prefer over 
+every other option,
+ also known as the Condorcet winner. To avoid division-by-zero errors, we add a small quantity $\epsilon$
+ to $n(a \rightarrow b)$ when $a=b$. 
+This makes no difference when $b$ is not the unanimous favorite, but it makes the probability $P[b   \rightarrow  b   \, | \, b ]$ exactly 1, and 
+all other probabilities 0, in that case. Thus, when every actor prefers $b$ over every other option, the only possible
+ successor to $b$ is $b$ itself, and the Markov process converges promptly to the  Condorcet winner.
+
+Again, note that the matrix of challenge probabilities defined in equation (\ref{eq:chlgProbs}) is constant, independent of the turn $t$.
+
+
+\section{Markov Model}
+
+
+At this point, we have the necessary equations to build the transition matrix of a Markov model.
+
+Given that $x$ is the current favorite, the probability that $a$ will succeed $x$  depends on the probability that $a$ will
+ be proposed as an alternative, and that $a$ will prevail if it is proposed. To find the probability that $a$ is the
+ next favorite, we consider two cases for $x$. 
+The first case is that $a$ itself was the old favorite,   some other option $y$ was proposed, and $a$ defeated $y$.
+The second case is that some other option $z$ was the favorite, $a$ was proposed, and $a$ defeated $z$. These two
+case are the major terms in the following equation:
+
+\begin{align} \label{eq:basicTransProbs}
+P_{t+1}(a) 
+&= P_{t}(a) \left( \sum_{y\neq a} P[y  \rightarrow a   \, | \, a]P[a\succ y] \right) 
+         \: + \:  \left( \sum_{z \neq a} P_{t}( z )  P[a  \rightarrow z   \, | \, z]P[a\succ z] \right)  \\
+&= \left( \sum_{y \neq a}  P_{t}(a )  P[y  \rightarrow a   \, | \, a]P[a\succ y] \right) 
+         \: + \: \left( \sum_{z \neq a} P_{t}( z )  P[a  \rightarrow z   \, | \, z]P[a\succ z]  \right)  \\
+&= \sum_{b} P[a \succ b] \Big(  P_{t}(a) P[b   \rightarrow a   \, | \, a] 
+         \: + \: P_{t}(b) P[a   \rightarrow b   \, | \, b] \Big)  \label{eq:basicTransProbs}
+\end{align}
+
+
+As $P_{t+1}$ is a column-vector, and $V(a,b) = P[a \succ b]$ is fixed matrix, then the term is parenthesis is just a column vector.
+Unlike a standard matrix multiplication, it depends on $a$, so we define a little more notation to get a more succinct expression.
+
+In a typical matrix multiplication, $r=Mq$, the $i$-the "row" of $r$ contains a single number, which is the dot product
+of the $i$-th row-vector of $M$ with the column-vector $q$. This row of $M$ can be written as a row-slice $M(i,)$.
+As $q$ is just a column vector, the entire vector is just the $0$-th column-slice, $q(,0)$. 
+ In terms of slices, this could be written as $r(i) =M(i,) \bigcdot q(,0)$.
+
+Next, we define two matrices, then take the required slices of them.
+
+First, we define $C_{t}(a,b) = P_{t}(a) P[b   \rightarrow a \, | \, a]$. Intuitively, this is the total probability that $a$ 
+is  challenged by $b$: the probability that $a$ is the
+current favorite, times the conditional probability that $b$ then challenges $a$.
+ Thus, the left half of the term in parentheses is the $a$-th column of $C_{t}$, which
+is the vertical slice $C(,a)$.
+Second, we note that the transpose of $C$ is $C_{t}^{T} (a,b) = P_{t}(b) P[a \rightarrow b \, | \, b]$, which is the right 
+half of the term in parentheses.
+The intuitive meaning of this term is the probability that $b$ challenges $a$, which is the the probability of $b$ times 
+the  conditional probability that $a$ then challenges $b$.
+
+Thus, the sum of the two terms in parentheses on the right is the probability that $a$ and $b$ get into a contest (one way or another).
+ The sum over all $b$ of this probability, times the probability that $a$ defeats that $b$, is thus the probability that $a$ is the
+ next favorite (one way or another).
+
+Finally,  we can write  equation (\ref{eq:basicTransProbs})  in a more compact form:
+
+\begin{align} 
+ V(a,b) &= P[a \succ b] \\
+ C_{t}(a,b)    &= P_{t}(a) P[b \rightarrow a]   \\
+ P_{t+1}(a) &= V(a,)  \bigcdot \left( C_{t} + C_{t}^{T}  \right) (,a) \label{eq:transProbs}
+\end{align}
+
+We need merely set the initial probabilities to uniform, $P_{0}[a] = \frac{1}{M}$, then iterate these equations until $P_t$ stabilizes.
+
+\section{Software Implementation}
+
+The above algorithms were implemented in the KTAB toolkit using the C++11 language. 
+
+\subsection{Correctness}
+
+A necessary condition for correctness is that if $P_t$ adds up to exactly 1, then after applying  equations  (\ref{eq:transProbs})  
+and   (\ref{eq:transProbsNewton})  
+the resulting $P_{t+1}$ must also sum to 1. Numerical checks of the KTAB implementation confirm that this condition is met,
+providing some evidence for the absence of algebraic (or coding) errors.
+
+
+\subsection{Generalization}
+The C++11 implementation generalizes equation (\ref{eq:basicProbability}) in that it allows $\nu \in \{1, 2, 4, 8 \}$. It also allows a binary
+victory model, where even the slightest advantage guarantees victory, as in a formal committee vote.
+
+
+
+\subsection{Convergence}
+\label{sec:convergence}
+
+While equation (\ref{eq:transProbs})   is mathematically correct, it converges fairly slowly. A standard method to speed up 
+convergence is Newton's method, which consists of simply averaging the old estimate with the new estimate:
+
+\begin{equation}  
+ P_{t+1}(a)  =  \frac {P_{t}(a) +  V(a,)  \bigcdot \left( C_{t} + C_{t}^{T}  \right) (,a)    } {2}  \label{eq:transProbsNewton}
+\end{equation}
+
+One of the oldest known algorithms is  the iterative algorithm for extracting square root of $y$:
+
+\begin{equation}  
+ x_{t+1}  =  \frac {x_{t} +  \frac{y}{x_{t}}    } {2}  
+\end{equation}
+
+If the error in $x_t$, as a fraction of $y$, is denoted $\epsilon_t$, then the reduction in the error term is as follows:
+
+\begin{equation}
+\epsilon_{t+1} = \frac {\epsilon_{t}^2} {2}
+\end{equation}
+
+If the error were merely halved each iteration, then the error term would be declining exponentially, like the series
+$2^{-1}, \, 2^{-2}, \, 2^{-3}, \, 2^{-4}, \, \ldots$. By contrast, the error terms of Newton's method decline super-exponentially,
+like the series  $2^{-1}, \, 2^{-3}, \, 2^{-7}, \, 2^{-15}, \, \ldots$. 
+
+
+
+The algorithm of equation (\ref{eq:transProbs})  correctly handles deterministic cycles. 
+Suppose that $\Omega = \{ a, b, c \}$, and every actor prefers $a$ to $b$, prefers $b$ to $c$, and prefers $c$ to $a$. 
+Given any particular option as the current favorite, the next one is
+unanimously determined, with certainty,
+in cyclic order. However, because any one
+of the three could be the favorite,  the limiting distribution is $[ \frac{1}{3},  \frac{1}{3},  \frac{1}{3} ]$. 
+Because of the sharp changes in the distribution, equation (\ref{eq:transProbs})  converges very slowly for this case.
+For the particular tolerances used in the KTAB demonstration, using equation  (\ref{eq:transProbsNewton}) 
+rather than equation  (\ref{eq:transProbs})    with unanimous cyclic preferences over three elements
+reduced the convergence time to 8 iterations rather than 1,039,053.
+
+
+\section{Conclusion}
+Something conclusive.
+
+
+\end{document}

@@ -7,7 +7,7 @@
  <ModelParameters>
     <VictoryProbModel>Linear</VictoryProbModel>
     <PCEModel>MarkovIncentive</PCEModel>
-    <StateTransitions>Deterministic</StateTransitions> 
+    <StateTransitions>Stochastic</StateTransitions> 
     
     <VotingRule>PropCbc</VotingRule>
     <BigRAdjust>OneThird</BigRAdjust>
@@ -27,56 +27,80 @@
     <Actor>
       <name>Alice</name>
       <description>One of the SMP actors</description>
-      <capability>72.2</capability>
+      <capability>117.7</capability>
       <Position>
-        <dCoord>42.1</dCoord>
-        <dCoord>15.7</dCoord>
+        <dCoord>52.8</dCoord>
+        <dCoord>39.8</dCoord>
+        <dCoord>39.6</dCoord>
       </Position>
       <Salience>
-        <dSal>83.8</dSal>
-        <dSal>97.2</dSal>
+        <dSal>32.3</dSal>
+        <dSal>22.4</dSal>
+        <dSal>13.4</dSal>
       </Salience>
     </Actor>
     
     <Actor>
       <name>Bob</name>
       <description>The second SMP actor</description>
-      <capability>72.2</capability>
+      <capability>93.2</capability>
       <Position>
-        <dCoord>42.1</dCoord>
-        <dCoord>15.7</dCoord>
+        <dCoord>15.9</dCoord>
+        <dCoord>61.4</dCoord>
+        <dCoord>72.0</dCoord>
       </Position>
       <Salience>
-        <dSal>83.8</dSal>
-        <dSal>97.2</dSal>
+        <dSal>25.2</dSal>
+        <dSal>34.5</dSal>
+        <dSal>26.5</dSal>
       </Salience>
     </Actor>
     
     <Actor>
       <name>Carol</name>
       <description>Third SMP actor</description>
-      <capability>72.2</capability>
+      <capability>61.4</capability>
       <Position>
-        <dCoord>42.1</dCoord>
-        <dCoord>15.7</dCoord>
+        <dCoord>61.1</dCoord>
+        <dCoord>86.5</dCoord>
+        <dCoord>44.5</dCoord>
       </Position>
       <Salience>
-        <dSal>83.8</dSal>
-        <dSal>97.2</dSal>
+        <dSal>28.8</dSal>
+        <dSal>28.6</dSal>
+        <dSal>18.2</dSal>
       </Salience>
     </Actor>
     
     <Actor>
       <name>David</name>
       <description>Fourth SMP actor</description>
-      <capability>63.8</capability>
+      <capability>135.4</capability>
       <Position>
-        <dCoord>55.9</dCoord>
-        <dCoord>39.8</dCoord>
+        <dCoord>26.3</dCoord>
+        <dCoord>16.5</dCoord>
+        <dCoord>15.9</dCoord>
       </Position>
       <Salience>
-        <dSal>11.2</dSal>
-        <dSal>63.8</dSal>
+        <dSal>15.6</dSal>
+        <dSal>42.0</dSal>
+        <dSal>14.3</dSal>
+      </Salience>
+    </Actor>
+    
+    <Actor>
+      <name>Ellie</name>
+      <description>Fifth and final SMP actor</description>
+      <capability>63.8</capability>
+      <Position>
+        <dCoord>73.3</dCoord>
+        <dCoord>61.1</dCoord>
+        <dCoord>26.3</dCoord>
+      </Position>
+      <Salience>
+        <dSal>39.7</dSal>
+        <dSal>19.9</dSal>
+        <dSal>15.8</dSal>
       </Salience>
     </Actor>
     

@@ -31,7 +31,7 @@ MainWindow::MainWindow()
     createActions();
     createStatusBar();
 
-    createModuleParametersDockWindow();
+    createModelParametersDockWindow();
     createLinePlotsDockWindows();
     createBarPlotsDockWindows();
     createQuadMapDockWindows();
@@ -240,6 +240,7 @@ void MainWindow::updateScenarioListComboBox(QStringList * scenarios,QStringList*
         connect(scenarioComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(scenarioComboBoxValue(int)));
 
     }
+    scenarioComboBox->setCurrentIndex(indx);
     scenarioBox = mScenarioIds.at(indx);
     scenarioDescriptionLineEdit->setText(mScenarioDesc.at(indx));
 
@@ -254,7 +255,6 @@ void MainWindow::updateDimensionCount(int dim, QStringList * dimList)
 
     for(int i = 0 ; i < dimList->length(); ++i)
         dimensionList.append( dimList->at(i));
-
 }
 
 void MainWindow::updateActorCount(int actNum)
@@ -268,7 +268,10 @@ void MainWindow::sliderStateValueToQryDB(int value)
     {
         scenarioBox = mScenarioIds.at(scenarioComboBox->currentIndex());
         lineCustomGraph->clearGraphs();
-        lineCustomGraph->xAxis->setRange(-1,turnSlider->value()+1);
+        if(turnSlider->value()!=numStates)
+            lineCustomGraph->xAxis->setRange(-1,turnSlider->value()+1);
+        else
+            lineCustomGraph->xAxis->setRange(-1,turnSlider->value());
         emit getScenarioRunValues(value,scenarioBox,dimension);
 
         lineGraphTitle->setText(QString(lineGraphDimensionComboBox->currentText()
@@ -998,54 +1001,10 @@ void MainWindow::createQuadMapDockWindows()
 
 }
 
-void MainWindow::createModuleParametersDockWindow()
+void MainWindow::createModelParametersDockWindow()
 {
-    moduleParametersDock = new QDockWidget(tr(" Parameters"),this);
-
-    moduleFrame = new QFrame(moduleParametersDock);
-    VLayout  = new QGridLayout(moduleFrame);
-
-    for (int i = 0; i < N; ++ i)
-    {
-        frames[i] = new QFrame(moduleParametersDock);
-        frames[i]->setFrameShape(QFrame::StyledPanel);//change to flat if required
-        VLayout->addWidget(frames[i]);
-    }
-
-    //RUN Button
-    runButton = new QPushButton;
-    runButton->setText("RUN");
-    runButton->setEnabled(false);
-    VLayout->addWidget(runButton);
-
-    connect(runButton,SIGNAL(clicked(bool)),this,SLOT(runPushButtonClicked(bool)));
-
-    //Radio buttons //Section1
-    QGridLayout *radioButtonLayout = new QGridLayout(frames[0]);
-    rparam1 = new QRadioButton("Parameter 1");
-    rparam2 = new QRadioButton("Parameter 2");
-    rparam3 = new QRadioButton("Parameter 3");
-    radioButtonLayout->addWidget(rparam1);
-    radioButtonLayout->addWidget(rparam2);
-    radioButtonLayout->addWidget(rparam3);
-    frames[0]->setLayout(radioButtonLayout);
-
-    //CheckBoxes //Section2
-    QGridLayout * checkBoxLayout = new QGridLayout(frames[1]);
-    cparam1 = new QCheckBox("Parameter 1");
-    cparam2 = new QCheckBox("Parameter 2");
-    cparam3 = new QCheckBox("Parameter 3");
-    checkBoxLayout->addWidget(cparam1);
-    checkBoxLayout->addWidget(cparam2);
-    checkBoxLayout->addWidget(cparam3);
-    frames[1]->setLayout(checkBoxLayout);
-
-    moduleParametersDock->setWidget(moduleFrame);
-    // moduleParametersDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::LeftDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea );
-    addDockWidget(Qt::LeftDockWidgetArea, moduleParametersDock);
-    viewMenu->addAction(moduleParametersDock->toggleViewAction());
-
-    moduleParametersDock->setVisible(true);
+    modelParametersDock = new QDockWidget(tr("Model Parameters"),this);
+    initializeModelParametersDock();
 }
 
 void MainWindow::saveTableViewToCSV()

@@ -112,11 +112,27 @@ void MainWindow::runPushButtonClicked(bool bl)
         QApplication::setOverrideCursor(QCursor(QPixmap("://images/hourglass.png")));
         QApplication::processEvents();
 
+        //get parameters from GUI
+        getParametersValues();
+
         // A code snippet from Demosmp.cpp to run the model
 
         using KBase::dSeed;
         auto sTime = KBase::displayProgramStart(DemoSMP::appName, DemoSMP::appVersion);
         uint64_t seed = dSeed;
+
+        //Collect flags and Data from GUI
+        if(seedRand->text().length()>0 && !seedRand->text().isNull())
+        {
+            seed = seedRand->text().toULongLong();
+        }
+        if (0 == seed)
+        {
+            PRNG * rng = new PRNG();
+            seed = rng->setSeed(seed); // 0 == get a random number
+            delete rng;
+            rng = nullptr;
+        }
 
         // JAH 20160730 vector of SQL logging flags for 5 groups of tables:
         // 0 = Information Tables, 1 = Position Tables, 2 = Challenge Tables,
@@ -124,10 +140,16 @@ void MainWindow::runPushButtonClicked(bool bl)
         // JAH 20161010 added group 4 for only VectorPos so it can be logged alone
         std::vector<bool> sqlFlags = {true,true,true,true,true};
 
+        //log minimum
+        if(logMinimum->isChecked())
+        {
+            sqlFlags = {true,false,false,false,true};
+        }
+
         // Notice that we NEVER use anything but the default seed.
         printf("Using PRNG seed:  %020llu \n", seed);
         printf("Same seed in hex:   0x%016llX \n", seed);
-        SMPLib::SMPModel::csvReadExec(seed, csvPath.toStdString(),sqlFlags, dbFilePath.toStdString());
+        SMPLib::SMPModel::csvReadExec(seed, csvPath.toStdString(),sqlFlags, dbFilePath.toStdString(),parameters);
         KBase::displayProgramEnd(sTime);
 
         QApplication::restoreOverrideCursor();
@@ -215,6 +237,213 @@ void MainWindow::logSMPDataOptionsAnalysis()
     }
 
 }
+
+//Model Parameters
+
+void MainWindow::initializeModelParametersDock()
+{
+    modelParametersFrame = new QFrame(modelParametersDock);
+    VLayout  = new QGridLayout(modelParametersFrame);
+
+    frames = new QFrame(modelParametersDock);
+    frames->setFrameShape(QFrame::StyledPanel);//change to flat if required
+    VLayout->addWidget(frames,0,0);
+
+    //LogMinimum
+    logMinimum = new QCheckBox("Minimum Logging");
+    logMinimum->setChecked(true);
+    logMinimum->setToolTip("Please be aware the turning on Minimum Logging will result in\n"
+                           " SMP not storing sufficient data to generate the quadmap.");
+    VLayout->addWidget(logMinimum,1,0);
+
+    //Seed
+    //    QLabel * seedLabel = new QLabel("Randomizer Seed");
+    // VLayout->addWidget(seedLabel,2,0);
+    seedRand = new QLineEdit;
+    seedRand->setPlaceholderText("Enter Random Seed");
+    VLayout->addWidget(seedRand,2,0);
+
+    //RUN Button
+    runButton = new QPushButton;
+    runButton->setText("RUN");
+    runButton->setEnabled(false);
+    VLayout->addWidget(runButton,3,0);
+
+    connect(runButton,SIGNAL(clicked(bool)),this,SLOT(runPushButtonClicked(bool)));
+
+    //Radio buttons //Section1
+    QGridLayout *parametersGLayout = new QGridLayout(frames);
+
+    victProbModelComboBox = new QComboBox;
+    pCEModelComboBox = new QComboBox;
+    stateTransitionsComboBox = new QComboBox;
+    votingRuleComboBox = new QComboBox;
+    bigRAdjustComboBox = new QComboBox;
+    bigRRangeComboBox = new QComboBox;
+    thirdPartyCommitComboBox = new QComboBox;
+    interVecBrgnComboBox = new QComboBox;
+    bargnModelComboBox = new QComboBox;
+
+    QLabel *victProbLabel = new QLabel(" VictoryProbModel ");
+    victProbLabel->setFrameStyle(QFrame::StyledPanel);
+    victProbLabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *pCELabel =  new QLabel(" ProbCondorcetElection ");
+    pCELabel->setFrameStyle(QFrame::StyledPanel);
+    pCELabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *stateTransitionsLabel =  new QLabel(" StateTransition ");
+    stateTransitionsLabel->setFrameStyle(QFrame::StyledPanel);
+    stateTransitionsLabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *votingRuleLabel =  new QLabel(" VotingRule ");
+    votingRuleLabel->setFrameStyle(QFrame::StyledPanel);
+    votingRuleLabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *bigRAdjustLabel =  new QLabel(" BigRAdjust ");
+    bigRAdjustLabel->setFrameStyle(QFrame::StyledPanel);
+    bigRAdjustLabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *bigRRangeLabel =  new QLabel(" BigRRange ");
+    bigRRangeLabel->setFrameStyle(QFrame::StyledPanel);
+    bigRRangeLabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *thirdPartyCommitLabel =  new QLabel(" ThirdPartyCommit ");
+    thirdPartyCommitLabel->setFrameStyle(QFrame::StyledPanel);
+    thirdPartyCommitLabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *interVecBrgnLabel =  new QLabel(" InterVecBrgn ");
+    interVecBrgnLabel->setFrameStyle(QFrame::StyledPanel);
+    interVecBrgnLabel->setAlignment(Qt::AlignHCenter);
+
+    QLabel *bargnModelLabel =  new QLabel(" BargnModel ");
+    bargnModelLabel->setFrameStyle(QFrame::StyledPanel);
+    bargnModelLabel->setAlignment(Qt::AlignHCenter);
+
+    QStringList victList;
+    victList << "Linear" << "Square" << "Quartic" << "Octic" << "Binary";
+
+    QStringList pceList;
+    pceList << "Conditional" << "MarkovIncentive" << "MarkovUniform";
+
+    QStringList stateList;
+    stateList << "Deterministic" << "Stochastic";
+
+    QStringList votingList;
+    votingList << "Binary" << "PropBin"<< "Proportional"<< "PropCbc"<< "Cubic"<< "ASymProsp";
+
+    QStringList bigAdjList;
+    bigAdjList << "None" << "OneThird" << "Half"<< "TwoThirds"<< "Full";
+
+    QStringList bigRangeList;
+    bigRangeList << "Min" << "Mid" << "Max";
+
+    QStringList thridpartyList;
+    thridpartyList << "NoCommit" << "SemiCommit" << "FullCommit";
+
+    QStringList interVecList;
+    interVecList << "S1P1" << "S2P2" << "S2PMax";
+
+    QStringList bargnList;
+    bargnList << "InitOnlyInterp" << "InitRcvrInterp" << "PWCompInterp";
+
+    QVBoxLayout * v1 = new QVBoxLayout;
+    victProbModelComboBox->addItems(victList);
+    v1->addWidget(victProbLabel,0,Qt::AlignBottom);
+    v1->addWidget(victProbModelComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v1,0,0);
+
+    QVBoxLayout * v2 = new QVBoxLayout;
+    pCEModelComboBox->addItems(pceList);
+    v2->addWidget(pCELabel,0,Qt::AlignBottom);
+    v2->addWidget(pCEModelComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v2,0,1);
+
+    QVBoxLayout * v3 = new QVBoxLayout;
+    stateTransitionsComboBox->addItems(stateList);
+    v3->addWidget(stateTransitionsLabel,0,Qt::AlignBottom);
+    v3->addWidget(stateTransitionsComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v3,0,2);
+
+    QVBoxLayout * v4 = new QVBoxLayout;
+    votingRuleComboBox->addItems(votingList);
+    v4->addWidget(votingRuleLabel,0,Qt::AlignBottom);
+    v4->addWidget(votingRuleComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v4,1,0);
+
+    QVBoxLayout * v5 = new QVBoxLayout;
+    bigRAdjustComboBox->addItems(bigAdjList);
+    v5->addWidget(bigRAdjustLabel,0,Qt::AlignBottom);
+    v5->addWidget(bigRAdjustComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v5,1,1);
+
+    QVBoxLayout * v6 = new QVBoxLayout;
+    bigRRangeComboBox->addItems(bigRangeList);
+    v6->addWidget(bigRRangeLabel,0,Qt::AlignBottom);
+    v6->addWidget(bigRRangeComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v6,1,2);
+
+    QVBoxLayout * v7 = new QVBoxLayout;
+    thirdPartyCommitComboBox->addItems(thridpartyList);
+    v7->addWidget(thirdPartyCommitLabel,0,Qt::AlignBottom);
+    v7->addWidget(thirdPartyCommitComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v7,2,0);
+
+    QVBoxLayout * v8 = new QVBoxLayout;
+    interVecBrgnComboBox->addItems(interVecList);
+    v8->addWidget(interVecBrgnLabel,0,Qt::AlignBottom);
+    v8->addWidget(interVecBrgnComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v8,2,1);
+
+    QVBoxLayout * v9 = new QVBoxLayout;
+    bargnModelComboBox->addItems(bargnList);
+    v9->addWidget(bargnModelLabel,0,Qt::AlignBottom);
+    v9->addWidget(bargnModelComboBox,0,Qt::AlignTop);
+    parametersGLayout->addLayout(v9,2,2);
+
+    modelParametersDock->setWidget(modelParametersFrame);
+    addDockWidget(Qt::LeftDockWidgetArea, modelParametersDock);
+    viewMenu->addAction(modelParametersDock->toggleViewAction());
+
+    modelParametersDock->setVisible(true);
+}
+
+void MainWindow::getParametersValues()
+{
+    victProbModel= victProbModelComboBox->currentIndex();
+    pCEModel = pCEModelComboBox->currentIndex();
+    stateTransitions = stateTransitionsComboBox->currentIndex();
+    votingRule = votingRuleComboBox->currentIndex();
+    bigRAdjust = bigRAdjustComboBox->currentIndex();
+    bigRRange = bigRRangeComboBox->currentIndex();
+    thirdPartyCommit= thirdPartyCommitComboBox->currentIndex();
+    interVecBrgn = interVecBrgnComboBox->currentIndex();
+    bargnModel = bargnModelComboBox->currentIndex();
+
+    parameters={victProbModel,pCEModel,stateTransitions,votingRule,bigRAdjust,bigRRange,thirdPartyCommit,
+                interVecBrgn,bargnModel};
+
+}
+
+//QStandardItemModel * MainWindow::initializeComboBox(int rows, QStringList items)
+//{
+//    QStandardItemModel * model= new QStandardItemModel(rows, 1); // 3 rows, 1 col
+//    for (int r = 0; r < rows; ++r)
+//    {
+//        QStandardItem* item = new QStandardItem(QString(items.at(r)));
+
+//        item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+//        item->setData(Qt::Unchecked, Qt::CheckStateRole);
+
+//        model->setItem(r, 0, item);
+//    }
+
+//    return model;
+//}
+
+
+
+
 
 
 // --------------------------------------------

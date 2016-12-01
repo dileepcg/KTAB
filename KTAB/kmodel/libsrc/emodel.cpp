@@ -655,7 +655,7 @@ EState<PT>* EState<PT>::doMCN(ReportingLevel rl) const {
   // the 0-neighbor, so we never take something less than the current
   neighbors.push_back(currNdcs);
 
-  const unsigned int numOpt = eMod->numOptions();
+ // const unsigned int numOpt = eMod->numOptions();
   const unsigned int numSim = eMod->nSim;
 
   // add 1-neighbors

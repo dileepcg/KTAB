@@ -104,7 +104,7 @@ void MainWindow::initializeBarGraphDock()
 
 void MainWindow::initializeBarGraphPlot()
 {
-    QFont font("Helvetica[Adobe]",15);
+    QFont font("Helvetica[Adobe]",10);
     barGraphTitle = new QCPPlotTitle(barCustomGraph," ");
     barGraphTitle->setFont(font);
     barGraphTitle->setTextColor(QColor(51,51,255));
