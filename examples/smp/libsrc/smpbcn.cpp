@@ -191,7 +191,6 @@ vector<double> SMPState::calcVotes(KMatrix w, KMatrix u, int k) const
 			
 		}
 	}
-	cout << endl;
 	return votes;
 }
 
