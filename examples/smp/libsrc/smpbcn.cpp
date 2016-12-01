@@ -185,8 +185,6 @@ vector<double> SMPState::calcVotes(KMatrix w, KMatrix u, int k) const
 	{
 		for (unsigned int j = 0; j < i; j++)
 		{
-//			double pv_ij;
-
 			auto vr = ((const SMPActor*)(model->actrs[k]))->vr;
 			double vkij = vfn(vr, k, i, j);
 			votes.push_back(vkij);
