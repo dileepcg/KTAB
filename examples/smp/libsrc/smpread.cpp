@@ -470,6 +470,7 @@ SMPModel * SMPModel::xmlRead(string fName, vector<bool> f) {
                     adjEl->QueryDoubleText(&adjV);
                     printf(" %6s (%u) :  %6s  (%u) = %.3f \n", aiStr.c_str(), aiNdx, rpStr.c_str(), rpNdx, adjV);
                     accM(aiNdx, rpNdx)=adjV;
+                    
                     numIAPairs++;
                     iaEl = iaEl->NextSiblingElement("iaPair");
                 }

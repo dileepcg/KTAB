@@ -1,5 +1,5 @@
   Software version: smpc 0.1
-  Start time: Fri Nov 11 10:21:13 2016
+  Start time: Sun Dec  4 20:51:43 2016
 
 Using PRNG seed:  15455440707583219804 
 Same seed in hex:   0xD67CC16FE69C185C 
@@ -156,7 +156,7 @@ Grp 4 = 1
 No scenario description provided to Model::Model, 
 generating default name from UTC start time.
 Using PRNG seed: 15455440707583219804 
-Scenario assigned name: -|Scenario-UTC-2016-11-5-1021-13|-
+Scenario assigned name: -|Scenario-UTC-2016-12-7-2051-43|-
 
 Successfully opened database #1
 
@@ -34320,6 +34320,6 @@ WY , prob , 0.0005 , 0.0002 , 0.0001 , 0.0000 , 0.0000 , 0.0000 , 0.0000 , 0.000
 SMPModel::~SMPModel Closing database
 SMPModel::~SMPModel Closing database succeeded.
 -----------------------------------
-  Finish time: Fri Nov 11 10:21:14 2016
+  Finish time: Sun Dec  4 20:52:02 2016
 
-  Elapsed time: 0.8875 seconds 
+  Elapsed time: 18.1231 seconds 

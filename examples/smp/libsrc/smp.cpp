@@ -1062,19 +1062,19 @@ SMPModel * SMPModel::initModel(vector<string> aName, vector<string> aDesc, vecto
                                uint64_t s, vector<bool> f)
 {
     
-     cout << "Num aName "<< aName.size() << endl;
-    cout << "Num aDesc "<< aDesc.size() << endl;
-    cout << "Num dName "<< dName.size() << endl;
-    auto sfn = [](const string str, const KMatrix & m) { 
-    cout << "Dim "<<str<<": "<<m.numR() << ", "<<m.numC() <<endl;
-    m.mPrintf(" %.4f ");
-    return;
-    };
-    sfn("cap", cap);
-    sfn("pos", pos);
-    sfn("sal", sal);
-    sfn("accM", accM);
-    cout << flush; 
+  //  cout << "Num aName "<< aName.size() << endl;
+  //  cout << "Num aDesc "<< aDesc.size() << endl;
+  //  cout << "Num dName "<< dName.size() << endl;
+  //  auto sfn = [](const string str, const KMatrix & m) { 
+  //  cout << "Dim "<<str<<": "<<m.numR() << ", "<<m.numC() <<endl;
+  //  m.mPrintf(" %.4f ");
+  //  return;
+  //  };
+  //  sfn("cap", cap);
+  //  sfn("pos", pos);
+  //  sfn("sal", sal);
+  //  sfn("accM", accM);
+  //  cout << flush; 
     
     assert(f.size() == Model::NumSQLLogGrps + NumSQLLogGrps);
     SMPModel * sm0 = new SMPModel("", s, f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
