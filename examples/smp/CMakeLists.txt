@@ -24,7 +24,6 @@ set(CMAKE_BUILD_TYPE Debug)
 set(LIBRARY_OUTPUT_PATH      ${PROJECT_SOURCE_DIR}/)
 set(EXECUTABLE_OUTPUT_PATH   ${PROJECT_SOURCE_DIR}/)
 
-set (ENABLE_FLTK_GUI true CACHE  BOOL "Build app with FLTK GUI")
 set (ENABLE_QT_GUI true CACHE  BOOL "Build app with QT GUI")
 set (ENABLE_COPY_QT_LIBS false CACHE  BOOL "Copy Qt LIBS after build")
 
@@ -56,7 +55,6 @@ if (NOT SQLITE_FOUND)
 endif (NOT SQLITE_FOUND)
 
 # --------------------------------------------------------
-# See this page for useful hints: https://cmake.org/Wiki/CMakeForFLTK
 
 set (SMP_XLIBS  )
 
@@ -76,37 +74,6 @@ if(NOT KMODEL_FOUND)
 endif(NOT KMODEL_FOUND)
 
 
-if (ENABLE_FLTK_GUI)
-
-  if(UNIX)
-    find_package(X11)
-    if (NOT X11_FOUND)
-      message (FATAL_ERROR "Couldn't find X11: required for building smpg")
-    endif (NOT X11_FOUND)
-    set (SMP_XLIBS
-      #           Xaw Xmu Xpm Xt Xft X11 Xinerama dl fontconfig
-      # Xext Xft fontconfig Xinerama dl m X11
-      Xext Xft fontconfig dl m X11  Xfixes
-      # Xft dl m X11
-      )
-  endif (UNIX)
-
-  include (${LOCAL_MODULE_DIR}/FLTKHelper.cmake)
-  find_package(FLTK REQUIRED)
-  if (NOT FLTK_FOUND)
-    message (FATAL_ERROR "Could not find fltk: required for building smpg")
-  endif (NOT FLTK_FOUND)
-
-  set (FLUID_DIR
-    fluid)
-
-
-  # Ditto for "Findkgraph.cmake"
-  find_package(kgraph)
-  if(NOT KGRAPH_FOUND)
-    message(FATAL_ERROR "Could not find kgraph")
-  endif(NOT KGRAPH_FOUND)
-endif (ENABLE_FLTK_GUI)
 
 # -------------------------------------------------
 # files to be built into a library go in libsrc/
@@ -135,11 +102,9 @@ endif(NOT MINICSV_DIR)
 include_directories (
   ${KUTILS_INCLUDE_DIR}
   ${KMODEL_INCLUDE_DIR}
-  ${KGRAPH_INCLUDE_DIR}
   ${PROJECT_SOURCE_DIR}/libsrc/
   ${PROJECT_SOURCE_DIR}/src/
   ${FLUID_DIR}
-  ${FLTK_INCLUDE_DIR}
   ${MINICSV_DIR}
   ${SQLITE_INCLUDE_DIR}
   ${TINYXML2_INCLUDE_DIR}
@@ -186,47 +151,6 @@ install(
   ${SMP_INSTALL_DIR}/include)
 
 # -------------------------------------------------
-if (ENABLE_FLTK_GUI)
-  # define a little library of smp GUI stuff (if desired)
-
-  set (SMPGUI_FLS
-    ${FLUID_DIR}/mainw.fl
-    )
-
-  message (STATUS "Use these SMPGUI_FLS: ${SMPGUI_FLS}")
-
-  fltk_wrap_ui (smpGUI ${SMPGUI_FLS})
-  add_library (smpGUI STATIC ${smpGUI_FLTK_UI_SRCS})
-
-  # --------------------------------------------------------
-  set (SMPG_SRCS
-    ${PROJECT_SOURCE_DIR}/src/guimain.cpp
-    )
-  set (SMPG_LIBS
-    ${FLTK_LIBRARIES}
-    ${KGRAPH_LIBRARIES}
-    smpGUI
-    ${SMP_XLIBS}
-    )
-
-  add_executable (smpg ${SMPG_SRCS})
-  target_link_libraries(smpg
-    smp
-    ${SMPG_LIBS}
-    ${SQLITE_LIBRARIES}
-    ${EFENCE_LIBRARIES}
-    ${TINYXML2_LIBRARIES}
-    )
-
-  # suppress the console window under Windows
-  if (WIN32)
-    if (MSVC)
-      set_target_properties(smpg PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-      set_target_properties(smpg PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-      message (STATUS "Using /SUBSYSTEM:WINDOWS")
-    endif(MSVC)
-  endif(WIN32)
-endif (ENABLE_FLTK_GUI)
 # -------------------------------------------------
 
 add_executable (smpc
@@ -298,13 +222,6 @@ message (STATUS "KUTILS_INCLUDE_DIR: " ${KUTILS_INCLUDE_DIR})
 message (STATUS "KMODEL_INCLUDE_DIR: " ${KMODEL_INCLUDE_DIR})
 message (STATUS "MINICSV_DIR: " ${MINICSV_DIR})
 message (STATUS "QCUSTOMPLOT_DIR: " ${QCUSTOMPLOT_DIR})
-
-if (ENABLE_FLTK_GUI)
-  message (STATUS "FLTK_INCLUDE_DIR: " ${FLTK_INCLUDE_DIR})
-  message (STATUS "KGRAPH_INCLUDE_DIR: " ${KGRAPH_INCLUDE_DIR})
-endif (ENABLE_FLTK_GUI)
-
-
 
 # -------------------------------------------------
 # As of early 2014, C++11 is still not the default

@@ -49,7 +49,6 @@ if (NOT SQLITE_FOUND)
 endif (NOT SQLITE_FOUND)
 
 # --------------------------------------------------------
-# See this page for useful hints: https://cmake.org/Wiki/CMakeForFLTK
 
 set (COMSEL_XLIBS  )
 
@@ -67,14 +66,6 @@ if(UNIX)
 endif (UNIX)
 
 
-include (${LOCAL_MODULE_DIR}/FLTKHelper.cmake)
-find_package(FLTK REQUIRED)
-if (NOT FLTK_FOUND)
-  message (FATAL_ERROR "Could not find fltk: required for building csg")
-endif (NOT FLTK_FOUND)
-
-set (FLUID_DIR
-  fluid)
 
 # --------------------------------------------------------
 
@@ -99,15 +90,6 @@ find_package(kmodel)
 if(NOT KMODEL_FOUND)
   message(FATAL_ERROR "Could not find kmodel")
 endif(NOT KMODEL_FOUND)
-
-
-# Ditto for "Findkgraph.cmake"
-find_package(kgraph)
-if(NOT KGRAPH_FOUND)
-  message(FATAL_ERROR "Could not find kgraph")
-endif(NOT KGRAPH_FOUND)
-
-
 # Ditto for "Findsmp.cmake"
 find_package(smp)
 if(NOT SMP_FOUND)
@@ -120,12 +102,9 @@ endif(NOT SMP_FOUND)
 include_directories (
   ${KUTILS_INCLUDE_DIR}
   ${KMODEL_INCLUDE_DIR}
-  ${KGRAPH_INCLUDE_DIR}
   ${SMP_INCLUDE_DIR}
   ${PROJECT_SOURCE_DIR}/libsrc/
   ${PROJECT_SOURCE_DIR}/src/
-  ${FLUID_DIR}
-  ${FLTK_INCLUDE_DIR}
   ${SQLITE_INCLUDE_DIR}
   ${TINYXML2_INCLUDE_DIR}
   )
@@ -138,28 +117,13 @@ set(COMSELLIB_SRCS
 add_library(comsel STATIC ${COMSELLIB_SRCS})
 
 # -------------------------------------------------
-# define a little library of comsel GUI stuff
-
-set (COMSELGUI_FLS
-  ${FLUID_DIR}/csmain.fl
-  )
-
-message (STATUS "Use these COMSELGUI_FLS: ${COMSELGUI_FLS}")
-
-fltk_wrap_ui (comselGUI ${COMSELGUI_FLS})
-add_library (comselGUI STATIC ${comselGUI_FLTK_UI_SRCS})
-
-# --------------------------------------------------------
 
 set (CSG_SRCS
   ${PROJECT_SOURCE_DIR}/src/democomsel.cpp
   )
 
 set (CSG_LIBS
-  ${FLTK_LIBRARIES}
-  ${KGRAPH_LIBRARIES}
-  comselGUI
-  ${COMSEL_XLIBS}
+    ${COMSEL_XLIBS}
   )
 
 add_executable (csg 
@@ -176,11 +140,10 @@ target_link_libraries(csg
   ${TINYXML2_LIBRARIES}
   )
   
-# suppress the console window under Windows
 if (WIN32)  
   if (MSVC)  
-    set_target_properties(csg PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-    message (STATUS "Using /SUBSYSTEM:WINDOWS") 
+    set_target_properties(csg PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+    message (STATUS "Using /SUBSYSTEM:CONSOLE") 
   endif(MSVC) 
 endif(WIN32)
 
@@ -194,8 +157,6 @@ message (STATUS "KUTILS_INCLUDE_DIR: " ${KUTILS_INCLUDE_DIR})
 #message (STATUS "SMP_LIBRARIES: " ${SMP_LIBRARIES})
 #message (STATUS "KMODEL_LIBRARIES: " ${KMODEL_LIBRARIES})
 #message (STATUS "KUTILS_LIBRARIES: " ${KUTILS_LIBRARIES})
-
-message (STATUS "FLTK_INCLUDE_DIR: " ${FLTK_INCLUDE_DIR})
 
 # -------------------------------------------------
 # As of early 2014, C++11 is still not the default
