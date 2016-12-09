@@ -333,7 +333,7 @@ namespace DemoComSel {
     return;
   }
 
-  void demoCSG(unsigned int nParty, unsigned int nDim, const uint64_t s) {
+  /*void demoCSG(unsigned int nParty, unsigned int nDim, const uint64_t s) {
     printf("Using PRNG seed: %020llu \n", s);
     auto rng = new PRNG();
     rng->setSeed(s);
@@ -358,7 +358,7 @@ namespace DemoComSel {
 
     return;
   }
-
+  */
 
 } // end of namespace
 
