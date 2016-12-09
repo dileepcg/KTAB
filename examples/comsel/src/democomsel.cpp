@@ -333,33 +333,7 @@ namespace DemoComSel {
     return;
   }
 
-  /*void demoCSG(unsigned int nParty, unsigned int nDim, const uint64_t s) {
-    printf("Using PRNG seed: %020llu \n", s);
-    auto rng = new PRNG();
-    rng->setSeed(s);
-
-    if (0 == nParty) {
-      nParty = 2 + (rng->uniform() % 4); // i.e. [2,6] inclusive
-    }
-    if (0 == nDim) {
-      nDim = 1 + (rng->uniform() % 7); // i.e. [1,7] inclusive
-    }
-
-    printf("Num parties: %u \n", nParty);
-    printf("Num dimensions: %u \n", nDim);
-
-    //Fl::scheme("standard"); // standard, plastic, gtk+, gleam
-
-    //auto mw = new CSMain();
-    //mw->mainWindow->show();
-    //Fl::run();
-    //delete mw;
-    //mw = nullptr;
-
-    return;
-  }
-  */
-
+  
 } // end of namespace
 
 
