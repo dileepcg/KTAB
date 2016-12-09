@@ -104,7 +104,6 @@ include_directories (
   ${KMODEL_INCLUDE_DIR}
   ${PROJECT_SOURCE_DIR}/libsrc/
   ${PROJECT_SOURCE_DIR}/src/
-  ${FLUID_DIR}
   ${MINICSV_DIR}
   ${SQLITE_INCLUDE_DIR}
   ${TINYXML2_INCLUDE_DIR}
