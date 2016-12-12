@@ -9,7 +9,6 @@ cmake --version  # This allows us to confirm which version of cmake has been ins
 
 # install additional dependencies
 brew tap linuxbrew/homebrew-xorg && brew install libxaw
-brew install fltk
 
 #install Qt5 libs
 brew tap homebrew/versions

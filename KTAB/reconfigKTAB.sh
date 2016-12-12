@@ -9,7 +9,7 @@ set -e
 # "Unix Makefiles", unless the first argument is non-null.
 #------------------------------------------
 
-DIRS=" kutils  kmodel  kgraph "
+DIRS=" kutils  kmodel"
 
 DQ="\""
 DEFGEN="Unix Makefiles"
