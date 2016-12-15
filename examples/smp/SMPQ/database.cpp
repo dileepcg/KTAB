@@ -168,7 +168,7 @@ void Database::getPositionDB(int dim, int turn)
     //qDebug()<<scenario_m;
 
     QSqlQuery qry;
-    QString query= QString(" select VectorPosition.Coord from VectorPosition,ActorDescription where"
+    QString query= QString(" select VectorPosition.Pos_Coord from VectorPosition,ActorDescription where"
                            " ActorDescription.Act_i = VectorPosition.Act_i"
                            " and VectorPosition.ScenarioId='%2' "
                            " and ActorDescription.ScenarioId='%2'"
@@ -218,7 +218,7 @@ void Database::getActorsInRangeFromDB(double lowerRng, double higherRng, int dim
 
     QSqlQuery qry;
     QString query= QString(" select Act_i from VectorPosition where"
-                           " Coord >= '%1'  AND Coord < '%2' AND "
+                           " Pos_Coord >= '%1'  AND Pos_Coord < '%2' AND "
                            " Dim_k='%3' AND ScenarioId='%4' "
                            "AND Turn_t='%5'")
             .arg(lwr).arg(upr).arg(dim).arg(scenarioM).arg(turn);
