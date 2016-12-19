@@ -35,7 +35,6 @@
 
 #include "smp.h"
 #include "comsel.h"
-//#include "csmain.h"
 #include "democomsel.h"
 
 using namespace std;
