@@ -412,7 +412,16 @@ KTable * Model::createSQL(unsigned int n)
           "Scenario Text(512) NOT NULL UNIQUE DEFAULT 'NoName', "\
           "Desc text(512) NOT NULL DEFAULT 'No Description', "\
           "ScenarioId TEXT(32) NOT NULL DEFAULT 'None'," \
-          "RNGSeed text(20) NOT NULL DEFAULT '0'" \
+          "RNGSeed text(20) NOT NULL DEFAULT '0'," \
+          "VictoryProbModel INTEGER NULL DEFAULT NULL," \
+          "ProbCondorcetElection INTEGER NULL DEFAULT NULL," \
+          "StateTransition INTEGER NULL DEFAULT NULL," \
+          "VotingRule INTEGER NULL DEFAULT NULL," \
+          "BigRAdjust INTEGER NULL DEFAULT NULL," \
+          "BigRRange INTEGER NULL DEFAULT NULL," \
+          "ThirdPartyCommit INTEGER NULL DEFAULT NULL," \
+          "InterVecBrgn INTEGER NULL DEFAULT NULL," \
+          "BargnModel INTEGER NULL DEFAULT NULL" \
           ");";
     name = "ScenarioDesc";
     grpID = 0;
@@ -765,7 +774,8 @@ void Model::LogInfoTables()
   sprintf(sqlBuffA,"INSERT INTO ActorDescription (ScenarioId,Act_i,Name,Desc) VALUES ('%s', ?1, ?2, ?3)",
           scenId.c_str());
   auto sqlBuffS = newChars(sqlBuffSize);
-  sprintf(sqlBuffS,"INSERT INTO ScenarioDesc (Scenario,Desc,ScenarioId,RNGSeed) VALUES ('%s',?1,?2,?3)",
+  sprintf(sqlBuffS,"INSERT INTO ScenarioDesc (Scenario,Desc,ScenarioId,RNGSeed,"
+      "VictoryProbModel,ProbCondorcetElection,StateTransition) VALUES ('%s',?1,?2,?3,?4,?5,?6)",
           scenName.c_str());
   // prepare the prepared statement statements
   sqlite3_stmt *insStmtA;
@@ -810,6 +820,12 @@ void Model::LogInfoTables()
   sprintf(seedBuff,"%20llu",rngSeed);
   const char* strSeed = seedBuff;
   rslt = sqlite3_bind_text(insStmtS, 3, strSeed, -1, SQLITE_TRANSIENT);
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtS, 4, static_cast<int>(vpm));
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtS, 5, static_cast<int>(pcem));
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtS, 6, static_cast<int>(stm));
   assert(SQLITE_OK == rslt);
   // record
   assert(SQLITE_OK == rslt);
