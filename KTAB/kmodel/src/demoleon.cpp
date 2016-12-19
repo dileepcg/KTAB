@@ -1995,7 +1995,7 @@ void demoMaxEcon(uint64_t s, unsigned int numF, unsigned int numG, unsigned int 
 // run with real-ish data; this could eventually be extended
 // to take in the setup data from csv
 // note that this bypasses entirely demoSetup, makeBaseYear, and makeIOModel
-void demoRealEcon(uint64_t s, PRNG* rng)
+void demoRealEcon(bool OSPonly, uint64_t s, PRNG* rng)
 {
   using std::vector;
   using std::cout;
@@ -2062,7 +2062,7 @@ void demoRealEcon(uint64_t s, PRNG* rng)
   auto cons = KMatrix::vecToKmat(cInput, N, M);
 
   // export demand price elasticities - different scenarios
-  unsigned int epsscen = 1;
+  unsigned int epsscen = 2;
   KMatrix eps = KMatrix();  // must declare it here even if capscen == 0 because of scope
   switch (epsscen)
   {
@@ -2072,13 +2072,13 @@ void demoRealEcon(uint64_t s, PRNG* rng)
     case 1: // equal
       eps = KMatrix(N,1,2.5);
       break;
-    case 2: // positively correlated with VA - most value-add linked with most elastic
+    case 2: // negatively correlated with VA - most value-add linked with most elastic
     {
       vector<double> eInput = {3.000, 2.750, 2.625, 2.250, 2.500, 2.875, 2.375, 2.125, 2.000};
       eps = KMatrix::vecToKmat(eInput,N,1);
       break;
     }
-    case 3: // negatively correlated with VA - most value-add linked with least elastic
+    case 3: // positively correlated with VA - most value-add linked with least elastic
     {
       vector<double> eInput = {2.000, 2.250, 2.375, 2.750, 2.500, 2.125, 2.625, 2.875, 3.000};
       eps = KMatrix::vecToKmat(eInput,N,1);
@@ -2324,15 +2324,83 @@ void demoRealEcon(uint64_t s, PRNG* rng)
   eu0.mPrintf(" %.4f ");
   cout << endl << flush;
 
-  // from here on out, the content is copied from demoEUEcon
-  //LeonState * eSt0 = ((LeonState *)(eMod0->history[0]));
+  // choose which model to run: only OSPs bargaining to find the CP, or
+  // UMAs bargaining with SUSN and PCE over the proposals from OSPs
+  if (OSPonly) {
+    // begin content copied from demoMaxEcon
+    eSt0->aUtil = vector<KMatrix>(); // dropping any old ones
+    eSt0->step = nullptr;
 
-  eSt0->aUtil = vector<KMatrix>(); // dropping any old ones
-  eSt0->step = [eSt0]() {
-    return eSt0->stepSUSN();
-  };
+    auto sCap = KMatrix(eMod0->numAct, 1);
+    for (unsigned int i = 0; i < eMod0->numAct; i++) {
+      auto ai = (LeonActor*)(eMod0->actrs[i]);
+      double si = sum(ai->vCap);
+      sCap(i, 0) = si;
+    }
 
-  eMod0->run();
+    auto omegaFn = [eMod0, sCap](const KMatrix & m1) {
+      auto m2 = eMod0->makeFTax(m1); // make it feasible
+      auto shares = eMod0->vaShares(m2, false);
+      double omega = 0;
+      for (unsigned int i = 0; i < eMod0->numAct; i++) {
+        auto ai = (LeonActor*)(eMod0->actrs[i]);
+        double si = shares(0, i);
+        double ui = ai->shareToUtil(si);
+        omega = omega + ui*sCap(i, 0);
+      }
+      return omega;
+    };
+
+    auto reportFn = [eMod0](const KMatrix & m) {
+      KMatrix r = eMod0->makeFTax(m);
+      assert(eMod0->infsDegree(r) < TolIFD); // make sure it is a feasible tax
+      printf("Rates: ");
+      trans(r).mPrintf(" %+.6f ");
+      return;
+    };
+
+    // TODO: do a VHCSearch here
+    auto vhc = new KBase::VHCSearch();
+    vhc->eval = omegaFn; // [] (const KMatrix & m1) { return 0.0;};
+    vhc->nghbrs = KBase::VHCSearch::vn2;
+    vhc->report = reportFn;
+
+    auto rslt = vhc->run(KMatrix(N, 1),            // p0
+                         1000, 10, 1E-4,              // iterMax, stableMax, sTol
+                         0.01, 0.618, 1.25, 1e-6,     // step0, shrink, stretch, minStep
+                         ReportingLevel::Medium);
+    // note that typical improvements in utility in the first round are on the order of 1E-1 or 1E-2.
+    // Therefore, any improvement of less than 1/100th of that (below sTol = 1E-4) is considered "stable"
+
+    double vBest = get<0>(rslt);
+    KMatrix pBest = get<1>(rslt);
+    unsigned int in = get<2>(rslt);
+    unsigned int sn = get<3>(rslt);
+
+    delete vhc;
+    vhc = nullptr;
+    printf("Iter: %u  Stable: %u \n", in, sn);
+    printf("Best value : %+.6f \n", vBest);
+    cout << "Best point:    ";
+    trans(pBest).mPrintf(" %+.6f ");
+    KMatrix rBest = eMod0->makeFTax(pBest);
+    printf("Best rates: ");
+    trans(rBest).mPrintf(" %+.6f ");
+
+    delete vhc;
+    vhc = nullptr;
+    // end content copied from demoMaxEcon*/
+  }
+  else {
+    // begin content copied from demoEUEcon
+    eSt0->aUtil = vector<KMatrix>(); // dropping any old ones
+    eSt0->step = [eSt0]() {
+      return eSt0->stepSUSN();
+    };
+
+    eMod0->run();
+    // end content copied from demoEUEcon
+  }
 
   // JAH 2060814 want to display a matrix of final policies, as well as the final mean policy
   // this is predominantly for automatic extraction of results
@@ -2380,17 +2448,18 @@ int main(int ac, char **av) {
   bool euEconP = false;
   bool maxEconP = false;
   bool rlEconP = false;
+  bool rlOSP = false; // true = run the model with only OSPs, false = UMAs & OSPs
 
   auto showHelp = []() {
     printf("\n");
     printf("Usage: specify one or more of these options\n");
-    printf("--help            print this message\n");
-    printf("--euEcon          exp. util. of IO econ model\n");
-    printf("--maxEcon         max support of IO econ model\n");
-    printf("--rlEcon          same as euEcon but with the synthesized data\n");
-    printf("--seed <n>        set a 64bit seed, in decimal\n");
-    printf("                  0 means truly random\n");
-    printf("                  default: %020llu \n", dSeed);
+    printf("--help              print this message\n");
+    printf("--euEcon            exp. util. of IO econ model\n");
+    printf("--maxEcon           max support of IO econ model\n");
+    printf("--rlEcon (OSP|UMA)  use synthesized data, with either all OSPs (maxEcon), or UMAs & OSPs (euEcon) \n");
+    printf("--seed <n>          set a 64bit seed, in decimal\n");
+    printf("                    0 means truly random\n");
+    printf("                    default: %020llu \n", dSeed);
   };
 
   // tmp args
@@ -2412,6 +2481,11 @@ int main(int ac, char **av) {
       }
       else if (strcmp(av[i], "--rlEcon") == 0) {
         rlEconP = true;
+        // this is the demo with real synthesized data, now, which model?
+        i++;
+        if (strcmp(av[i],"OSP")==0) {
+          rlOSP = true;
+        }
       }
       else if (strcmp(av[i], "--help") == 0) {
         run = false;
@@ -2458,7 +2532,7 @@ int main(int ac, char **av) {
   if (rlEconP)
   {
     cout << "R----------------------------------" << endl;
-    DemoLeon::demoRealEcon(seed, rng);
+    DemoLeon::demoRealEcon(rlOSP, seed, rng);
   }
   cout << "-----------------------------------" << endl;
 

@@ -239,6 +239,11 @@ void SMPModel::LogInfoTables()
   auto sqlBuffS = newChars(sqlBuffSize);
   sprintf(sqlBuffS,"INSERT INTO SpatialSalience (ScenarioId, Turn_t, Act_i, Dim_k,Sal) VALUES ('%s', ?1, ?2, ?3, ?4)",
           scenId.c_str());
+  auto sqlBuffScene = newChars(sqlBuffSize);
+  sprintf(sqlBuffScene, "UPDATE ScenarioDesc SET VotingRule = ?1, BigRAdjust = ?2, "
+      "BigRRange = ?3, ThirdPartyCommit = ?4, InterVecBrgn = ?5, BargnModel = ?6 "
+      " WHERE ScenarioId = '%s'",
+      scenId.c_str());
   // prepare the prepared statement statements
   sqlite3_stmt *insStmtD;
   sqlite3_prepare_v2(smpDB, sqlBuffD, strlen(sqlBuffD), &insStmtD, NULL);
@@ -248,6 +253,10 @@ void SMPModel::LogInfoTables()
   assert(nullptr != insStmtC);
   sqlite3_stmt *insStmtS;
   sqlite3_prepare_v2(smpDB, sqlBuffS, strlen(sqlBuffS), &insStmtS, NULL);
+  assert(nullptr != insStmtS);
+
+  sqlite3_stmt *insStmtScene=nullptr;
+  sqlite3_prepare_v2(smpDB, sqlBuffScene, strlen(sqlBuffScene), &insStmtScene, NULL);
   assert(nullptr != insStmtS);
 
   sqlite3_exec(smpDB, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
@@ -327,18 +336,42 @@ void SMPModel::LogInfoTables()
     }
   }
 
+  //ScenarioDesc table
+  rslt = sqlite3_bind_int(insStmtScene, 1, static_cast<int>(vrCltn));
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtScene, 2, static_cast<int>(bigRAdj));
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtScene, 3, static_cast<int>(bigRRng));
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtScene, 4, static_cast<int>(tpCommit));
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtScene, 5, static_cast<int>(ivBrgn));
+  assert(SQLITE_OK == rslt);
+  rslt = sqlite3_bind_int(insStmtScene, 6, static_cast<int>(brgnMod));
+  assert(SQLITE_OK == rslt);
+
+  rslt = sqlite3_step(insStmtScene);
+  assert(SQLITE_DONE == rslt);
+  sqlite3_clear_bindings(insStmtScene);
+  assert(SQLITE_DONE == rslt);
+  rslt = sqlite3_reset(insStmtScene);
+  assert(SQLITE_OK == rslt);
+
   // finish
   sqlite3_exec(smpDB, "END TRANSACTION", NULL, NULL, &zErrMsg);
   // finalize statement to avoid resource leaks
   sqlite3_finalize(insStmtD);
   sqlite3_finalize(insStmtC);
   sqlite3_finalize(insStmtS);
+  sqlite3_finalize(insStmtScene);
   delete sqlBuffD;
   sqlBuffD = nullptr;
   delete sqlBuffC;
   sqlBuffC = nullptr;
   delete sqlBuffS;
   sqlBuffS = nullptr;
+  delete sqlBuffScene;
+  sqlBuffScene = nullptr;
 
   return;
 }
