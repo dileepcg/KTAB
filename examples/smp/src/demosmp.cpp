@@ -275,21 +275,6 @@ int main(int ac, char **av) {
     printf("                        default: %020llu \n", dSeed);
   };
 
-  /*std::time_t now = std::time(0);
-  std::tm* now_tm = std::gmtime(&now);
-  char buf[42];
-  std::strftime(buf, 42, "%Y%m%d %X", now_tm);
-  inputDBname = buf;
-  
-  std::cout << inputDBname;
-
-  std::chrono::time_point<std::chrono::system_clock> st;
-  st = std::chrono::system_clock::now();
-  std::time_t start_time = std::chrono::system_clock::to_time_t(st);
-  cout << std::ctime(&start_time);
-  std::time_t t = std::time(nullptr);
-  std::cout << "UTC:   " << std::put_time(std::gmtime(&t), "%c %Z") << '\n';
-  std::cout << "local: " << std::put_time(std::localtime(&t), "%c %Z") << '\n';*/
   bool isdbflagexist = false;
   if (ac > 1) {
     for (int i = 1; i < ac; i++) {
