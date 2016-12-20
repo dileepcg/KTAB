@@ -59,8 +59,9 @@ using SMPLib::SMPState;
 
 // -------------------------------------------------
 
-void demoRandSMP(unsigned int numA, unsigned int sDim, bool accP, uint64_t s,  vector<bool> f) {
+void demoRandSMP(unsigned int numA, unsigned int sDim, bool accP, uint64_t s,  vector<bool> f, string inputDBname) {
   printf("Using PRNG seed: %020llu \n", s);
+  SMPModel::setDBPath(inputDBname);
   // JAH 20160711 added rng seed 20160730 JAH added sql flags
   auto md0 = new SMPModel( "", s, f);
   //rng->setSeed(s); // seed is now set in Model::Model
@@ -309,7 +310,7 @@ int main(int ac, char **av) {
 		}
       }
 	  else if (strcmp(av[i], "--dbname") == 0) {
-		  csvP = true;
+		  //csvP = true;
 		  i++;
 		  if (av[i] != NULL)
 		  {
@@ -381,7 +382,7 @@ int main(int ac, char **av) {
   }
   if (euSmpP) {
     cout << "-----------------------------------" << endl;
-    DemoSMP::demoRandSMP(0, 0, randAccP, seed, sqlFlags);
+    DemoSMP::demoRandSMP(0, 0, randAccP, seed, sqlFlags, inputDBname);
   }
   if (csvP) {
     cout << "-----------------------------------" << endl;
@@ -389,7 +390,8 @@ int main(int ac, char **av) {
   }
   if (xmlP) {
     cout << "-----------------------------------" << endl;
-    SMPLib::SMPModel::xmlReadExec(inputXML, sqlFlags, "testSMP.db");
+//    SMPLib::SMPModel::xmlReadExec(inputXML, sqlFlags, "testSMP.db");
+	SMPLib::SMPModel::xmlReadExec(inputXML, sqlFlags, inputDBname);
   }
   cout << "-----------------------------------" << endl;
 

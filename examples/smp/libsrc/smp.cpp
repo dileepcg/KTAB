@@ -784,7 +784,7 @@ tuple< KMatrix, VUI> SMPState::pDist(int persp) const {
 
 // -------------------------------------------------
 
-string SMPModel::dbPath = ""; // Initializing to have testsmp.db as a default DB name
+string SMPModel::dbPath = ""; 
 
 // JAH 20160711 added rng seed
 SMPModel::SMPModel(string desc, uint64_t s, vector<bool> f) : Model(desc, s, f) {
