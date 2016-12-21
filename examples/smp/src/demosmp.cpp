@@ -269,7 +269,7 @@ int main(int ac, char **av) {
     printf("--ra			randomize the adjustment of ideal points with euSMP \n");
     printf("--csv <f>               read a scenario from CSV \n");
     printf("--xml <f>               read a scenario from XML \n");
-	printf("----dbname <f>          specify a db file name for logging \n");
+	printf("--dbname <f>            specify a db file name for logging \n");
     printf("--logmin                log only scenario information + position histories\n");
     printf("--seed <n>              set a 64bit seed\n");
     printf("                        0 means truly random\n");
