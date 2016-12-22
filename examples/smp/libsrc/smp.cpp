@@ -787,7 +787,7 @@ tuple< KMatrix, VUI> SMPState::pDist(int persp) const {
 string SMPModel::dbPath = ""; 
 
 // JAH 20160711 added rng seed
-SMPModel::SMPModel(string desc, uint64_t s, vector<bool> f) : Model(desc, s, f) {
+SMPModel::SMPModel(string desc, uint64_t s, vector<bool> f, string sceName) : Model(desc, s, f, sceName) {
     // note that numDim, posTol, and dimName are initialized in class declaration
     // TODO: get cleaner opening of smpDB
     sqlTest();
@@ -1059,7 +1059,7 @@ SMPModel * SMPModel::initModel(vector<string> aName, vector<string> aDesc, vecto
                                const KMatrix & pos, // one row per actor, one column per dimension
                                const KMatrix & sal, // one row per actor, one column per dimension
                                const KMatrix & accM,
-                               uint64_t s, vector<bool> f)
+                               uint64_t s, vector<bool> f, string scenDesc, string scenName)
 {
     
   //  cout << "Num aName "<< aName.size() << endl;
@@ -1077,7 +1077,7 @@ SMPModel * SMPModel::initModel(vector<string> aName, vector<string> aDesc, vecto
   //  cout << flush; 
     
     assert(f.size() == Model::NumSQLLogGrps + NumSQLLogGrps);
-    SMPModel * sm0 = new SMPModel("", s, f); // JAH 20160711 added rng seed 20160730 JAH added sql flags
+    SMPModel * sm0 = new SMPModel(scenDesc, s, f, scenName); // JAH 20160711 added rng seed 20160730 JAH added sql flags
     SMPState * st0 = new SMPState(sm0);
   sm0->addState(st0);
 

@@ -215,7 +215,7 @@ SMPModel * SMPModel::csvRead(string fName, uint64_t s, vector<bool> f) {
     auto accM = KBase::iMat(numActor);
 
     // now that it is read and verified, use the data
-    auto sm0 = initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM,  s, f);
+    auto sm0 = initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM,  s, f, scenDesc, scenName);
     return sm0;
 }
 // end of readCSVStream
@@ -241,6 +241,10 @@ SMPModel * SMPModel::xmlRead(string fName, vector<bool> f) {
     vector<string> dNames = {};
     KMatrix capM, posM, salM, accM; // all size 0-by-0
 
+	const char * sName = new char[512];
+	//strcpy(sName, "");
+	const char* sn2 = "";
+
     try {
         d1.LoadFile(fName.c_str());
         auto eid = d1.ErrorID();
@@ -252,15 +256,25 @@ SMPModel * SMPModel::xmlRead(string fName, vector<bool> f) {
         XMLElement* scenEl = d1.FirstChildElement("Scenario");
         assert(nullptr != scenEl);
         auto scenNameEl = getFirstChild(scenEl, "name");
-        try {
-            const char * sName = scenNameEl->GetText();
+		try {
+            sName = scenNameEl->GetText();
+			if (sName == NULL)
+			{
+				sName = new char[512];
+				strcpy((char *)sName, "");
+			}
             printf("Name of scenario: %s\n", sName);
         }
         catch (...) {
             throw (KException("Error reading file header"));
         }
         auto scenDescEl = getFirstChild(scenEl, "desc");
-        const char* sn2 = scenDescEl->GetText();
+		sn2 = scenDescEl->GetText();
+		if (sn2 == NULL)
+		{
+			sn2 = new char[512];
+			strcpy((char *)sn2, "");
+		}
         assert(nullptr != sn2);
         auto seedEl = getFirstChild(scenEl, "prngSeed");
         const char* sd2 = seedEl->GetText();
@@ -497,7 +511,7 @@ SMPModel * SMPModel::xmlRead(string fName, vector<bool> f) {
     cout << "End SMPModel::readXML of " << fName << endl;
     // now that it is read and verified, use the data  
     delete smp;
-    smp = initModel(actorNames, actorDescs, dNames, capM, posM, salM, accM, seed, f); 
+    smp = initModel(actorNames, actorDescs, dNames, capM, posM, salM, accM, seed, f, sn2, sName);
     assert (smp != nullptr);
     return smp;
 }

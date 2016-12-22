@@ -409,10 +409,10 @@ KTable * Model::createSQL(unsigned int n)
   case 12:  //ScenarioDesc creation
     // JAH 20160711 added the RNGSeed field
     sql = "create table if not exists ScenarioDesc ("  \
-          "Scenario Text(512) NOT NULL UNIQUE DEFAULT 'NoName', "\
-          "Desc text(512) NOT NULL DEFAULT 'No Description', "\
+          "Scenario TEXT(512) NOT NULL UNIQUE DEFAULT 'NoName', "\
+          "Desc TEXT(512) NOT NULL DEFAULT 'No Description', "\
           "ScenarioId TEXT(32) NOT NULL DEFAULT 'None'," \
-          "RNGSeed text(20) NOT NULL DEFAULT '0'," \
+          "RNGSeed TEXT(20) NOT NULL DEFAULT '0'," \
           "VictoryProbModel INTEGER NULL DEFAULT NULL," \
           "ProbCondorcetElection INTEGER NULL DEFAULT NULL," \
           "StateTransition INTEGER NULL DEFAULT NULL," \
@@ -809,7 +809,7 @@ void Model::LogInfoTables()
 
   // Scenario Description
   // Turn_t
-  rslt = sqlite3_bind_text(insStmtS, 1, scenName.c_str(), -1, SQLITE_TRANSIENT);
+  rslt = sqlite3_bind_text(insStmtS, 1, scenDesc.c_str(), -1, SQLITE_TRANSIENT);
   assert(SQLITE_OK == rslt);
   // Scen Id
   rslt = sqlite3_bind_text(insStmtS, 2, scenId.c_str(), -1, SQLITE_TRANSIENT);

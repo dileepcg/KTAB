@@ -287,7 +287,8 @@ public:
   sqlite3 *smpDB = nullptr; // keep this protected, to ease later multi-threading
   // JAH 20160711 added seed 20160730 JAH added sql flags
   // BPW 2016-09-28 removed redundant PRNG input variable
-  explicit Model(string d, uint64_t s, vector<bool> f);
+  //explicit Model(string d, uint64_t s, vector<bool> f);
+  explicit Model(string d, uint64_t s, vector<bool> f, string Name = "");
   virtual ~Model();
 
   static const unsigned int minNumActor = 3;
@@ -416,6 +417,7 @@ protected:
   // TODO: rename this from 'smpDB' to 'scenarioDB'
   // Note that, with composite models, there many be dozens interacting.
   string scenName = "Scen"; // default is set from UTC time
+  string scenDesc = ""; // default is set from UTC time
   string scenId = "none";
   uint64_t rngSeed = 0; // JAH 20160711 rng seed
 

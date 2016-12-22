@@ -279,7 +279,7 @@ private:
 class SMPModel : public Model {
   friend class SMPState;
 public:
-  explicit SMPModel( string desc = "", uint64_t s=KBase::dSeed, vector<bool> f={}); // JAH 20160711 added rng seed
+  explicit SMPModel( string desc = "", uint64_t s=KBase::dSeed, vector<bool> f={}, string sceName = ""); // JAH 20160711 added rng seed
   virtual ~SMPModel();
 
   static string dbPath; //to store db file name from SMPQ GUI, default is testsmp.db
@@ -305,11 +305,11 @@ public:
   static SMPModel * xmlRead(string fName,vector<bool> f);
 
   static  SMPModel * initModel(vector<string> aName, vector<string> aDesc, vector<string> dName,
-    const KMatrix & cap, // one row per actor
-    const KMatrix & pos, // one row per actor, one column per dimension
-    const KMatrix & sal, // one row per actor, one column per dimension
-    const KMatrix & accM,
-    uint64_t s, vector<bool> f);
+	  const KMatrix & cap, // one row per actor
+	  const KMatrix & pos, // one row per actor, one column per dimension
+	  const KMatrix & sal, // one row per actor, one column per dimension
+	  const KMatrix & accM,
+	  uint64_t s, vector<bool> f, string scenName, string scenDesc);
 
   // print history of each actor in CSV (might want to generalize to arbitrary VctrPstn)
   void showVPHistory() const;
