@@ -5,7 +5,7 @@
 # rebuild them
 #
 #------------------------------------------
-FILES="kutils  kmodel  kgraph"
+FILES="kutils kmodel"
 
 for d in $FILES
 do
