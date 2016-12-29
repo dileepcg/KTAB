@@ -409,9 +409,9 @@ KTable * Model::createSQL(unsigned int n)
   case 12:  //ScenarioDesc creation
     // JAH 20160711 added the RNGSeed field
     sql = "create table if not exists ScenarioDesc ("  \
-          "Scenario TEXT(512) NOT NULL UNIQUE DEFAULT 'NoName', "\
+          "Scenario TEXT(512) NOT NULL DEFAULT 'NoName', "\
           "Desc TEXT(512) NOT NULL DEFAULT 'No Description', "\
-          "ScenarioId TEXT(32) NOT NULL DEFAULT 'None'," \
+          "ScenarioId TEXT(32) NOT NULL UNIQUE DEFAULT 'None'," \
           "RNGSeed TEXT(20) NOT NULL DEFAULT '0'," \
           "VictoryProbModel INTEGER NULL DEFAULT NULL," \
           "ProbCondorcetElection INTEGER NULL DEFAULT NULL," \
