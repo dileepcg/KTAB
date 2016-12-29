@@ -256,26 +256,27 @@ SMPState* SMPState::doBCN() const {
 
       std::thread thr(recordUtility, i, this);
 
-      {   // make the variables local to lexical scope of this block.
-        // for testing, calculate and print out a block of data showing each's perspective
-        bool recordTmpSQLP = true;  // Record this in SQLite
-        auto pFn = [this, recordTmpSQLP](unsigned int h, unsigned int k, unsigned int i, unsigned int j) {
-          auto est = probEduChlg(h, k, i, j, recordTmpSQLP); // H's estimate of the effect on K of I->J
-          double phij = get<0>(est);
-          double edu_hk_ij = get<1>(est);
-          printf("Est by %2u of prob %.4f that [%2u>%2u], with expected gain to %2u of %+.4f \n",
-                 h, phij, i, j, k, edu_hk_ij);
-        };
-
-        // I's estimate of the effect on I of I->J
+      // make the variables local to lexical scope of this block.
+      // for testing, calculate and print out a block of data showing each's perspective
+      bool recordTmpSQLP = true;  // Record this in SQLite
+      auto pFn = [this, recordTmpSQLP](unsigned int h, unsigned int k, unsigned int i, unsigned int j) {
+        auto est = probEduChlg(h, k, i, j, recordTmpSQLP); // H's estimate of the effect on K of I->J
+        double phij = get<0>(est);
+        double edu_hk_ij = get<1>(est);
         printf("Est by %2u of prob %.4f that [%2u>%2u], with expected gain to %2u of %+.4f \n",
-               i, piiJ, i, j, i, get<2>(chlgI));
+               h, phij, i, j, k, edu_hk_ij);
+		return est;
+      };
 
-        pFn(i, j, i, j); // I's estimate of the effect on J of I->J
+      // I's estimate of the effect on I of I->J
+      printf("Est by %2u of prob %.4f that [%2u>%2u], with expected gain to %2u of %+.4f \n",
+             i, piiJ, i, j, i, get<2>(chlgI));
 
-        pFn(j, i, i, j); // J's estimate of the effect on I of I->J
-        pFn(j, j, i, j); // J's estimate of the effect on J of I->J
-      }
+      pFn(i, j, i, j); // I's estimate of the effect on J of I->J
+
+      auto Vjij = pFn(j, i, i, j); // J's estimate of the effect on I of I->J
+
+      pFn(j, j, i, j); // J's estimate of the effect on J of I->J
 
       // interpolate a bargain from I's perspective
       BargainSMP* brgnIIJ = SMPActor::interpolateBrgn(ai, aj, posI, posJ, piiJ, 1 - piiJ, ivb);
@@ -286,7 +287,6 @@ SMPState* SMPState::doBCN() const {
       assert(naj == j);
 
       // interpolate a bargain from targeted J's perspective
-      auto Vjij = probEduChlg(j, i, i, j, recordBargainingP);
       double pjiJ = get<1>(Vjij); // j's estimate of the probability that i defeats j
       BargainSMP* brgnJIJ = SMPActor::interpolateBrgn(ai, aj, posI, posJ, pjiJ, 1 - pjiJ, ivb);
 
@@ -548,10 +548,7 @@ SMPState* SMPState::doBCN() const {
 		for (unsigned int actor = 0; actor < na; ++actor) {
 			auto pv_ij = calcVotes(w, u_im, actor);
 
-			//if (pv_ij.size() != 0)
-			//{
-				model->sqlBargainVote(t, barginIDsPair_i_j, pv_ij, actor);
-		//	}
+			model->sqlBargainVote(t, barginIDsPair_i_j, pv_ij, actor);
 		}
 		model->sqlBargainUtil(t, bargnIdsRows, u_im);
 	}

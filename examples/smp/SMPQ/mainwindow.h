@@ -439,6 +439,9 @@ private :
     QPushButton * plotQuadMap;
     int initiatorTip;
 
+    bool useHistory;
+    QString currentScenarioId;
+
     void initializeQuadMapDock();
     void initializeQuadMapPlot();
 
@@ -469,6 +472,7 @@ private slots :
 
     void quadMapAutoScale(bool status);
     void quadMapPlotPoints(bool status);
+    void dbImported(bool bl);
 
 signals :
     void getUtilChlgAndUtilSQfromDB(QList <int > VHAxisList);
