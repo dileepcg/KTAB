@@ -149,7 +149,9 @@ void MainWindow::runPushButtonClicked(bool bl)
         // Notice that we NEVER use anything but the default seed.
         printf("Using PRNG seed:  %020llu \n", seed);
         printf("Same seed in hex:   0x%016llX \n", seed);
-        SMPLib::SMPModel::csvReadExec(seed, csvPath.toStdString(),sqlFlags, dbFilePath.toStdString(),parameters);
+        currentScenarioId =QString::fromStdString(SMPLib::SMPModel::csvReadExec
+                                                   (seed, csvPath.toStdString(),sqlFlags,
+                                                    dbFilePath.toStdString(),parameters));
         KBase::displayProgramEnd(sTime);
 
         QApplication::restoreOverrideCursor();
@@ -167,6 +169,7 @@ void MainWindow::runPushButtonClicked(bool bl)
 
 void MainWindow::smpDBPath(QString smpdbPath)
 {
+    useHistory=true;
     dbGetFilePAth(true,smpdbPath,true);
 }
 

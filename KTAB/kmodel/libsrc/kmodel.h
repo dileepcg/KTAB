@@ -390,6 +390,10 @@ public:
 
   void LogInfoTables(); // JAH 20160731
 
+  void createTableIndices();
+
+  void dropTableIndices();
+
   static void demoSQLite();
 
   static KMatrix bigRfromProb(const KMatrix & p, BigRRange rr);
@@ -408,7 +412,7 @@ public:
 protected:
   //static string createTableSQL(unsigned int tn);
   static const int NumTables = 13; //TODO: constant need to be redefined when new table is added
-  static const int NumSQLLogGrps = 4; // TODO : Add one to this num when new logging group is added
+  static const int NumSQLLogGrps = 5; // TODO : Add one to this num when new logging group is added
   // note that the function to write to table #k must be kept
   // synchronized with the result of createSQL(k) !
 

@@ -232,7 +232,7 @@ KTable * Model::createSQL(unsigned int n)
           "Util	REAL NOT NULL DEFAULT 0.0"\
           ");";
     name = "PosUtil";
-    grpID = 1;
+    grpID = 4;
     break;
 
   case 1: // pos-vote table
@@ -1068,6 +1068,28 @@ void Model::sqlPosVote(unsigned int t)
   smpDB = db; // give it the new pointer
 
   return;
+}
+
+void Model::createTableIndices() {
+    char * zErrMsg = nullptr;
+    const char * indexUtil = "CREATE INDEX IF NOT EXISTS idx_util ON PosUtil(ScenarioId, Turn_t, Est_h, Act_i, Pos_j)";
+    int rc = sqlite3_exec(smpDB, indexUtil, nullptr, nullptr, &zErrMsg);
+    assert(rc == SQLITE_OK);
+
+    const char *indexActor = "CREATE INDEX IF NOT EXISTS idx_actor ON ActorDescription(ScenarioId)";
+    rc = sqlite3_exec(smpDB, indexActor, nullptr, nullptr, &zErrMsg);
+    assert(rc == SQLITE_OK);
+}
+
+void Model::dropTableIndices(){
+    char * zErrMsg = nullptr;
+    const char * indexUtil = "DROP INDEX IF EXISTS idx_util";
+    int rc = sqlite3_exec(smpDB, indexUtil, nullptr, nullptr, &zErrMsg);
+    assert(rc == SQLITE_OK);
+
+    const char * indexActor = "DROP INDEX IF EXISTS idx_actor";
+    rc = sqlite3_exec(smpDB, indexActor, nullptr, nullptr, &zErrMsg);
+    assert(rc == SQLITE_OK);
 }
 
 

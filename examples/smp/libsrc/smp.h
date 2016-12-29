@@ -295,11 +295,11 @@ public:
   static void configExec(SMPModel * md0);
 
   // read, configure, and run from CSV
-  static void csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, string dbFilePath,
+  static string csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, string dbFilePath,
                           vector<int> par=vector<int>());
 
   // read, configure, and run from XML
-  static void xmlReadExec(string inputXML, vector<bool> f, string dbFilePath);
+  static string xmlReadExec(string inputXML, vector<bool> f, string dbFilePath);
 
   static SMPModel * csvRead(string fName, uint64_t s, vector<bool> f);
   static SMPModel * xmlRead(string fName,vector<bool> f);
@@ -335,12 +335,26 @@ public:
   //Model Parameters
   static void updateModelParameters(SMPModel *md0, vector<int> parameters);
 
+  static void destroyModel();
+
+  /**
+   * This version of getQuadMapPoint is meant to be used after a model run is finished
+   * but the model objest still exists so that the history could be used
+   */
+  static double getQuadMapPoint(size_t t, size_t est_h, size_t aff_k, size_t init_i, size_t rcvr_j);
+
+  /**
+  * This version of getQuadMapPoint is meant to be used on a db file which contains the results
+  * of at least one model run
+  */
+  static double getQuadMapPoint(string dbname, string scenarioID, size_t turn, size_t est_h,
+      size_t aff_k, size_t init_i, size_t rcvr_j);
 protected:
   //sqlite3 *smpDB = nullptr; // keep this protected, to ease multi-threading
   //string scenName = "Scen";
-  static const int NumTables = 4; // TODO : Add one to this num when new table is added
+  static const int NumTables = 5; // TODO : Add one to this num when new table is added
 
-  static const int NumSQLLogGrps = 1; // TODO : Add one to this num when new logging group is added
+  static const int NumSQLLogGrps = 0; // TODO : Add one to this num when new logging group is added
 
   // note that the function to write to table #k must be kept
   // synchronized with the result of createTableSQL(k) !
@@ -369,7 +383,17 @@ protected:
   // PWCompInterSMPBM, InitOnlyInterpSMPBM or InitRcvrInterpSMPBM;
 
 private:
+  void releaseDB();
 
+  static tuple<double, double> calcContribs(VotingRule vrCltn, double wi, double wj, tuple<double, double, double, double>(utils));
+
+  // Method used in sqlite execution for callback functionality
+  static int callBack(void *data, int numCol, char **stringFields, char **colNames);
+
+  // fieldVals is used to store the result of select sql queries
+  static std::vector<string> fieldVals;
+
+  static KMatrix accM; // size 0-by-0
 };
 
 

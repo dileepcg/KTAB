@@ -64,7 +64,7 @@ using tinyxml2::XMLElement;
 using tinyxml2::XMLDocument;
 
 // --------------------------------------------
-
+KMatrix SMPModel::accM;
 
 // --------------------------------------------
 
@@ -212,7 +212,7 @@ SMPModel * SMPModel::csvRead(string fName, uint64_t s, vector<bool> f) {
     sal = sal / 100.0;
 
     cout << "Setting ideal-accomodation matrix to identity matrix" << endl;
-    auto accM = KBase::iMat(numActor);
+    accM = KBase::iMat(numActor);
 
     // now that it is read and verified, use the data
     auto sm0 = initModel(actorNames, actorDescs, dNames, cap, pos, sal, accM,  s, f);
@@ -239,7 +239,7 @@ SMPModel * SMPModel::xmlRead(string fName, vector<bool> f) {
     vector<string> actorNames = {};
     vector<string> actorDescs = {};
     vector<string> dNames = {};
-    KMatrix capM, posM, salM, accM; // all size 0-by-0
+    KMatrix capM, posM, salM; // all size 0-by-0
 
     try {
         d1.LoadFile(fName.c_str());

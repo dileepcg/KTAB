@@ -122,6 +122,8 @@ MainWindow::MainWindow()
     initiatorTip=0;
     prevTurn=0;
     firstVal=false;
+    useHistory =true;
+    currentScenarioId = "dummy";
 }
 
 MainWindow::~MainWindow()
@@ -300,6 +302,14 @@ void MainWindow::scenarioComboBoxValue(int scenario)
     if(scenario>=0 && mScenarioIds.length()>0)
     {
         scenarioBox = mScenarioIds.at(scenario);
+        if(currentScenarioId==scenarioBox)
+        {
+            useHistory=true;
+        }
+        else
+        {
+            useHistory=false;
+        }
         scenarioDescriptionLineEdit->setText(mScenarioDesc.at(scenario));
         if(tableType=="Database")
         {
@@ -883,6 +893,7 @@ void MainWindow::createActions()
     QAction *importDBAct = new QAction(dbIcon, tr("&Import Database"), this);
     importDBAct->setShortcuts(seq);
     importDBAct->setStatusTip(tr("Import Database"));
+    connect(importDBAct, SIGNAL(triggered(bool)),this,SLOT(dbImported(bool)));
     connect(importDBAct, SIGNAL(triggered(bool)), this,SLOT(dbGetFilePAth(bool)));
     fileMenu->addAction(importDBAct);
     fileToolBar->addAction(importDBAct);

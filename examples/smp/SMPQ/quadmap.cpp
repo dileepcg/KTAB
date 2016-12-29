@@ -22,8 +22,11 @@
 // -------------------------------------------------
 
 #include "mainwindow.h"
+#include "smp.h"
 
-
+using SMPLib::SMPModel;
+using SMPLib::SMPActor;
+using SMPLib::SMPState;
 void MainWindow::initializeQuadMapDock()
 {
     quadMapCustomGraph= new QCustomPlot;
@@ -389,7 +392,30 @@ void MainWindow::getUtilChlgHorizontalVerticalAxisData(int turn)
                 VHAxisValues.append(initI);
                 VHAxisValues.append(recdJ);
             }
-            emit getUtilChlgAndUtilSQfromDB(VHAxisValues);
+            //            emit getUtilChlgAndUtilSQfromDB(VHAxisValues);
+            double x,y;
+            if(useHistory)
+            {
+                y =SMPLib::SMPModel::getQuadMapPoint(VHAxisValues.at(0),VHAxisValues.at(1),VHAxisValues.at(2),
+                                                     VHAxisValues.at(3),VHAxisValues.at(4));
+                x =SMPLib::SMPModel::getQuadMapPoint(VHAxisValues.at(5),VHAxisValues.at(6),VHAxisValues.at(7),
+                                                     VHAxisValues.at(8),VHAxisValues.at(9));
+
+                qDebug()<<"History" <<useHistory;
+            }
+            else
+            {
+                y =SMPLib::SMPModel::getQuadMapPoint(dbPath.toStdString(),scenarioBox.toStdString(),VHAxisValues.at(0),
+                                                     VHAxisValues.at(1),VHAxisValues.at(2),VHAxisValues.at(3),
+                                                     VHAxisValues.at(4));
+                x =SMPLib::SMPModel::getQuadMapPoint(dbPath.toStdString(),scenarioBox.toStdString(),VHAxisValues.at(5),
+                                                     VHAxisValues.at(6),VHAxisValues.at(7),VHAxisValues.at(8),
+                                                     VHAxisValues.at(9));
+
+                qDebug()<<"History" <<useHistory;
+            }
+
+            quadMapUtilChlgandSQValues(VHAxisValues.at(0),x,y,VHAxisValues.at(4));
         }
     }
 }
@@ -736,5 +762,10 @@ void MainWindow::quadMapPlotPoints(bool status)
         plotQuadMap->setEnabled(true);
         QApplication::restoreOverrideCursor();
     }
+}
+
+void MainWindow::dbImported(bool bl)
+{
+    useHistory=false;
 }
 

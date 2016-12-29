@@ -387,11 +387,13 @@ int main(int ac, char **av) {
   if (csvP) {
     cout << "-----------------------------------" << endl;
     SMPLib::SMPModel::csvReadExec(seed, inputCSV, sqlFlags, inputDBname);
+    SMPLib::SMPModel::destroyModel();
   }
   if (xmlP) {
     cout << "-----------------------------------" << endl;
 //    SMPLib::SMPModel::xmlReadExec(inputXML, sqlFlags, "testSMP.db");
 	SMPLib::SMPModel::xmlReadExec(inputXML, sqlFlags, inputDBname);
+    SMPLib::SMPModel::destroyModel();
   }
   cout << "-----------------------------------" << endl;
 

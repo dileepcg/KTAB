@@ -54,6 +54,10 @@ using KBase::ReportingLevel;
 
 // --------------------------------------------
 
+SMPModel * md0 = nullptr;
+
+std::vector<string> SMPModel::fieldVals;
+
 // big enough buffer to build all desired SQLite statements
 const unsigned int sqlBuffSize = 250;
 
@@ -582,7 +586,6 @@ SMPState* SMPState::stepBCN() {
     // VectorPosition, which is in this same group, is handled separately
     if (model->sqlFlags[1])
     {
-        model->sqlAUtil(myT);
         model->sqlPosEquiv(myT);
         model->sqlPosProb(myT);
         model->sqlPosVote(myT);
@@ -798,21 +801,22 @@ SMPModel::~SMPModel() {
     // With committee selection, we might have dozens of SMP models writing into one database,
     // so we cannot automatically close it when deleting a particular SMP.
 
+    releaseDB();
+}
+
+void SMPModel::releaseDB() {
     if (nullptr != smpDB) {
-        cout << "SMPModel::~SMPModel Closing database" << endl << flush;
+        cout << "SMPModel: Closing database" << endl << flush;
         int close_result = sqlite3_close(smpDB);
         if (close_result != SQLITE_OK) {
-            cout << "SMPModel::~SMPModel Closing database failed!" << endl << flush;
+            cout << "SMPModel: Closing database failed!" << endl << flush;
         }
         else {
-            cout << "SMPModel::~SMPModel Closing database succeeded." << endl << flush;
+            cout << "SMPModel: Closing database succeeded." << endl << flush;
         }
         smpDB = nullptr;
     }
-
 }
-
-
 
 void SMPModel::addDim(string dn) {
     dimName.push_back(dn);
@@ -1117,23 +1121,28 @@ void SMPModel::setDBPath(std::string dbName)
     dbPath = dbName;
 }
 
-void SMPModel::csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, string dbFilePath, vector<int> par) {
+string SMPModel::csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, string dbFilePath, vector<int> par) {
     SMPModel::setDBPath(dbFilePath);
-    auto md0 = csvRead(inputCSV, seed, f);
-    if(false==par.empty())
-        SMPModel::updateModelParameters(md0,par);
+    if (md0 != nullptr) {
+        delete md0;
+        md0 = nullptr;
+    }
+    
+    md0 = csvRead(inputCSV, seed, f);
+    if (false == par.empty()) {
+        SMPModel::updateModelParameters(md0, par);
+    }
     configExec(md0);
-    delete md0;
-    return;
+    md0->releaseDB();
+    return md0->getScenarioID();
 }
 
-void SMPModel::xmlReadExec(string inputXML, vector<bool> f, string dbFilePath) {
+string SMPModel::xmlReadExec(string inputXML, vector<bool> f, string dbFilePath) {
     SMPModel::setDBPath(dbFilePath);
-    auto md0 = SMPModel::xmlRead(inputXML, f);
-  cout << "Executing model" << endl << flush;
-  configExec(md0);
-    delete md0;
-    return;
+    md0 = SMPModel::xmlRead(inputXML, f);
+    configExec(md0);
+    md0->releaseDB();
+    return md0->getScenarioID();
 }
 
 void SMPModel::configExec(SMPModel * md0)
@@ -1154,6 +1163,9 @@ void SMPModel::configExec(SMPModel * md0)
     };
     md0->stop = smpStopFn(minIter, maxIter, minDeltaRatio, minSigDelta);
 
+    // Drop the indices of the tables before the model run
+    md0->dropTableIndices();
+
     // execute
     cout << "Starting model run" << endl << flush;
     md0->run();
@@ -1166,11 +1178,17 @@ void SMPModel::configExec(SMPModel * md0)
     {
         md0->LogInfoTables();
     }
+
+    if (md0->sqlFlags[4]) {
+        for (auto turn = 0; turn < nState; ++turn) {
+            md0->sqlAUtil(turn);
+        }
+    }
+
     // JAH 20160802 added logging control flag for the last state
     // also added the sqlPosVote and sqlPosEquiv calls to get the final state
     if (md0->sqlFlags[1])
     {
-        md0->sqlAUtil(nState - 1);
         md0->sqlPosProb(nState - 1);
         md0->sqlPosEquiv(nState - 1);
         md0->sqlPosVote(nState - 1);
@@ -1180,6 +1198,9 @@ void SMPModel::configExec(SMPModel * md0)
     printf("There were %u states, with %i steps between them\n", nState, nState - 1);
     cout << "History of actor positions over time" << endl;
     md0->showVPHistory();
+
+    //Create indices in the tables
+    md0->createTableIndices();
 
     return;
 }
@@ -1196,6 +1217,285 @@ void SMPModel::updateModelParameters(SMPModel *md0, vector <int> parameters)
     md0->tpCommit = (ThirdPartyCommit)parameters.at(6); //thirdPartyCommit
     md0->ivBrgn = (InterVecBrgn)parameters.at(7); //interVecBrgn
     md0->brgnMod = (SMPBargnModel)parameters.at(8); //bargnModel
+}
+
+double SMPModel::getQuadMapPoint(size_t t, size_t est_h, size_t aff_k, size_t init_i, size_t rcvr_j) {
+    auto smpState = md0->history[t];
+    auto autil = smpState->aUtil;
+    double uii = autil[est_h](init_i, init_i);
+    double uij = autil[est_h](init_i, rcvr_j);
+    double uji = autil[est_h](rcvr_j, init_i);
+    double ujj = autil[est_h](rcvr_j, rcvr_j);
+
+    // h's estimate of utility to k of status-quo positions of i and j
+    const double euSQ = autil[est_h](aff_k, init_i) + autil[est_h](aff_k, rcvr_j);
+    assert((0.0 <= euSQ) && (euSQ <= 2.0));
+
+    // h's estimate of utility to k of i defeating j, so j adopts i's position
+    const double uhkij = autil[est_h](aff_k, init_i) + autil[est_h](aff_k, init_i);
+    assert((0.0 <= uhkij) && (uhkij <= 2.0));
+
+    // h's estimate of utility to k of j defeating i, so i adopts j's position
+    const double uhkji = autil[est_h](aff_k, rcvr_j) + autil[est_h](aff_k, rcvr_j);
+    assert((0.0 <= uhkji) && (uhkji <= 2.0));
+
+    auto ai = ((const SMPActor*)(md0->actrs[init_i]));
+    double si = KBase::sum(ai->vSal);
+    double ci = ai->sCap;
+    auto aj = ((const SMPActor*)(md0->actrs[rcvr_j]));
+    double sj = KBase::sum(aj->vSal);
+    assert((0 < sj) && (sj <= 1));
+    double cj = aj->sCap;
+    const double minCltn = 1E-10;
+
+    auto contribs = calcContribs(md0->vrCltn, si*ci, sj*cj, tuple<double, double, double, double>(uii, uij, uji, ujj));
+
+    double chij = get<0>(contribs); // strength of complete coalition supporting i over j (initially empty)
+    double chji = get<1>(contribs); // strength of complete coalition supporting j over i (initially empty)
+
+    // cache those sums
+    double contrib_i_ij = chij;
+    double contrib_j_ij = chji;
+
+    // we assess the overall coalition strengths by adding up the contribution of
+    // individual actors (including i and j, above). We assess the contribution of third
+    // parties (n) by looking at little coalitions in the hypothetical (in:j) or (i:nj) contests.
+    for (unsigned int n = 0; n < md0->numAct; n++) {
+        if ((n != init_i) && (n != rcvr_j)) { // already got their influence-contributions
+            auto an = ((const SMPActor*)(md0->actrs[n]));
+
+            double cn = an->sCap;
+            double sn = KBase::sum(an->vSal);
+            double uni = autil[est_h](n, init_i);
+            double unj = autil[est_h](n, rcvr_j);
+            double unn = autil[est_h](n, n);
+
+            // notice that each third party starts afresh,
+            // considering only contributions of principals and itself
+            double pin = Actor::vProbLittle(md0->vrCltn, sn*cn, uni, unj, contrib_i_ij, contrib_j_ij);
+
+            assert(0.0 <= pin);
+            assert(pin <= 1.0);
+            double pjn = 1.0 - pin;
+            auto vt_uv_ul = Actor::thirdPartyVoteSU(sn*cn, md0->vrCltn, md0->tpCommit, pin, pjn, uni, unj, unn);
+            const double vnij = get<0>(vt_uv_ul);
+            chij = (vnij > 0) ? (chij + vnij) : chij;
+            assert(0 < chij);
+            chji = (vnij < 0) ? (chji - vnij) : chji;
+            assert(0 < chji);
+        }
+    }
+
+    const double phij = chij / (chij + chji); // ProbVict, for i
+    const double phji = chji / (chij + chji);
+
+    const double euVict = uhkij;  // UtilVict
+    const double euCntst = phij*uhkij + phji*uhkji; // UtilContest,
+    const double euChlg = (1 - sj)*euVict + sj*euCntst; // UtilChlg
+
+    return (euChlg - euSQ);
+}
+
+int SMPModel::callBack(void *data, int numCol, char **stringFields, char **colNames)
+{
+    fieldVals.clear(); assert(fieldVals.empty() == true);
+
+    for (int i = 0; i < numCol; i++)
+    {
+        //cout << colNames[i] << "= " << (stringFields[i] ? stringFields[i] : "NULL") << endl;
+        fieldVals.push_back(stringFields[i] ? stringFields[i] : "NULL");
+    }
+
+    assert(fieldVals.size() > 0);
+    return (int)0;
+};
+
+double SMPModel::getQuadMapPoint(string dbname, string scenarioID, size_t turn, size_t est_h,
+    size_t aff_k, size_t init_i, size_t rcvr_j) {
+
+    sqlite3 *db = nullptr;
+    char* zErrMsg = nullptr;
+    if (sqlite3_open_v2(dbname.c_str(), &db, SQLITE_OPEN_READONLY, NULL)) {
+        std::cerr << __FILE__ << ", Line: " << __LINE__ << ", Tried to open db file: " << dbname << endl;
+        std::cerr << "Error: " << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        exit(-1);
+    }
+
+    auto sqlExec = [&db, &zErrMsg](string sqlQry) {
+        int rc = sqlite3_exec(db, sqlQry.c_str(), callBack, nullptr, &zErrMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr <<  "SQL error: " <<  zErrMsg << endl;
+            sqlite3_free(zErrMsg);
+            sqlite3_close(db);
+        }
+        return rc;
+    };
+
+    auto getUtilQuery = [scenarioID, turn, est_h](size_t initiator, size_t receiver) {
+        string query = "SELECT Util FROM PosUtil WHERE ScenarioId = \'" + scenarioID
+            + "\' AND Turn_t = " + std::to_string(turn) + " AND Est_h = " + std::to_string(est_h)
+            + " AND Act_i = " + std::to_string(initiator) + " AND Pos_j =  " + std::to_string(receiver);
+        return query;
+    };
+
+    auto getVSalQuery = [scenarioID, turn](size_t actor) {
+        string query = "SELECT SUM(Sal) FROM SpatialSalience WHERE ScenarioId=\'" + scenarioID
+            + "\' AND Turn_t = " + std::to_string(turn) + " AND Act_i = " + std::to_string(actor);
+
+        return query;
+    };
+
+    auto getSCapQuery = [scenarioID, turn](size_t actor) {
+        string query = "SELECT Cap FROM SpatialCapability WHERE ScenarioId=\'" + scenarioID
+            + "\' AND Turn_t = " + std::to_string(turn) + " AND Act_i = " + std::to_string(actor);
+
+        return query;
+    };
+
+    // Get voting rule and third party commit for this scenario
+    string query = "SELECT VotingRule, ThirdPartyCommit FROM ScenarioDesc WHERE ScenarioId=\'" + scenarioID + "\'";
+    assert(SQLITE_OK == sqlExec(query));
+    assert(fieldVals.size() == 2 );
+
+    //voting rule
+    int vr = stoi(fieldVals[0]);
+    VotingRule vrCltn = static_cast<VotingRule>(vr);
+
+    //third party commit
+    int tpc = stoi(fieldVals[1]);
+    ThirdPartyCommit tpCommit = static_cast<ThirdPartyCommit>(tpc);
+
+    assert(SQLITE_OK == sqlExec(getUtilQuery(init_i, init_i)));    double uii = stod(fieldVals[0]);
+
+    assert(SQLITE_OK == sqlExec(getUtilQuery(init_i, rcvr_j)));    double uij = stod(fieldVals[0]);
+
+    assert(SQLITE_OK == sqlExec(getUtilQuery(rcvr_j, init_i)));    double uji = stod(fieldVals[0]);
+
+    assert(SQLITE_OK == sqlExec(getUtilQuery(rcvr_j, rcvr_j)));    double ujj = stod(fieldVals[0]);
+
+    assert(SQLITE_OK == sqlExec(getUtilQuery(aff_k, init_i)));    double uki = stod(fieldVals[0]);
+
+    assert(SQLITE_OK == sqlExec(getUtilQuery(aff_k, rcvr_j)));    double ukj = stod(fieldVals[0]);
+
+    double euSQ = uki + ukj;
+
+    double uhkij = 2 * uki;
+    assert((0.0 <= uhkij) && (uhkij <= 2.0));
+
+    double uhkji = 2 * ukj;
+    assert((0.0 <= uhkji) && (uhkji <= 2.0));
+
+    assert(SQLITE_OK == sqlExec(getVSalQuery(init_i)));    double si = stod(fieldVals[0]);
+    assert((0 < si) && (si <= 1));
+    assert(SQLITE_OK == sqlExec(getVSalQuery(rcvr_j)));    double sj = stod(fieldVals[0]);
+    assert((0 < sj) && (sj <= 1));
+
+    assert(SQLITE_OK == sqlExec(getSCapQuery(init_i)));    double ci = stod(fieldVals[0]);
+    assert(SQLITE_OK == sqlExec(getSCapQuery(rcvr_j)));    double cj = stod(fieldVals[0]);
+
+    auto contribs = calcContribs(vrCltn, si*ci, sj*cj, tuple<double, double, double, double>(uii,uij,uji,ujj));
+
+    double chij = get<0>(contribs); // strength of complete coalition supporting i over j (initially empty)
+    double chji = get<1>(contribs); // strength of complete coalition supporting j over i (initially empty)
+
+    // cache those sums
+    double contrib_i_ij = chij;
+    double contrib_j_ij = chji;
+
+    // Get count of actors for this scenario
+    query = "SELECT MAX(Act_i) FROM ActorDescription WHERE ScenarioId=\'" + scenarioID + "\'";
+    assert(SQLITE_OK == sqlExec(query));    size_t numAct = stoul(fieldVals[0])+1;
+
+    // we assess the overall coalition strengths by adding up the contribution of
+    // individual actors (including i and j, above). We assess the contribution of third
+    // parties (n) by looking at little coalitions in the hypothetical (in:j) or (i:nj) contests.
+    for (size_t n = 0; n < numAct; n++) {
+        if ((n != init_i) && (n != rcvr_j)) { // already got their influence-contributions
+
+            assert(SQLITE_OK == sqlExec(getVSalQuery(n)));    double sn = stod(fieldVals[0]);
+
+            assert(SQLITE_OK == sqlExec(getSCapQuery(n)));    double cn = stod(fieldVals[0]);
+
+            assert(SQLITE_OK == sqlExec(getUtilQuery(n, init_i)));    double uni = stod(fieldVals[0]);
+
+            assert(SQLITE_OK == sqlExec(getUtilQuery(n, rcvr_j)));    double unj = stod(fieldVals[0]);
+
+            assert(SQLITE_OK == sqlExec(getUtilQuery(n, n)));    double unn = stod(fieldVals[0]);
+
+            // notice that each third party starts afresh,
+            // considering only contributions of principals and itself
+            double pin = Actor::vProbLittle(vrCltn, sn*cn, uni, unj, contrib_i_ij, contrib_j_ij);
+
+            assert(0.0 <= pin && pin <= 1.0);
+            double pjn = 1.0 - pin;
+            auto vt_uv_ul = Actor::thirdPartyVoteSU(sn*cn, vrCltn, tpCommit, pin, pjn, uni, unj, unn);
+            const double vnij = get<0>(vt_uv_ul);
+            chij = (vnij > 0) ? (chij + vnij) : chij;
+            assert(0 < chij);
+            chji = (vnij < 0) ? (chji - vnij) : chji;
+            assert(0 < chji);
+        }
+    }
+
+    const double phij = chij / (chij + chji); // ProbVict, for i
+    const double phji = chji / (chij + chji);
+
+    const double euVict = uhkij;  // UtilVict
+    const double euCntst = phij*uhkij + phji*uhkji; // UtilContest,
+    const double euChlg = (1 - sj)*euVict + sj*euCntst; // UtilChlg
+
+    sqlite3_close_v2(db);
+
+    return (euChlg - euSQ);
+}
+
+tuple<double, double> SMPModel::calcContribs(VotingRule vrCltn, double wi, double wj, tuple<double, double, double, double>(utils)) {
+    const double minCltn = 1E-10;
+
+    // get h's estimate of the principal actors' contribution to their own contest
+
+    // h's estimate of i's unilateral influence contribution to (i:j).
+    // When ideals perfectly track positions, this must be positive
+
+    double contrib_i_ij = Model::vote(vrCltn, wi, get<0>(utils), get<1>(utils));
+    assert(0 <= contrib_i_ij);
+
+    // h's estimate of j's unilateral influence contribution to (i:j).
+    // When ideals perfectly track positions, this must be negative
+    double contrib_j_ij = Model::vote(vrCltn, wj, get<2>(utils), get<3>(utils));
+    assert(contrib_j_ij <= 0);
+
+    double chij = minCltn; // strength of complete coalition supporting i over j (initially empty)
+    double chji = minCltn; // strength of complete coalition supporting j over i (initially empty)
+
+    // add i's contribution to the appropriate coalition
+    if (contrib_i_ij > 0.0) {
+        chij = chij + contrib_i_ij;
+    }
+    assert(0.0 < chij);
+
+    if (contrib_i_ij < 0.0) {
+        chji = chji - contrib_i_ij;
+    }
+    assert(0.0 < chji);
+
+    // add j's contribution to the appropriate coalition
+    if (contrib_j_ij > 0.0) {
+        chij = chij + contrib_j_ij;
+    }
+    assert(0.0 < chij);
+
+    if (contrib_j_ij < 0.0) {
+        chji = chji - contrib_j_ij;
+    }
+    assert(0.0 < chji);
+
+    return tuple<double, double>(chij, chji);
+}
+
+void SMPModel::destroyModel() {
+    delete md0;
 }
 
 }; // end of namespace
