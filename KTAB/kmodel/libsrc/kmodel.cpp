@@ -175,7 +175,7 @@ Model::Model(string desc, uint64_t sd, vector<bool> f, string Name) {
 		  auto utcBuff = newChars(200);
 
 		  std::strftime(utcBuff, 150, "Scenario-UTC-%Y-%m-%u-%H%M-%S", gmtime(&start_time));
-		  cout << "No scenario description provided to Model::Model, " << endl;
+		  cout << "No scenario name provided to Model::Model " << endl;
 		  cout << "generating default name from UTC start time." << endl << flush;
 		  scenName = utcBuff;
 		  // Scenario Id Generation  include the microsecond
