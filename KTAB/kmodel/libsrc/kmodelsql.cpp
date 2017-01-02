@@ -1085,6 +1085,7 @@ void Model::dropTableIndices(){
     char * zErrMsg = nullptr;
     const char * indexUtil = "DROP INDEX IF EXISTS idx_util";
     int rc = sqlite3_exec(smpDB, indexUtil, nullptr, nullptr, &zErrMsg);
+
     assert(rc == SQLITE_OK);
 
     const char * indexActor = "DROP INDEX IF EXISTS idx_actor";
