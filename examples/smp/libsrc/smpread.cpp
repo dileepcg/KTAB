@@ -99,18 +99,18 @@ SMPModel * SMPModel::csvRead(string fName, uint64_t s, vector<bool> f) {
 	smp = new SMPModel(sn2, seed);
 	SMPState* sms = new SMPState(smp);
 	smp->addState(sms);
-    cout << endl << flush;
-	cout <<"VictoryProbModel:  "<< smp->vpm << endl;
-	cout <<"VotingRule:  "<< smp->vrCltn << endl;
-	cout <<"PCEModel:  "<< smp->pcem << endl;
-	cout <<"StateTransitions:  "<< smp->stm << endl;
-	cout <<"BigRRange:  "<< smp->bigRRng << endl;
-	cout <<"BigRAdjust:  "<< smp->bigRAdj << endl;
-	cout <<"ThirdPartyCommit:  "<< smp->tpCommit << endl;
-	cout <<"InterVecBrgn:  "<< smp->ivBrgn << endl;
-	cout <<"BargnModel:  "<< smp->brgnMod << endl;
+	cout << "Displaying model parameters...\n";
+	cout <<"  VictoryProbModel:  "<< smp->vpm << endl;
+	cout <<"  VotingRule:  "<< smp->vrCltn << endl;
+	cout <<"  PCEModel:  "<< smp->pcem << endl;
+	cout <<"  StateTransitions:  "<< smp->stm << endl;
+	cout <<"  BigRRange:  "<< smp->bigRRng << endl;
+	cout <<"  BigRAdjust:  "<< smp->bigRAdj << endl;
+	cout <<"  ThirdPartyCommit:  "<< smp->tpCommit << endl;
+	cout <<"  InterVecBrgn:  "<< smp->ivBrgn << endl;
+	cout <<"  BargnModel:  "<< smp->brgnMod << endl;
 	cout << flush;
-
+	delete smp;
     if (numDim < 1) { // lower limit
         throw(KBase::KException("SMPModel::readCSVStream: Invalid number of dimensions"));
     }
