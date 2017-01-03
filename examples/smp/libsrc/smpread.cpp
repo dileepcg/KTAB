@@ -71,12 +71,6 @@ KMatrix SMPModel::accM;
 SMPModel * SMPModel::csvRead(string fName, uint64_t s, vector<bool> f) {
     using KBase::KException;
     char * errBuff; // as sprintf requires
-	SMPModel* smp = nullptr;
-	const char* sn2 = "";
-	uint64_t seed = KBase::dSeed;
-	smp = new SMPModel(sn2, seed);
-	SMPState* sms = new SMPState(smp);
-	smp->addState(sms);
 
     csv::ifstream inStream(fName.c_str());
     inStream.set_delimiter(',', "$$");
@@ -99,6 +93,12 @@ SMPModel * SMPModel::csvRead(string fName, uint64_t s, vector<bool> f) {
 
     printf("Number of actors: %u \n", numActor);
     printf("Number of dimensions: %u \n", numDim);
+	SMPModel* smp = nullptr;
+	const char* sn2 = "";
+	uint64_t seed = KBase::dSeed;
+	smp = new SMPModel(sn2, seed);
+	SMPState* sms = new SMPState(smp);
+	smp->addState(sms);
     cout << endl << flush;
 	cout <<"VictoryProbModel:  "<< smp->vpm << endl;
 	cout <<"VotingRule:  "<< smp->vrCltn << endl;
