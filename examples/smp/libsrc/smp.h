@@ -336,6 +336,9 @@ public:
   static void updateModelParameters(SMPModel *md0, vector<int> parameters);
   static void displayModelPrams(SMPModel *md0);
 
+  //default parameters for SMPQ
+  static vector<int> getDefaultModelParameters();
+
   static void destroyModel();
 
   /**
@@ -350,6 +353,7 @@ public:
   */
   static double getQuadMapPoint(string dbname, string scenarioID, size_t turn, size_t est_h,
       size_t aff_k, size_t init_i, size_t rcvr_j);
+
 protected:
   //sqlite3 *smpDB = nullptr; // keep this protected, to ease multi-threading
   //string scenName = "Scen";

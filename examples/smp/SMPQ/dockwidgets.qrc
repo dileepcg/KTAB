@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/csv.png</file>
         <file>images/editcsv.png</file>
         <file>images/editdb.png</file>
         <file>images/import.png</file>
@@ -8,5 +7,7 @@
         <file>images/save.png</file>
         <file>images/KTABIcon.jpg</file>
         <file>images/hourglass.png</file>
+        <file>images/xml.png</file>
+        <file>images/create.png</file>
     </qresource>
 </RCC>
