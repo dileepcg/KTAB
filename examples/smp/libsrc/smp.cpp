@@ -1219,6 +1219,25 @@ void SMPModel::updateModelParameters(SMPModel *md0, vector <int> parameters)
     md0->brgnMod = (SMPBargnModel)parameters.at(8); //bargnModel
 }
 
+vector<int> SMPModel::getDefaultModelParameters()
+{
+    vector<int> defaultParameters;
+    SMPModel * dummyModel = new SMPModel;
+
+    defaultParameters.push_back((int)dummyModel->vpm);
+    defaultParameters.push_back((int)dummyModel->pcem);
+    defaultParameters.push_back((int)dummyModel->stm);
+    defaultParameters.push_back((int)dummyModel->vrCltn);
+    defaultParameters.push_back((int)dummyModel->bigRAdj);
+    defaultParameters.push_back((int)dummyModel->bigRRng);
+    defaultParameters.push_back((int)dummyModel->tpCommit);
+    defaultParameters.push_back((int)dummyModel->ivBrgn);
+    defaultParameters.push_back((int)dummyModel->brgnMod);
+
+    delete dummyModel;
+    return defaultParameters;
+}
+
 double SMPModel::getQuadMapPoint(size_t t, size_t est_h, size_t aff_k, size_t init_i, size_t rcvr_j) {
     auto smpState = md0->history[t];
     auto autil = smpState->aUtil;

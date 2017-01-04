@@ -52,6 +52,7 @@ public slots :
     void getInfluenceDB(int turn =0);
     void getPositionDB(int dim,int turn =0);
     void getSalienceDB(int dim,int turn =0);
+    void getAffinityDB();
 
     //BarCharts
     void getActorsInRangeFromDB(double lowerRng, double higherRng, int dim, int turn);
@@ -76,6 +77,7 @@ signals:
     void actorsInflu(QList <QString>);
     void actorsPostn(QList<QString>,int);
     void actorsSalnce(QList<QString>,int);
+    void actorsAffinity(QList<QString>,QList<int>,QList<int>);
 
     //BarCharts
     void listActorsSalienceCapability(QList<int>,QList<double>,QList<double>,double r1,double r2);
@@ -105,6 +107,9 @@ private:
     QList <QString> actorInfluence;
     QList <QString> actorPosition;
     QList <QString> actorSalience;
+    QList <QString> actorAffinity;
+    QList <int>     actorI;
+    QList <int>     actorJ;
 
     //BarChart
     QList <int> actorIdsList;

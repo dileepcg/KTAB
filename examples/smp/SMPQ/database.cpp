@@ -55,12 +55,14 @@ void Database::openDB(QString dbPath, bool run)
 
         getActorsDescriptionDB();
 
-
         // to update numActors in db
         getNumActors();
 
         // number of states/turns in db
         getNumStates();
+
+        //Affinty
+        getAffinityDB();
 
 
         readVectorPositionTable(0,scenarioM,0);//turn
@@ -182,7 +184,9 @@ void Database::getPositionDB(int dim, int turn)
     {
         actorPosition.append(qry.value(0).toString());
     }
-    emit actorsPostn(actorPosition,dim);
+    if(actorPosition.length()>0)
+        emit actorsPostn(actorPosition,dim);
+
 }
 
 void Database::getSalienceDB(int dim, int turn)
@@ -206,6 +210,27 @@ void Database::getSalienceDB(int dim, int turn)
         actorSalience.append(qry.value(0).toString());
     }
     emit actorsSalnce(actorSalience,dim);
+}
+
+void Database::getAffinityDB()
+{
+    actorI.clear();
+    actorJ.clear();
+    actorAffinity.clear();
+
+    QSqlQuery qry;
+    QString query= QString(" select Act_i, Act_j, Affinity from Accommodation where ScenarioId='%1' ").arg(scenarioM);
+
+    qry.exec(query);
+
+    while(qry.next())
+    {
+        actorI.append(qry.value(0).toInt());
+        actorJ.append(qry.value(1).toInt());
+        actorAffinity.append(qry.value(2).toString());
+    }
+    qDebug()<<actorAffinity.length() << actorI.length() << actorJ.length();
+    emit actorsAffinity(actorAffinity,actorI,actorJ);
 }
 
 void Database::getActorsInRangeFromDB(double lowerRng, double higherRng, int dim, int turn)
@@ -345,7 +370,10 @@ void Database::readVectorPositionTable(int turn, QString scenario, int dim)
     if(numStates<turn)
         turn=numStates;
 
+    //Actors
     getNumActors();
+    //Affinty
+    getAffinityDB();
 
     sqlmodel = new QStandardItemModel(this);
     QSqlQuery qry;

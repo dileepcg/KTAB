@@ -149,9 +149,20 @@ void MainWindow::runPushButtonClicked(bool bl)
         // Notice that we NEVER use anything but the default seed.
         printf("Using PRNG seed:  %020llu \n", seed);
         printf("Same seed in hex:   0x%016llX \n", seed);
-        currentScenarioId =QString::fromStdString(SMPLib::SMPModel::csvReadExec
-                                                   (seed, csvPath.toStdString(),sqlFlags,
-                                                    dbFilePath.toStdString(),parameters));
+
+        if(savedAsXml==true)
+        {
+            currentScenarioId =QString::fromStdString(SMPLib::SMPModel::xmlReadExec
+                                                      (xmlPath.toStdString(),sqlFlags,
+                                                       dbFilePath.toStdString()));
+        }
+        else
+        {
+            currentScenarioId =QString::fromStdString(SMPLib::SMPModel::csvReadExec
+                                                      (seed, csvPath.toStdString(),sqlFlags,
+                                                       dbFilePath.toStdString(),parameters));
+        }
+
         KBase::displayProgramEnd(sTime);
 
         QApplication::restoreOverrideCursor();
@@ -175,10 +186,14 @@ void MainWindow::smpDBPath(QString smpdbPath)
 
 void MainWindow::disableRunButton(QTableWidgetItem *itm)
 {
-    Q_UNUSED(itm)
-    runButton->setEnabled(false);
-    disconnect(csvTableWidget,SIGNAL(itemChanged(QTableWidgetItem*)),this,SLOT(disableRunButton(QTableWidgetItem*)));
+    //    disconnect(csvTableWidget,SIGNAL(itemChanged(QTableWidgetItem*)),this,SLOT(disableRunButton(QTableWidgetItem*)));
 
+    if(itm->column()==0)
+    {
+        affinityMatrix->setVerticalHeaderItem(itm->row(),new QTableWidgetItem(itm->text()));
+        affinityMatrix->setHorizontalHeaderItem(itm->row(),new QTableWidgetItem(itm->text()));
+        runButton->setEnabled(false);
+    }
 }
 
 void MainWindow::logSMPDataOptionsAnalysis()
@@ -333,7 +348,7 @@ void MainWindow::initializeModelParametersDock()
     stateList << "Deterministic" << "Stochastic";
 
     QStringList votingList;
-    votingList << "Binary" << "PropBin"<< "Proportional"<< "PropCbc"<< "Cubic"<< "ASymProsp";
+    votingList << "Binary" << "PropBin"<< "Prop"<< "PropCbc"<< "Cubic"<< "ASymProsp";
 
     QStringList bigAdjList;
     bigAdjList << "None" << "OneThird" << "Half"<< "TwoThirds"<< "Full";
@@ -408,6 +423,9 @@ void MainWindow::initializeModelParametersDock()
     addDockWidget(Qt::LeftDockWidgetArea, modelParametersDock);
     viewMenu->addAction(modelParametersDock->toggleViewAction());
 
+    defParameters = QVector<int>::fromStdVector(SMPLib::SMPModel::getDefaultModelParameters());
+    setDefaultParameters();
+
     modelParametersDock->setVisible(true);
 }
 
@@ -428,26 +446,19 @@ void MainWindow::getParametersValues()
 
 }
 
-//QStandardItemModel * MainWindow::initializeComboBox(int rows, QStringList items)
-//{
-//    QStandardItemModel * model= new QStandardItemModel(rows, 1); // 3 rows, 1 col
-//    for (int r = 0; r < rows; ++r)
-//    {
-//        QStandardItem* item = new QStandardItem(QString(items.at(r)));
+void MainWindow::setDefaultParameters()
+{
+    victProbModelComboBox->setCurrentIndex(defParameters.at(0));
+    pCEModelComboBox->setCurrentIndex(defParameters.at(1));
+    stateTransitionsComboBox->setCurrentIndex(defParameters.at(2));
+    votingRuleComboBox->setCurrentIndex(defParameters.at(3));
+    bigRAdjustComboBox->setCurrentIndex(defParameters.at(4));
+    bigRRangeComboBox->setCurrentIndex(defParameters.at(5));
+    thirdPartyCommitComboBox->setCurrentIndex(defParameters.at(6));
+    interVecBrgnComboBox->setCurrentIndex(defParameters.at(7));
+    bargnModelComboBox->setCurrentIndex(defParameters.at(8));
 
-//        item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-//        item->setData(Qt::Unchecked, Qt::CheckStateRole);
-
-//        model->setItem(r, 0, item);
-//    }
-
-//    return model;
-//}
-
-
-
-
-
+}
 
 // --------------------------------------------
 // Copyright KAPSARC. Open source MIT License.

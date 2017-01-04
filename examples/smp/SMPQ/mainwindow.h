@@ -27,6 +27,7 @@
 #include <QMainWindow>
 #include "csv.h"
 #include "database.h"
+#include "xmlparser.h"
 #include "../qcustomplot/qcustomplot.h"
 
 #include <QtSql>
@@ -89,21 +90,25 @@ private slots:
     //Central-  Controls Frame
     void sliderStateValueToQryDB(int value);
     void scenarioComboBoxValue(int scenarioBox);
-    void createNewCSV(bool bl);
+    void createNewSMPData(bool bl);
     void cellSelected(QStandardItem *in);
     void insertNewRowCSV();
     void insertNewColumnCSV();
     void donePushButtonClicked(bool bl);
+    void saveTableWidgetToCSV(bool bl);
 
     //    bool eventFilter(QObject*, QEvent*);
     void displayMenuTableWidget(QPoint pos);
     void displayMenuTableView(QPoint pos);
+    //    void displayAffinityMenuTableWidget(QPoint pos);
+    //    void displayCsvAffinityMenuTableView(QPoint pos);
 
     //DB to CSV
     void actorsNameDesc(QList<QString> actorName, QList<QString> actorDescription);
     void actorsInfluence(QList<QString> ActorInfluence);
     void actorsPosition(QList<QString> actorPosition, int dim);
     void actorsSalience(QList<QString> actorSalience, int dim);
+    void actAffinity(QList<QString> actorAff, QList<int> actorI, QList<int> actorJ);
 
 signals:
     //CSV
@@ -134,7 +139,7 @@ private:
     void createQuadMapDockWindows();
     void createModelParametersDockWindow();
     void saveTableViewToCSV();
-    void saveTableWidgetToCSV();
+    void saveAsDialog();
     int validateControlButtons(QString viewName);
 
     void updateDBViewColumns();
@@ -182,10 +187,15 @@ private:
     std::vector<int> parameters;
 
     //csv window
+    QTabWidget * csvTableViewTabWidget;
     QTableView * csvTableView;
+    QTableView * csvTableAffinityView;
+    QStandardItemModel * csvAffinityModel;
     CSV *csvObj;
 
     QTableWidget * csvTableWidget;
+    QTabWidget * smpDataTab;
+    QTableWidget * affinityMatrix;
 
     QMenu *viewMenu;
 
@@ -226,7 +236,7 @@ private:
     QLineEdit* headerEditor;
     int editorIndex;
 
-    QString  tableType; // CSV, Database, NewCSV
+    QString  tableType; // CSV, Database, NewSMPData
     QStandardItemModel *modeltoCSV;
     QStandardItemModel *modeltoDB;
 
@@ -240,6 +250,9 @@ private:
     QList <QString> actorsInfl;
     QList <QString> actorsPos[3];
     QList <QString> actorsSal[3];
+    QList <QString> actorAffinity;
+    QList <int>     actI;
+    QList <int>     actJ;
 
     QStringList dimensionList;
 
@@ -477,6 +490,53 @@ private slots :
 signals :
     void getUtilChlgAndUtilSQfromDB(QList <int > VHAxisList);
 
+
+    //Xmlparser
+private :
+    QString xmlPath;
+    Xmlparser *xmlparser;
+    QTabWidget *xmlTabWidget;
+    QTableView *xmlImportDataTableView;
+    QTableView *xmlAffinityMatrixTableView;
+
+    QStandardItemModel * xmlSmpDataModel;
+    QStandardItemModel * xmlAffinityMatrixModel;
+
+    QStringList dimensionsXml;
+    QVector<int> defParameters;
+
+    QAbstractButton * CSVButton;
+    QAbstractButton * XMLButton;
+    QDialogButtonBox * saveAsDial;
+
+    bool savedAsXml;
+
+    void createXmlTable();
+    void populateXmlTable(QStandardItemModel *actorsVal);
+    void populateAffinityMatrix(QList<QStringList> idealAdj, QVector<QString> actors);
+    void updateControlsBar(QStringList modelDesc);
+    void updateModelParameters(QStringList modPara);
+    void initializeAffinityMatrixRowCol(int count, QString table);
+    void saveTableViewToXML();
+    void setDefaultParameters();
+
+private slots:
+    void displayMenuXmlTableView(QPoint pos);
+    //    void displayMenuXmlAffTableView(QPoint pos);
+    void importXmlGetFilePath(bool bl);
+    void openStatusXml(bool status);
+    void xmlDataParsedFromFile(QStringList modelDesc, QStringList modpara, QStringList dims,
+                               QStandardItemModel *actModel, QList <QStringList> idealAdj);
+    void savedXmlName(QString fileName);
+    void saveTableWidgetToXML(bool bl);
+    void xmlCellSelected(QStandardItem *in);
+signals:
+    bool openXMLFile(QString file);
+    void readXMLFile();
+    void saveXMLDataToFile(QStringList parameters, QStandardItemModel * smpData,
+                           QStandardItemModel * affModel);
+    void saveNewSMPDataToXMLFile(QStringList parameters, QTableWidget
+                                 * smpDataWidget, QTableWidget * affModelWidget);
 };
 
 
