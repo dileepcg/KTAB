@@ -93,24 +93,6 @@ SMPModel * SMPModel::csvRead(string fName, uint64_t s, vector<bool> f) {
 
     printf("Number of actors: %u \n", numActor);
     printf("Number of dimensions: %u \n", numDim);
-	SMPModel* smp = nullptr;
-	const char* sn2 = "";
-	uint64_t seed = KBase::dSeed;
-	smp = new SMPModel(sn2, seed);
-	SMPState* sms = new SMPState(smp);
-	smp->addState(sms);
-	cout << "Displaying model parameters...\n";
-	cout <<"  VictoryProbModel:  "<< smp->vpm << endl;
-	cout <<"  VotingRule:  "<< smp->vrCltn << endl;
-	cout <<"  PCEModel:  "<< smp->pcem << endl;
-	cout <<"  StateTransitions:  "<< smp->stm << endl;
-	cout <<"  BigRRange:  "<< smp->bigRRng << endl;
-	cout <<"  BigRAdjust:  "<< smp->bigRAdj << endl;
-	cout <<"  ThirdPartyCommit:  "<< smp->tpCommit << endl;
-	cout <<"  InterVecBrgn:  "<< smp->ivBrgn << endl;
-	cout <<"  BargnModel:  "<< smp->brgnMod << endl;
-	cout << flush;
-	delete smp;
     if (numDim < 1) { // lower limit
         throw(KBase::KException("SMPModel::readCSVStream: Invalid number of dimensions"));
     }

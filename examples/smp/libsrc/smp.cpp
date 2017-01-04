@@ -1120,7 +1120,21 @@ void SMPModel::setDBPath(std::string dbName)
 {
     dbPath = dbName;
 }
-
+void SMPModel::displayModelPrams(SMPModel *md0)
+{
+	cout << "Displaying model parameters...\n";
+	//md0->vpm
+	cout << "  VictoryProbModel:  " << md0->vpm << endl;
+	cout << "  VotingRule:  " << md0->vrCltn << endl;
+	cout << "  PCEModel:  " << md0->pcem << endl;
+	cout << "  StateTransitions:  " << md0->stm << endl;
+	cout << "  BigRRange:  " << md0->bigRRng << endl;
+	cout << "  BigRAdjust:  " << md0->bigRAdj << endl;
+	cout << "  ThirdPartyCommit:  " << md0->tpCommit << endl;
+	cout << "  InterVecBrgn:  " << md0->ivBrgn << endl;
+	cout << "  BargnModel:  " << md0->brgnMod << endl;
+	cout << flush;
+}
 string SMPModel::csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, string dbFilePath, vector<int> par) {
     SMPModel::setDBPath(dbFilePath);
     if (md0 != nullptr) {
@@ -1132,7 +1146,8 @@ string SMPModel::csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, str
     if (false == par.empty()) {
         SMPModel::updateModelParameters(md0, par);
     }
-    configExec(md0);
+	SMPModel::displayModelPrams(md0);
+	configExec(md0);
     md0->releaseDB();
     return md0->getScenarioID();
 }
@@ -1140,6 +1155,7 @@ string SMPModel::csvReadExec(uint64_t seed, string inputCSV, vector<bool> f, str
 string SMPModel::xmlReadExec(string inputXML, vector<bool> f, string dbFilePath) {
     SMPModel::setDBPath(dbFilePath);
     md0 = SMPModel::xmlRead(inputXML, f);
+	SMPModel::displayModelPrams(md0);
     configExec(md0);
     md0->releaseDB();
     return md0->getScenarioID();
